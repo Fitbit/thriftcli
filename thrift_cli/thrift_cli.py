@@ -42,6 +42,7 @@ class ThriftCLI(object):
 	def _parse_thrift(self):
 		tparser = ThriftParser()
 		tparse_result = tparser.parse(self._thrift_path)
+		return tparse_result
 
 	def _get_method_from_endpoint(self, endpoint):
 		class_name = 'Client'

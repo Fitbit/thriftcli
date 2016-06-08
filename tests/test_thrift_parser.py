@@ -11,8 +11,6 @@ class TestThriftParser(unittest.TestCase):
 		tparser = ThriftParser()
 		expected_tparse_result = data.TEST_THRIFT_PARSE_RESULT
 		tparse_result = tparser.parse(data.TEST_THRIFT_PATH)
-		# print tparse_result
-		# print expected_tparse_result
 		self.assertEqual(tparse_result, expected_tparse_result)
 
 	def test_parse_structs(self):
@@ -20,18 +18,20 @@ class TestThriftParser(unittest.TestCase):
 		tparser._thrift_content = data.TEST_THRIFT_CONTENT
 		expected_structs = data.TEST_THRIFT_STRUCTS
 		structs = tparser._parse_structs()
-		for struct, expected_struct in zip(structs.values(), expected_structs.values()):
-			print struct
-			print expected_struct
-			print struct == expected_struct
 		self.assertEqual(structs, expected_structs)
+
+	def test_parse_services(self):
+		tparser = ThriftParser()
+		tparser._thrift_content = data.TEST_THRIFT_CONTENT
+		expected_services = data.TEST_THRIFT_SERVICES
+		services = tparser._parse_services()
+		self.assertEqual(services, expected_services)
 
 	def test_parse_endpoints_from_service_definition(self):
 		tparser = ThriftParser()
 		endpoints = tparser._parse_endpoints_from_service_definition(data.TEST_THRIFT_SERVICE_DEFINITION)
 		expected_endpoints = data.TEST_THRIFT_SERVICE_ENDPOINTS
-		for endpoint, expected_endpoint in zip(endpoints, expected_endpoints):
-			self.assertEqual(endpoint, expected_endpoint)
+		self.assertEqual(endpoints, expected_endpoints)
 
 	def test_parse_struct_definitions(self):
 		tparser = ThriftParser()

@@ -69,8 +69,10 @@ class ThriftParser(object):
 		endpoint_matches = self.endpoints_regex.findall(definition)
 		(oneways, return_types, names, fields_strings) = zip(*endpoint_matches)
 		(oneways, return_types, names, fields_strings) = (list(oneways), list(return_types), list(names), list(fields_strings))
-		fields = [self._parse_fields_from_fields_string(fields_string) for fields_string in fields_strings]
-		endpoints = [ThriftService.Endpoint(return_type, name, fields, oneway=oneway) for oneway, return_type, name, fields in zip(oneways, return_types, names, fields)]
+		fields_lists = [self._parse_fields_from_fields_string(fields_string) for fields_string in fields_strings]
+		fields_dicts = [{field.name:field for field in field_list} for field_list in fields_lists]
+		endpoints = [ThriftService.Endpoint(return_type, name, fields, oneway=oneway) for oneway, return_type, name, fields in zip(oneways, return_types, names, fields_dicts)]
+		endpoints = {endpoint.name:endpoint for endpoint in endpoints}
 		return endpoints
 
 	def _parse_fields_from_fields_string(self, fields_string):

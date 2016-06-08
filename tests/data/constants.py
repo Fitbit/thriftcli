@@ -41,26 +41,26 @@ TEST_THRIFT_STRUCT = ThriftStruct(TEST_THRIFT_STRUCT_NAME, TEST_THRIFT_STRUCT_FI
 TEST_THRIFT_STRUCT2 = ThriftStruct(TEST_THRIFT_STRUCT_NAME2, TEST_THRIFT_STRUCT_FIELDS2)
 TEST_THRIFT_SERVICE_NAME = 'SomeService'
 TEST_THRIFT_SERVICE_NAME2 = 'SomeService2'
-TEST_THRIFT_SERVICE_ENDPOINTS = [
-	ThriftService.Endpoint('void', 'ping'),
-	ThriftService.Endpoint('i32', 'doSomething1', [
-		ThriftStruct.Field(1, 'i32', 'num1'),
-		ThriftStruct.Field(2, 'i32', 'num2'),
-		ThriftStruct.Field(3, 'Operation', 'op')
-		]),
-	ThriftService.Endpoint('void', 'useSomeStruct', [
-		ThriftStruct.Field(1, 'SomeStruct', 'someStruct')
-		], oneway=True)
-]
-TEST_THRIFT_SERVICE_ENDPOINTS2 = [
-	ThriftService.Endpoint('void', 'ping'),
-	ThriftService.Endpoint('string', 'doSomething2', [
-		ThriftStruct.Field(1, 'i32', 'num1')
-		]),
-	ThriftService.Endpoint('void', 'useSomeStruct2', [
-		ThriftStruct.Field(1, 'SomeStruct2', 'someStruct')
-		])
-]
+TEST_THRIFT_SERVICE_ENDPOINTS = {
+	'ping': ThriftService.Endpoint('void', 'ping'),
+	'doSomething1': ThriftService.Endpoint('i32', 'doSomething1', {
+		'num1': ThriftStruct.Field(1, 'i32', 'num1'),
+		'num2': ThriftStruct.Field(2, 'i32', 'num2'),
+		'op': ThriftStruct.Field(3, 'Operation', 'op')
+		}),
+	'useSomeStruct': ThriftService.Endpoint('void', 'useSomeStruct', {
+		'someStruct': ThriftStruct.Field(1, 'SomeStruct', 'someStruct')
+		}, oneway=True)
+}
+TEST_THRIFT_SERVICE_ENDPOINTS2 = {
+	'ping': ThriftService.Endpoint('void', 'ping'),
+	'doSomething2': ThriftService.Endpoint('string', 'doSomething2', {
+		'num1': ThriftStruct.Field(1, 'i32', 'num1')
+		}),
+	'useSomeStruct2': ThriftService.Endpoint('void', 'useSomeStruct2', {
+		'someStruct': ThriftStruct.Field(1, 'SomeStruct2', 'someStruct')
+		})
+}
 TEST_THRIFT_SERVICE_DEFINITION = ("""
 	service %s {
 		void ping(),
