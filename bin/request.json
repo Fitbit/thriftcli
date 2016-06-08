@@ -1,0 +1,13 @@
+{
+	"request": {
+		"id": 0,
+		"type": 0,
+		"name": "giraffee",
+		"weight": 2.0,
+		"complex": {
+			"things": [1, 2, 3]
+		}
+	}
+}
+
+// endpoint(request=<InferredTypeA>(id=0, type=0, name='giraffee', weight=2.0, complex=<InferredTypeB>(things=[1, 2, 3])))
