@@ -32,7 +32,7 @@ def main():
     cli = ThriftCLI()
     try:
         cli.setup(thrift_path, server_address)
-        cli.run(endpoint, request_body)
+        print cli.run(endpoint, request_body)
     finally:
         cli.cleanup()
 
