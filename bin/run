@@ -1,3 +1,5 @@
 #!/bin/bash
 
-python run.py $@
+BIN=`dirname $0`
+
+python $BIN/run.py $@

@@ -32,7 +32,9 @@ def main():
     cli = ThriftCLI()
     try:
         cli.setup(thrift_path, server_address)
-        print cli.run(endpoint, request_body)
+        result = cli.run(endpoint, request_body)
+        if result is not None:
+            print result
     finally:
         cli.cleanup()
 
