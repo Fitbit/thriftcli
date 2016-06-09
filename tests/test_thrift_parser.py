@@ -2,8 +2,8 @@ import unittest
 
 import mock
 
-from thrift_cli import ThriftParser
 import data
+from thrift_cli import ThriftParser
 
 
 class TestThriftParser(unittest.TestCase):

@@ -12,12 +12,10 @@ from thrift.protocol import TBinaryProtocol
 
 
 class ThriftCLI(object):
-
     def __init__(self):
         self._thrift_path = None
         self._server_address = None
         self._parsed_thrift = None
-        self._module = None
         self._transport = None
 
     def setup(self, thrift_path, server_address):
@@ -25,15 +23,15 @@ class ThriftCLI(object):
         self._thrift_path = thrift_path
         self._server_address = server_address
         self._parsed_thrift = self._parse_thrift()
-        self._module = self._generate_and_import_module()
+        self._generate_and_import_module()
         self._open_connection()
 
     def run(self, endpoint, request_body):
         """ Runs the endpoint on the connected server as defined by the thrift file.
         The request_body is transformed into the endpoint's arguments. """
         method = self._get_method_from_endpoint(endpoint)
-        request_args = self._json_to_object(request_body)
-        return method(**request_args)
+        request_args = self._json_to_args(endpoint, request_body)
+        return method(*request_args)
 
     def cleanup(self):
         """ Deletes the gen-py code and closes the transport with the server. """
@@ -55,22 +53,38 @@ class ThriftCLI(object):
 
     def _get_method_from_endpoint(self, endpoint):
         class_name = 'Client'
-        try:
-            [service_name, method_name] = endpoint.split('.')
-        except:
-            raise ThriftCLIException('Endpoint should be in format \'Service.method\'')
+        [service_name, method_name] = self._split_endpoint(endpoint)
         client_constructor = getattr(self._get_service_module(service_name), class_name)
         client = client_constructor(self._protocol)
-        method = getattr(client, method_name)
+        try:
+            method = getattr(client, method_name)
+        except AttributeError:
+            raise ThriftCLIException('\'%s\' service has no method \'%s\'' % (service_name, method_name))
         return method
+
+    @staticmethod
+    def _split_endpoint(endpoint):
+        try:
+            split = endpoint.split('.')
+            if not split or len(split) != 2:
+                raise ValueError()
+            return split
+        except ValueError:
+            raise ThriftCLIException('Endpoint should be in format \'Service.method\'')
 
     def _get_service_module(self, service_name):
         service_reference = '.'.join([self._get_module_name(), service_name])
-        return sys.modules[service_reference]
+        try:
+            return sys.modules[service_reference]
+        except KeyError:
+            raise ThriftCLIException('Invalid service \'%s\' provided' % service_name)
 
-    def _json_to_object(self, data):
+    def _json_to_args(self, endpoint, data):
         # return json.loads(data, object_hook=lambda d: Namespace(**d))
-        return {}
+        # print endpoint
+        # [service_name, method_name] = self._split_endpoint(endpoint)
+        # print self._parsed_thrift.services
+        return []
 
     def _generate_and_import_module(self):
         command = 'thrift -r --gen py %s' % self._thrift_path
@@ -89,7 +103,6 @@ class ThriftCLI(object):
     def _get_module_name(self):
         return self._thrift_path[:-len('.thrift')].split('/')[-1]
 
-
     def _open_connection(self):
         (url, port) = self._parse_address_for_hostname_and_port()
         self._transport = TSocket.TSocket(url, port)
@@ -102,7 +115,7 @@ class ThriftCLI(object):
         if '//' not in address_to_parse:
             address_to_parse = '//' + address_to_parse
         url_obj = urlparse.urlparse(address_to_parse)
-        return (url_obj.hostname, url_obj.port)
+        return url_obj.hostname, url_obj.port
 
 
 class ThriftCLIException(Exception):

@@ -2,8 +2,8 @@ import unittest
 
 import mock
 
-from thrift_cli import ThriftCLI
 import data
+from thrift_cli import ThriftCLI, ThriftCLIException
 
 
 class TestThriftCLI(unittest.TestCase):
@@ -46,3 +46,16 @@ class TestThriftCLI(unittest.TestCase):
         expected_module_name = data.TEST_THRIFT_MODULE_NAME
         module_name = cli._get_module_name()
         self.assertEqual(module_name, expected_module_name)
+
+    def test_split_endpoint(self):
+        cli = ThriftCLI()
+        endpoint = 'Calculator.ping'
+        expected_service_name, expected_method_name = 'Calculator', 'ping'
+        service_name, method_name = cli._split_endpoint(endpoint)
+        self.assertEqual((service_name, method_name), (expected_service_name, expected_method_name))
+        endpoint = 'Calculatorping'
+        with self.assertRaises(ThriftCLIException):
+            cli._split_endpoint(endpoint)
+        endpoint = 'Calculator.pi.ng'
+        with self.assertRaises(ThriftCLIException):
+            cli._split_endpoint(endpoint)

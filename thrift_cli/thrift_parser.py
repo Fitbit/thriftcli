@@ -23,6 +23,8 @@ class ThriftParser(object):
             })
 
     def __init__(self):
+        self._thrift_path = None
+        self._thrift_content = None
         self.structs_regex = re.compile(r'^([\r\t ]*?struct (\w+)[^}]+})', flags=re.MULTILINE)
         self.services_regex = re.compile(r'^([\r\t ]*?service (\w+)[^}]+})', flags=re.MULTILINE)
         self.endpoints_regex = re.compile(r'^[\r\t ]*(oneway)?\s*(\w+)\s*(\w+)\(([a-zA-Z0-9: ,]*)\)',
