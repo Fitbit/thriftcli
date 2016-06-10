@@ -4,7 +4,6 @@ import sys
 import urlparse
 
 from .thrift_parser import ThriftParser
-# from argparse import Namespace
 
 from thrift.transport import TSocket
 from thrift.transport import TTransport
@@ -15,14 +14,14 @@ class ThriftCLI(object):
     def __init__(self):
         self._thrift_path = None
         self._server_address = None
-        self._parsed_thrift = None
+        self._thrift_parser = ThriftParser()
         self._transport = None
 
     def setup(self, thrift_path, server_address):
         """ Opens a connection between the given thrift file and server. """
         self._thrift_path = thrift_path
         self._server_address = server_address
-        self._parsed_thrift = self._parse_thrift()
+        self._thrift_parser.parse(self._thrift_path)
         self._generate_and_import_module()
         self._open_connection()
 
@@ -30,8 +29,10 @@ class ThriftCLI(object):
         """ Runs the endpoint on the connected server as defined by the thrift file.
         The request_body is transformed into the endpoint's arguments. """
         method = self._get_method_from_endpoint(endpoint)
-        request_args = self._json_to_args(endpoint, request_body)
-        return method(*request_args)
+        [service_name, method_name] = self._split_endpoint(endpoint)
+        request_args = self.convert_json_to_args(service_name, method_name, request_body)
+        print request_args
+        return method(**request_args)
 
     def cleanup(self):
         """ Deletes the gen-py code and closes the transport with the server. """
@@ -45,11 +46,6 @@ class ThriftCLI(object):
             shutil.rmtree(path)
         except OSError:
             pass
-
-    def _parse_thrift(self):
-        tparser = ThriftParser()
-        tparse_result = tparser.parse(self._thrift_path)
-        return tparse_result
 
     def _get_method_from_endpoint(self, endpoint):
         class_name = 'Client'
@@ -78,13 +74,6 @@ class ThriftCLI(object):
             return sys.modules[service_reference]
         except KeyError:
             raise ThriftCLIException('Invalid service \'%s\' provided' % service_name)
-
-    def _json_to_args(self, endpoint, data):
-        # return json.loads(data, object_hook=lambda d: Namespace(**d))
-        # print endpoint
-        # [service_name, method_name] = self._split_endpoint(endpoint)
-        # print self._parsed_thrift.services
-        return []
 
     def _generate_and_import_module(self):
         command = 'thrift -r --gen py %s' % self._thrift_path
@@ -116,6 +105,41 @@ class ThriftCLI(object):
             address_to_parse = '//' + address_to_parse
         url_obj = urlparse.urlparse(address_to_parse)
         return url_obj.hostname, url_obj.port
+
+    def convert_json_to_args(self, service_name, method_name, data):
+        fields = self._thrift_parser.get_fields_for_endpoint(service_name, method_name)
+        return self._convert_json_to_args_given_fields(fields, data)
+
+    def _convert_json_to_args_given_fields(self, fields, data):
+        args = {field_name: self._convert_json_entry_to_arg(fields[field_name], value)
+                for field_name, value in data.items()}
+        return args
+
+    def _convert_json_entry_to_arg(self, field, value):
+        if isinstance(value, dict):
+            fields = self._thrift_parser.get_fields_for_struct_name(field.field_type)
+            value = self._convert_json_to_args_given_fields(fields, value)
+        arg = self._construct_arg(field, value)
+        return arg
+
+    def _construct_arg(self, field, value):
+        if self._thrift_parser.has_struct(field.field_type):
+            return self._construct_struct_arg(field, value)
+        elif self._thrift_parser.has_enum(field.field_type):
+            return self._construct_enum_arg(field, value)
+        return value
+
+    def _construct_struct_arg(self, field, value):
+        return getattr(self._get_service_module('ttypes'), field.field_type)(**value)
+
+    def _construct_enum_arg(self, field, value):
+        enum_class = getattr(self._get_service_module('ttypes'), field.field_type)
+        if isinstance(value, (int, long)):
+            return value
+        elif isinstance(value, basestring):
+            return enum_class._NAMES_TO_VALUES[value]
+        raise TypeError('Invalid value provided for enum %s: %s' % (field.field_type. str(value)))
+
 
 
 class ThriftCLIException(Exception):

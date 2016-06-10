@@ -22,20 +22,20 @@ TEST_THRIFT_STRUCT_FIELDS2 = {
     'thing_six': ThriftStruct.Field(6, 'byte', 'thing_six', required=False, optional=True)
 }
 TEST_THRIFT_STRUCT_DEFINITION = ("""
-	struct %s {
-		1:string thing_one,
-		2:double thing_two = 2.0,
-		3:bool thing_three = False
-	}""" % TEST_THRIFT_STRUCT_NAME).lstrip('\n')
+    struct %s {
+        1:string thing_one,
+        2:double thing_two = 2.0,
+        3:bool thing_three = False
+    }""" % TEST_THRIFT_STRUCT_NAME).lstrip('\n')
 TEST_THRIFT_STRUCT_DEFINITION2 = ("""
-	struct %s {
-		1:required i8 thing_one,
-		2:i16 thing_two,
-		3:optional i32 thing_three,
-		4:required i64 thing_four = 0,
-		5:required binary thing_five,
-		6:optional byte thing_six
-	}""" % TEST_THRIFT_STRUCT_NAME2).lstrip('\n')
+    struct %s {
+        1:required i8 thing_one,
+        2:i16 thing_two,
+        3:optional i32 thing_three,
+        4:required i64 thing_four = 0,
+        5:required binary thing_five,
+        6:optional byte thing_six
+    }""" % TEST_THRIFT_STRUCT_NAME2).lstrip('\n')
 TEST_THRIFT_STRUCT = ThriftStruct(TEST_THRIFT_STRUCT_NAME, TEST_THRIFT_STRUCT_FIELDS)
 TEST_THRIFT_STRUCT2 = ThriftStruct(TEST_THRIFT_STRUCT_NAME2, TEST_THRIFT_STRUCT_FIELDS2)
 TEST_THRIFT_SERVICE_NAME = 'SomeService'
@@ -61,24 +61,42 @@ TEST_THRIFT_SERVICE_ENDPOINTS2 = {
     })
 }
 TEST_THRIFT_SERVICE_DEFINITION = ("""
-	service %s {
-		void ping(),
-		i32 doSomething1(1:i32 num1, 2:i32 num2, 3:Operation op),
-		oneway void useSomeStruct(1:SomeStruct someStruct)
-	}""" % TEST_THRIFT_SERVICE_NAME).lstrip('\n')
+    service %s {
+        void ping(),
+        i32 doSomething1(1:i32 num1, 2:i32 num2, 3:Operation op),
+        oneway void useSomeStruct(1:SomeStruct someStruct)
+    }""" % TEST_THRIFT_SERVICE_NAME).lstrip('\n')
 TEST_THRIFT_SERVICE_DEFINITION2 = ("""
-	service %s {
-		void ping(),
-		string doSomething2(1:i32 num1)
-		void useSomeStruct2(1:SomeStruct2 someStruct)
-	}""" % TEST_THRIFT_SERVICE_NAME2).lstrip('\n')
+    service %s {
+        void ping(),
+        string doSomething2(1:i32 num1)
+        void useSomeStruct2(1:SomeStruct2 someStruct)
+    }""" % TEST_THRIFT_SERVICE_NAME2).lstrip('\n')
 TEST_THRIFT_SERVICE = ThriftService(TEST_THRIFT_SERVICE_NAME, TEST_THRIFT_SERVICE_ENDPOINTS)
 TEST_THRIFT_SERVICE2 = ThriftService(TEST_THRIFT_SERVICE_NAME2, TEST_THRIFT_SERVICE_ENDPOINTS2)
+TEST_THRIFT_ENUM = 'SomeEnum'
+TEST_THRIFT_ENUM2 = 'SomeEnum2'
+TEST_THRIFT_ENUM_DEFINITION = ("""
+    enum %s {
+        A,
+        B,
+        C,
+        D
+    }""" % TEST_THRIFT_ENUM).lstrip('\n')
+TEST_THRIFT_ENUM_DEFINITION2 = ("""
+    enum %s {
+        W,
+        X = 4,
+        Y = 0xf2a,
+        Z
+    }""" % TEST_THRIFT_ENUM2).lstrip('\n')
 TEST_THRIFT_CONTENT = '\n'.join([
     TEST_THRIFT_STRUCT_DEFINITION,
     TEST_THRIFT_STRUCT_DEFINITION2,
     TEST_THRIFT_SERVICE_DEFINITION,
-    TEST_THRIFT_SERVICE_DEFINITION2
+    TEST_THRIFT_SERVICE_DEFINITION2,
+    TEST_THRIFT_ENUM_DEFINITION,
+    TEST_THRIFT_ENUM_DEFINITION2
 ])
 TEST_THRIFT_STRUCTS = {
     TEST_THRIFT_STRUCT_NAME: TEST_THRIFT_STRUCT,
@@ -88,21 +106,31 @@ TEST_THRIFT_SERVICES = {
     TEST_THRIFT_SERVICE_NAME: TEST_THRIFT_SERVICE,
     TEST_THRIFT_SERVICE_NAME2: TEST_THRIFT_SERVICE2
 }
-TEST_THRIFT_PARSE_RESULT = ThriftParser.Result(TEST_THRIFT_STRUCTS, TEST_THRIFT_SERVICES)
-TEST_JSON_CONTENT = """
-	{
-		"request": {
-			"id": 0,
-			"type": 0,
-			"name": "giraffee",
-			"weight": 2.0
-		}
-	}""".lstrip('\n')
-TEST_JSON_OBJECT = {
-    'request': {
-        'id': 0,
-        'type': 0,
-        'name:': 'giraffee',
-        'weight': 2.0
+TEST_THRIFT_ENUMS = set([TEST_THRIFT_ENUM, TEST_THRIFT_ENUM2])
+TEST_THRIFT_PARSE_RESULT = ThriftParser.Result(TEST_THRIFT_STRUCTS, TEST_THRIFT_SERVICES, TEST_THRIFT_ENUMS)
+TEST_THRIFT_ENDPOINT_NAME = 'SomeService.useSomeStruct'
+TEST_THRIFT_METHOD_NAME = 'useSomeStruct'
+TEST_REQUEST_JSON = {
+    "someStruct": {
+        "thing_one": "some string",
+        "thing_two": 1.5,
+        "thing_three": True,
     }
+}
+
+
+class SomeStruct(object):
+    def __init__(self, thing_one, thing_two, thing_three):
+        self._thing_one = thing_one
+        self._thing_two = thing_two
+        self._thing_three = thing_three
+
+    def __eq__(self, other):
+        return type(other) is type(self) and self.__dict__ == other.__dict__
+
+    def __ne__(self, other):
+        return not self.__eq__(other)
+
+TEST_REQUEST_ARGS = {
+    'someStruct': SomeStruct('some string', 1.5, True)
 }

@@ -49,13 +49,28 @@ class TestThriftCLI(unittest.TestCase):
 
     def test_split_endpoint(self):
         cli = ThriftCLI()
-        endpoint = 'Calculator.ping'
-        expected_service_name, expected_method_name = 'Calculator', 'ping'
+        endpoint = '%s.%s' % (data.TEST_THRIFT_SERVICE_NAME, data.TEST_THRIFT_METHOD_NAME)
+        expected_service_name, expected_method_name = data.TEST_THRIFT_SERVICE_NAME, data.TEST_THRIFT_METHOD_NAME
         service_name, method_name = cli._split_endpoint(endpoint)
         self.assertEqual((service_name, method_name), (expected_service_name, expected_method_name))
-        endpoint = 'Calculatorping'
+        endpoint = '%s%s' % (data.TEST_THRIFT_SERVICE_NAME, data.TEST_THRIFT_METHOD_NAME)
         with self.assertRaises(ThriftCLIException):
             cli._split_endpoint(endpoint)
-        endpoint = 'Calculator.pi.ng'
+        endpoint = '%s.%s.abc' % (data.TEST_THRIFT_SERVICE_NAME, data.TEST_THRIFT_METHOD_NAME)
         with self.assertRaises(ThriftCLIException):
             cli._split_endpoint(endpoint)
+
+    # @mock.patch('thrift_cli.TSocket.TSocket')
+    # @mock.patch('thrift_cli.ThriftParser._load_file')
+    # def test_convert_json_to_args(self, mock_load_file, mock_tsocket):
+    #     mock_load_file.return_value = data.TEST_THRIFT_CONTENT
+    #     cli = ThriftCLI()
+    #     try:
+    #         cli.setup(data.TEST_THRIFT_PATH, data.TEST_SERVER_ADDRESS)
+    #         cli._endpoint = data.TEST_THRIFT_ENDPOINT_NAME
+    #         request_args = cli.convert_json_to_args(
+    #             data.TEST_THRIFT_SERVICE_NAME, data.TEST_THRIFT_METHOD_NAME, data.TEST_REQUEST_JSON)
+    #         expected_request_args = data.TEST_REQUEST_ARGS
+    #         self.assertEqual(request_args, expected_request_args)
+    #     finally:
+    #         cli.cleanup()

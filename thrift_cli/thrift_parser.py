@@ -6,9 +6,10 @@ from .thrift_struct import ThriftStruct
 
 class ThriftParser(object):
     class Result(object):
-        def __init__(self, structs, services):
+        def __init__(self, structs, services, enums):
             self.structs = structs
             self.services = services
+            self.enums = enums
 
         def __eq__(self, other):
             return type(other) is type(self) and self.__dict__ == other.__dict__
@@ -19,14 +20,17 @@ class ThriftParser(object):
         def __str__(self):
             return str({
                 'structs': {name: str(struct) for name, struct in self.structs.items()},
-                'services': {name: str(service) for name, service in self.services.items()}
+                'services': {name: str(service) for name, service in self.services.items()},
+                'enums': enums
             })
 
     def __init__(self):
         self._thrift_path = None
         self._thrift_content = None
+        self._result = None
         self.structs_regex = re.compile(r'^([\r\t ]*?struct (\w+)[^}]+})', flags=re.MULTILINE)
         self.services_regex = re.compile(r'^([\r\t ]*?service (\w+)[^}]+})', flags=re.MULTILINE)
+        self.enums_regex = re.compile(r'^[\r\t ]*?enum (\w+)[^}]+}', flags=re.MULTILINE)
         self.endpoints_regex = re.compile(r'^[\r\t ]*(oneway)?\s*(\w+)\s*(\w+)\(([a-zA-Z0-9: ,]*)\)',
                                           flags=re.MULTILINE)
         self.fields_regex = re.compile(
@@ -35,7 +39,8 @@ class ThriftParser(object):
     def parse(self, thrift_path):
         self._thrift_path = thrift_path
         self._thrift_content = self._load_file(thrift_path)
-        return ThriftParser.Result(self._parse_structs(), self._parse_services())
+        self._result = ThriftParser.Result(self._parse_structs(), self._parse_services(), self._parse_enums())
+        return self._result
 
     def _load_file(self, path):
         with open(path, 'r') as file:
@@ -90,9 +95,26 @@ class ThriftParser(object):
         fields = [self._construct_field_from_field_match(field_match) for field_match in field_matches]
         return fields
 
+    def _parse_enums(self):
+        enums_list = self.enums_regex.findall(self._thrift_content)
+        enums = set(enums_list)
+        return enums
+
     @staticmethod
     def _construct_field_from_field_match(field_match):
         (index, oneway, return_type, name, default) = field_match
         oneway = oneway == 'oneway'
         default = default if len(default) else None
         return ThriftStruct.Field(index, return_type, name, oneway=oneway, default=default)
+
+    def get_fields_for_endpoint(self, service_name, method_name):
+        return self._result.services[service_name].endpoints[method_name].fields
+
+    def get_fields_for_struct_name(self, struct_name):
+        return self._result.structs[struct_name].fields
+
+    def has_struct(self, struct_name):
+        return struct_name in self._result.structs
+
+    def has_enum(self, enum_name):
+        return enum_name in self._result.enums
