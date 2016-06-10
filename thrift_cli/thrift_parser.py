@@ -31,10 +31,10 @@ class ThriftParser(object):
         self.structs_regex = re.compile(r'^([\r\t ]*?struct (\w+)[^}]+})', flags=re.MULTILINE)
         self.services_regex = re.compile(r'^([\r\t ]*?service (\w+)[^}]+})', flags=re.MULTILINE)
         self.enums_regex = re.compile(r'^[\r\t ]*?enum (\w+)[^}]+}', flags=re.MULTILINE)
-        self.endpoints_regex = re.compile(r'^[\r\t ]*(oneway)?\s*(\w+)\s*(\w+)\(([a-zA-Z0-9: ,]*)\)',
+        self.endpoints_regex = re.compile(r'^[\r\t ]*(oneway)?\s*([^\n]*)\s+(\w+)\(([a-zA-Z0-9: ,<>]*)\)',
                                           flags=re.MULTILINE)
         self.fields_regex = re.compile(
-            r'^[\r\t ]*([\d+]):\s*(optional|required)?\s*(\w+)?\s*(\w+)(?:\s*=\s*([^,\s]+))?', flags=re.MULTILINE)
+            r'^[\r\t ]*([\d+]):\s*(optional|required)?\s*([^\n=]+)?\s+(\w+)(?:\s*=\s*([^,\s]+))?[,|\n]', flags=re.MULTILINE)
 
     def parse(self, thrift_path):
         self._thrift_path = thrift_path

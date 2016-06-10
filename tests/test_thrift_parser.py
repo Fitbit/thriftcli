@@ -47,7 +47,8 @@ class TestThriftParser(unittest.TestCase):
         tparser._thrift_content = data.TEST_THRIFT_CONTENT
         expected_struct_definitions = {
             data.TEST_THRIFT_STRUCT_NAME: data.TEST_THRIFT_STRUCT_DEFINITION,
-            data.TEST_THRIFT_STRUCT_NAME2: data.TEST_THRIFT_STRUCT_DEFINITION2
+            data.TEST_THRIFT_STRUCT_NAME2: data.TEST_THRIFT_STRUCT_DEFINITION2,
+            data.TEST_THRIFT_STRUCT_NAME3: data.TEST_THRIFT_STRUCT_DEFINITION3
         }
         struct_definitions = tparser._parse_struct_definitions()
         self.assertEqual(struct_definitions, expected_struct_definitions)
@@ -57,7 +58,8 @@ class TestThriftParser(unittest.TestCase):
         tparser._thrift_content = data.TEST_THRIFT_CONTENT
         expected_service_definitions = {
             data.TEST_THRIFT_SERVICE_NAME: data.TEST_THRIFT_SERVICE_DEFINITION,
-            data.TEST_THRIFT_SERVICE_NAME2: data.TEST_THRIFT_SERVICE_DEFINITION2
+            data.TEST_THRIFT_SERVICE_NAME2: data.TEST_THRIFT_SERVICE_DEFINITION2,
+            data.TEST_THRIFT_SERVICE_NAME3: data.TEST_THRIFT_SERVICE_DEFINITION3
         }
         service_definitions = tparser._parse_service_definitions()
         self.assertEqual(service_definitions, expected_service_definitions)
