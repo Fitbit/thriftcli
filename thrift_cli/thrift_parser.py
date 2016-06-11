@@ -89,11 +89,29 @@ class ThriftParser(object):
         return endpoints
 
     def _parse_fields_from_fields_string(self, fields_string):
-        field_strings = [field_string.strip() for field_string in fields_string.split(',')]
-        field_matches = [self.fields_regex.findall(field_string) for field_string in field_strings]
+        field_strings = self._split_fields_string(fields_string)
+        field_matches = [self.fields_regex.findall(field_string+'\n') for field_string in field_strings]
         field_matches = [field_match[0] for field_match in field_matches if len(field_match)]
         fields = [self._construct_field_from_field_match(field_match) for field_match in field_matches]
         return fields
+
+    @staticmethod
+    def _split_fields_string(fields_string):
+        field_strings = []
+        bracket_depth = 0
+        last_index = 0
+        for i, char in enumerate(fields_string):
+            if char == '<':
+                bracket_depth += 1
+            elif char == '>':
+                bracket_depth -= 1
+            elif char == ',' and bracket_depth == 0:
+                field_string = fields_string[last_index:i]
+                field_strings.append(field_string)
+                last_index = i + 1
+        field_string = fields_string[last_index:]
+        field_strings.append(field_string)
+        return field_strings
 
     def _parse_enums(self):
         enums_list = self.enums_regex.findall(self._thrift_content)

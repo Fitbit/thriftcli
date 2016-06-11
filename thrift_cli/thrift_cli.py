@@ -2,6 +2,7 @@ import shutil
 import subprocess
 import sys
 import urlparse
+import json
 
 from .thrift_parser import ThriftParser
 
@@ -111,35 +112,74 @@ class ThriftCLI(object):
         return self._convert_json_to_args_given_fields(fields, data)
 
     def _convert_json_to_args_given_fields(self, fields, data):
-        args = {field_name: self._convert_json_entry_to_arg(fields[field_name], value)
+        args = {field_name: self._convert_json_entry_to_arg(fields[field_name].field_type, value)
                 for field_name, value in data.items()}
         return args
 
-    def _convert_json_entry_to_arg(self, field, value):
-        if isinstance(value, dict):
-            fields = self._thrift_parser.get_fields_for_struct_name(field.field_type)
+    def _convert_json_entry_to_arg(self, field_type, value):
+        if self._thrift_parser.has_struct(field_type):
+            fields = self._thrift_parser.get_fields_for_struct_name(field_type)
             value = self._convert_json_to_args_given_fields(fields, value)
-        arg = self._construct_arg(field, value)
+        arg = self._construct_arg(field_type, value)
         return arg
 
-    def _construct_arg(self, field, value):
-        if self._thrift_parser.has_struct(field.field_type):
-            return self._construct_struct_arg(field, value)
-        elif self._thrift_parser.has_enum(field.field_type):
-            return self._construct_enum_arg(field, value)
+    def _construct_arg(self, field_type, value):
+        if self._thrift_parser.has_struct(field_type):
+            return self._construct_struct_arg(field_type, value)
+        elif self._thrift_parser.has_enum(field_type):
+            return self._construct_enum_arg(field_type, value)
+        elif field_type.startswith('list<'):
+            return self._construct_list_arg(field_type, value)
+        elif field_type.startswith('set<'):
+            return self._construct_set_arg(field_type, value)
+        elif field_type.startswith('map<'):
+            return self._construct_map_arg(field_type, value)
         return value
 
-    def _construct_struct_arg(self, field, value):
-        return getattr(self._get_service_module('ttypes'), field.field_type)(**value)
+    def _construct_struct_arg(self, field_type, value):
+        return getattr(self._get_service_module('ttypes'), field_type)(**value)
 
-    def _construct_enum_arg(self, field, value):
-        enum_class = getattr(self._get_service_module('ttypes'), field.field_type)
+    def _construct_enum_arg(self, field_type, value):
+        enum_class = getattr(self._get_service_module('ttypes'), field_type)
         if isinstance(value, (int, long)):
             return value
         elif isinstance(value, basestring):
             return enum_class._NAMES_TO_VALUES[value]
-        raise TypeError('Invalid value provided for enum %s: %s' % (field.field_type. str(value)))
+        raise ThriftCLIException('Invalid value provided for enum %s: %s' % (field_type.str(value)))
 
+    def _construct_list_arg(self, field_type, value):
+        elem_type = field_type[field_type.index('<') + 1:field_type.rindex('>')]
+        return tuple([self._convert_json_entry_to_arg(elem_type, elem) for elem in value])
+
+    def _construct_set_arg(self, field_type, value):
+        elem_type = field_type[field_type.index('<') + 1:field_type.rindex('>')]
+        return frozenset([self._convert_json_entry_to_arg(elem_type, elem) for elem in value])
+
+    def _construct_map_arg(self, field_type, value):
+        types_string = field_type[field_type.index('<') + 1:field_type.rindex('>')]
+        split_index = self._calc_map_types_split_index(types_string)
+        if split_index == -1:
+            raise ThriftCLIException('Invalid type formatting for map - \'%s\'' % types_string)
+        key_type = types_string[:split_index].strip()
+        elem_type = types_string[split_index + 1:].strip()
+        if self._thrift_parser.has_struct(key_type):
+            return {self._convert_json_entry_to_arg(key_type, json.loads(key)):
+                        self._convert_json_entry_to_arg(elem_type, elem) for key, elem in value.items()}
+        else:
+            return {self._convert_json_entry_to_arg(key_type, key): self._convert_json_entry_to_arg(elem_type, elem)
+                    for key, elem in value.items()}
+
+    @staticmethod
+    def _calc_map_types_split_index(types_string):
+        bracket_depth = 0
+        for i, char in enumerate(types_string):
+            if char == '<':
+                bracket_depth += 1
+            elif char == '>':
+                bracket_depth -= 1
+            elif char == ',' and bracket_depth == 0:
+                return i
+        return -1
 
 
 class ThriftCLIException(Exception):
