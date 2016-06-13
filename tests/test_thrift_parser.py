@@ -7,6 +7,7 @@ from thriftcli import ThriftParser
 
 
 class TestThriftParser(unittest.TestCase):
+
     @mock.patch('thriftcli.ThriftParser._load_file')
     def test_parse(self, mock_load_file):
         mock_load_file.return_value = data.TEST_THRIFT_CONTENT
@@ -20,14 +21,15 @@ class TestThriftParser(unittest.TestCase):
         tparser._thrift_content = data.TEST_THRIFT_CONTENT
         expected_structs = data.TEST_THRIFT_STRUCTS
         structs = tparser._parse_structs()
-        self.assertEqual(structs, expected_structs)
+        self.maxDiff = None
+        self.assertDictEqual(structs, expected_structs)
 
     def test_parse_services(self):
         tparser = ThriftParser()
         tparser._thrift_content = data.TEST_THRIFT_CONTENT
         expected_services = data.TEST_THRIFT_SERVICES
         services = tparser._parse_services()
-        self.assertEqual(services, expected_services)
+        self.assertDictEqual(services, expected_services)
 
     def test_parse_enums(self):
         tparser = ThriftParser()

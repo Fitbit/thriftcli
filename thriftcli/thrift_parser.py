@@ -122,10 +122,11 @@ class ThriftParser(object):
 
     @staticmethod
     def _construct_field_from_field_match(field_match):
-        (index, oneway, return_type, name, default) = field_match
-        oneway = oneway == 'oneway'
+        (index, modifier, field_type, name, default) = field_match
+        required = True if modifier == 'required' else None
+        optional = True if modifier == 'optional' else None
         default = default if len(default) else None
-        return ThriftStruct.Field(index, return_type, name, oneway=oneway, default=default)
+        return ThriftStruct.Field(index, field_type, name, required=required, optional=optional, default=default)
 
     def get_fields_for_endpoint(self, service_name, method_name):
         return self._result.services[service_name].endpoints[method_name].fields

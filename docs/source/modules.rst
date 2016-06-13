@@ -1,7 +1,7 @@
-thrift_cli
-==========
+thriftcli
+=========
 
 .. toctree::
    :maxdepth: 4
 
-   thrift_cli
+   thriftcli

@@ -11,14 +11,14 @@ TEST_THRIFT_STRUCT_NAME2 = 'SomeStruct2'
 TEST_THRIFT_STRUCT_NAME3 = 'SomeStruct3'
 TEST_THRIFT_STRUCT_FIELDS = {
     'thing_one': ThriftStruct.Field(1, 'string', 'thing_one'),
-    'thing_two': ThriftStruct.Field(2, 'double', 'thing_two', default=2.0),
-    'thing_three': ThriftStruct.Field(3, 'bool', 'thing_three', default=False)
+    'thing_two': ThriftStruct.Field(2, 'double', 'thing_two', default='2.0'),
+    'thing_three': ThriftStruct.Field(3, 'bool', 'thing_three', default='False')
 }
 TEST_THRIFT_STRUCT_FIELDS2 = {
     'thing_one': ThriftStruct.Field(1, 'i8', 'thing_one', required=True),
     'thing_two': ThriftStruct.Field(2, 'i16', 'thing_two', required=False),
     'thing_three': ThriftStruct.Field(3, 'i32', 'thing_three', optional=True),
-    'thing_four': ThriftStruct.Field(4, 'i64', 'thing_four', optional=False, default=0),
+    'thing_four': ThriftStruct.Field(4, 'i64', 'thing_four', optional=False, default='0'),
     'thing_five': ThriftStruct.Field(5, 'binary', 'thing_five', required=True, optional=False),
     'thing_six': ThriftStruct.Field(6, 'byte', 'thing_six', required=False, optional=True)
 }

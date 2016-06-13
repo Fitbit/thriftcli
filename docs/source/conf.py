@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 #
 # Thrift CLI documentation build configuration file, created by
-# sphinx-quickstart on Mon Jun 13 12:11:10 2016.
+# sphinx-quickstart on Mon Jun 13 14:55:42 2016.
 #
 # This file is execfile()d with the current directory set to its
 # containing dir.

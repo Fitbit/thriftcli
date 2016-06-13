@@ -18,6 +18,6 @@ class TestThriftStruct(unittest.TestCase):
         self.assertTrue(field5.required and not field5.optional)
         self.assertTrue(not field6.required and field6.optional)
         with self.assertRaises(ThriftCLIException):
-            field7 = ThriftStruct.Field(7, 'void', 'someField5', required=True, optional=True)
+            ThriftStruct.Field(7, 'void', 'someField5', required=True, optional=True)
         with self.assertRaises(ThriftCLIException):
-            field8 = ThriftStruct.Field(8, 'void', 'someField6', required=False, optional=False)
+            ThriftStruct.Field(8, 'void', 'someField6', required=False, optional=False)
