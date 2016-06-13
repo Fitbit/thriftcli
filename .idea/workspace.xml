@@ -2,21 +2,7 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="a32c4f4a-9c06-4591-813e-9b1636fc0749" name="Default" comment="">
-      <change type="MOVED" beforePath="$PROJECT_DIR$/thrift_cli.iml" afterPath="$PROJECT_DIR$/thriftcli.iml" />
-      <change type="MOVED" beforePath="$PROJECT_DIR$/thrift_cli/__init__.py" afterPath="$PROJECT_DIR$/thriftcli/__init__.py" />
-      <change type="MOVED" beforePath="$PROJECT_DIR$/thrift_cli/thrift_cli.py" afterPath="$PROJECT_DIR$/thriftcli/thrift_cli.py" />
-      <change type="MOVED" beforePath="$PROJECT_DIR$/thrift_cli/thrift_parser.py" afterPath="$PROJECT_DIR$/thriftcli/thrift_parser.py" />
-      <change type="MOVED" beforePath="$PROJECT_DIR$/thrift_cli/thrift_service.py" afterPath="$PROJECT_DIR$/thriftcli/thrift_service.py" />
-      <change type="MOVED" beforePath="$PROJECT_DIR$/thrift_cli/thrift_struct.py" afterPath="$PROJECT_DIR$/thriftcli/thrift_struct.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/dictionaries/nvirdy.xml" afterPath="$PROJECT_DIR$/.idea/dictionaries/nvirdy.xml" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/modules.xml" afterPath="$PROJECT_DIR$/.idea/modules.xml" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/bin/run.py" afterPath="$PROJECT_DIR$/bin/run.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/setup.py" afterPath="$PROJECT_DIR$/setup.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/tests/data/constants.py" afterPath="$PROJECT_DIR$/tests/data/constants.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/tests/test_thrift_cli.py" afterPath="$PROJECT_DIR$/tests/test_thrift_cli.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/tests/test_thrift_parser.py" afterPath="$PROJECT_DIR$/tests/test_thrift_parser.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/tests/test_thrift_struct.py" afterPath="$PROJECT_DIR$/tests/test_thrift_struct.py" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/README.md" afterPath="$PROJECT_DIR$/README.md" />
     </list>
     <ignored path="thrift_cli.iws" />
     <ignored path=".idea/workspace.xml" />
@@ -71,7 +57,7 @@
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="test_thrift_cli.py" pinned="false" current-in-tab="true">
+      <file leaf-file-name="test_thrift_cli.py" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/tests/test_thrift_cli.py">
           <provider selected="true" editor-type-id="text-editor">
             <state relative-caret-position="223">
@@ -79,6 +65,16 @@
               <folding>
                 <element signature="e#0#15#0" expanded="true" />
               </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="README.md" pinned="false" current-in-tab="true">
+        <entry file="file://$PROJECT_DIR$/README.md">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="165">
+              <caret line="11" column="4" selection-start-line="11" selection-start-column="4" selection-end-line="11" selection-end-column="4" />
+              <folding />
             </state>
           </provider>
         </entry>
@@ -143,9 +139,9 @@
         <option value="$PROJECT_DIR$/tests/data/constants.py" />
         <option value="$PROJECT_DIR$/thrift_cli/thrift_cli.py" />
         <option value="$PROJECT_DIR$/thrift_cli/thrift_parser.py" />
-        <option value="$PROJECT_DIR$/README.md" />
         <option value="$PROJECT_DIR$/tests/test_thrift_parser.py" />
         <option value="$PROJECT_DIR$/tests/test_thrift_cli.py" />
+        <option value="$PROJECT_DIR$/README.md" />
       </list>
     </option>
   </component>
@@ -951,7 +947,7 @@
       <workItem from="1465618006409" duration="2964000" />
       <workItem from="1465841400436" duration="3008000" />
       <workItem from="1465850514705" duration="74000" />
-      <workItem from="1465850677117" duration="102000" />
+      <workItem from="1465850677117" duration="321000" />
     </task>
     <servers />
   </component>
@@ -988,7 +984,7 @@
     </history-entry>
   </component>
   <component name="TimeTrackingManager">
-    <option name="totallyTimeSpent" value="28788000" />
+    <option name="totallyTimeSpent" value="29007000" />
   </component>
   <component name="ToolWindowManager">
     <frame x="1280" y="-929" width="2560" height="1417" extended-state="6" />
@@ -1161,6 +1157,7 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="0">
           <caret line="0" column="0" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
+          <folding />
         </state>
       </provider>
     </entry>
@@ -1394,13 +1391,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/README.md">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="60">
-          <caret line="4" column="28" selection-start-line="4" selection-start-column="28" selection-end-line="4" selection-end-column="28" />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/thriftcli.iml">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="75">
@@ -1444,6 +1434,14 @@
           <folding>
             <element signature="e#0#15#0" expanded="true" />
           </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/README.md">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="165">
+          <caret line="11" column="4" selection-start-line="11" selection-start-column="4" selection-end-line="11" selection-end-column="4" />
+          <folding />
         </state>
       </provider>
     </entry>
