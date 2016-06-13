@@ -16,7 +16,7 @@ This example assumes that:
 
 - '.\./my_project/something.thrift' declares a service called 'MyService'
 - 'MyService' declares an endpoint called 'doSomething'
-- 'request_body.json' provides the arguments to 'doSomething' as JSON, in the format _<field_name>: <value>_
+- 'request_body.json' provides the arguments to 'doSomething' as JSON, in the format 'field_name: value'
 
 Note: The JSON file is not needed for endpoints that take no arguments, and is ignored.
 
