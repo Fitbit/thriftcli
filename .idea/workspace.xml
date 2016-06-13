@@ -3,9 +3,12 @@
   <component name="ChangeListManager">
     <list default="true" id="a32c4f4a-9c06-4591-813e-9b1636fc0749" name="Default" comment="">
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/tests/data/constants.py" afterPath="$PROJECT_DIR$/tests/data/constants.py" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/tests/test_thrift_cli.py" afterPath="$PROJECT_DIR$/tests/test_thrift_cli.py" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/tests/test_thrift_parser.py" afterPath="$PROJECT_DIR$/tests/test_thrift_parser.py" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/thrift_cli/thrift_cli.py" afterPath="$PROJECT_DIR$/thrift_cli/thrift_cli.py" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/thrift_cli/thrift_parser.py" afterPath="$PROJECT_DIR$/thrift_cli/thrift_parser.py" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/thrift_cli/thrift_struct.py" afterPath="$PROJECT_DIR$/thrift_cli/thrift_struct.py" />
     </list>
     <ignored path="thrift_cli.iws" />
     <ignored path=".idea/workspace.xml" />
@@ -22,10 +25,10 @@
   <component name="CoverageDataManager">
     <SUITE FILE_PATH="coverage/thrift_cli$Unittests_in_setup.coverage" NAME="Unittests in setup Coverage Results" MODIFIED="1465506994978" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
     <SUITE FILE_PATH="coverage/thrift_cli$thrift_cli.coverage" NAME="thrift_cli Coverage Results" MODIFIED="1465513454888" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/thrift_cli" />
-    <SUITE FILE_PATH="coverage/thrift_cli$Unittests_in_tests.coverage" NAME="Unittests in tests Coverage Results" MODIFIED="1465603612383" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/tests" />
+    <SUITE FILE_PATH="coverage/thrift_cli$Unittests_in_tests.coverage" NAME="Unittests in tests Coverage Results" MODIFIED="1465844318662" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/tests" />
     <SUITE FILE_PATH="coverage/thrift_cli$Unittest_TestThriftParser_test_split_endpoint.coverage" NAME="Unittest TestThriftParser.test_split_endpoint Coverage Results" MODIFIED="1465513180953" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/tests" />
     <SUITE FILE_PATH="coverage/thrift_cli$run.coverage" NAME="run Coverage Results" MODIFIED="1465514507078" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/bin" />
-    <SUITE FILE_PATH="coverage/thrift_cli$setup.coverage" NAME="setup Coverage Results" MODIFIED="1465603612083" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
+    <SUITE FILE_PATH="coverage/thrift_cli$setup.coverage" NAME="setup Coverage Results" MODIFIED="1465844318368" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
   </component>
   <component name="CreatePatchCommitExecutor">
     <option name="PATCH_PATH" value="" />
@@ -46,11 +49,11 @@
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="thrift_cli.py" pinned="false" current-in-tab="true">
+      <file leaf-file-name="thrift_cli.py" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/thrift_cli/thrift_cli.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="325">
-              <caret line="154" column="34" selection-start-line="154" selection-start-column="34" selection-end-line="154" selection-end-column="34" />
+            <state relative-caret-position="473">
+              <caret line="159" column="28" selection-start-line="159" selection-start-column="28" selection-end-line="159" selection-end-column="28" />
               <folding>
                 <element signature="e#0#13#0" expanded="true" />
               </folding>
@@ -58,13 +61,13 @@
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="thrift_parser.py" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/thrift_cli/thrift_parser.py">
+      <file leaf-file-name="test_thrift_cli.py" pinned="false" current-in-tab="true">
+        <entry file="file://$PROJECT_DIR$/tests/test_thrift_cli.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="666">
-              <caret line="130" column="34" selection-start-line="130" selection-start-column="8" selection-end-line="130" selection-end-column="34" />
+            <state relative-caret-position="503">
+              <caret line="75" column="27" selection-start-line="75" selection-start-column="27" selection-end-line="75" selection-end-column="27" />
               <folding>
-                <element signature="e#0#9#0" expanded="true" />
+                <element signature="e#0#15#0" expanded="true" />
               </folding>
             </state>
           </provider>
@@ -94,12 +97,12 @@
         <option value="/usr/local/lib/python2.7/site-packages/thrift_cli-0.1-py2.7.egg!/thrift_cli/thrift_cli.py" />
         <option value="$PROJECT_DIR$/bin/run" />
         <option value="$PROJECT_DIR$/bin/run.py" />
-        <option value="$PROJECT_DIR$/thrift_cli/thrift_struct.py" />
-        <option value="$PROJECT_DIR$/tests/test_thrift_cli.py" />
-        <option value="$PROJECT_DIR$/tests/data/constants.py" />
         <option value="$PROJECT_DIR$/tests/test_thrift_parser.py" />
         <option value="$PROJECT_DIR$/thrift_cli/thrift_parser.py" />
+        <option value="$PROJECT_DIR$/thrift_cli/thrift_struct.py" />
         <option value="$PROJECT_DIR$/thrift_cli/thrift_cli.py" />
+        <option value="$PROJECT_DIR$/tests/data/constants.py" />
+        <option value="$PROJECT_DIR$/tests/test_thrift_cli.py" />
       </list>
     </option>
   </component>
@@ -141,6 +144,7 @@
     </navigator>
     <panes>
       <pane id="Scratches" />
+      <pane id="Scope" />
       <pane id="ProjectPane">
         <subPane>
           <PATH>
@@ -221,7 +225,6 @@
           </PATH>
         </subPane>
       </pane>
-      <pane id="Scope" />
       <pane id="PackagesPane" />
     </panes>
   </component>
@@ -960,44 +963,46 @@
       <updated>1465505900346</updated>
       <workItem from="1465505902869" duration="954000" />
       <workItem from="1465506902645" duration="10329000" />
-      <workItem from="1465581513584" duration="10124000" />
+      <workItem from="1465581513584" duration="11357000" />
+      <workItem from="1465618006409" duration="2964000" />
+      <workItem from="1465841400436" duration="1067000" />
     </task>
     <servers />
   </component>
   <component name="TestHistory">
-    <history-entry file="Unittests_in_tests - 2016.06.10 at 13h 46m 06s.xml">
+    <history-entry file="Unittests_in_tests - 2016.06.13 at 11h 21m 44s.xml">
       <configuration name="Unittests in tests" configurationId="tests" />
     </history-entry>
-    <history-entry file="Unittests_in_tests - 2016.06.10 at 13h 48m 55s.xml">
+    <history-entry file="Unittests_in_tests - 2016.06.13 at 11h 24m 01s.xml">
       <configuration name="Unittests in tests" configurationId="tests" />
     </history-entry>
-    <history-entry file="Unittests_in_tests - 2016.06.10 at 13h 49m 03s.xml">
+    <history-entry file="Unittests_in_tests - 2016.06.13 at 11h 24m 15s.xml">
       <configuration name="Unittests in tests" configurationId="tests" />
     </history-entry>
-    <history-entry file="Unittests_in_tests - 2016.06.10 at 15h 42m 01s.xml">
+    <history-entry file="Unittests_in_tests - 2016.06.13 at 11h 24m 52s.xml">
       <configuration name="Unittests in tests" configurationId="tests" />
     </history-entry>
-    <history-entry file="Unittests_in_tests - 2016.06.10 at 16h 00m 40s.xml">
+    <history-entry file="Unittests_in_tests - 2016.06.13 at 11h 25m 46s.xml">
       <configuration name="Unittests in tests" configurationId="tests" />
     </history-entry>
-    <history-entry file="Unittests_in_tests - 2016.06.10 at 16h 26m 33s.xml">
+    <history-entry file="Unittests_in_tests - 2016.06.13 at 11h 26m 02s.xml">
       <configuration name="Unittests in tests" configurationId="tests" />
     </history-entry>
-    <history-entry file="Unittests_in_tests - 2016.06.10 at 16h 34m 29s.xml">
+    <history-entry file="Unittests_in_tests - 2016.06.13 at 11h 56m 12s.xml">
       <configuration name="Unittests in tests" configurationId="tests" />
     </history-entry>
-    <history-entry file="Unittests_in_tests - 2016.06.10 at 16h 35m 08s.xml">
+    <history-entry file="Unittests_in_tests - 2016.06.13 at 11h 57m 08s.xml">
       <configuration name="Unittests in tests" configurationId="tests" />
     </history-entry>
-    <history-entry file="Unittests_in_tests - 2016.06.10 at 16h 37m 22s.xml">
+    <history-entry file="Unittests_in_tests - 2016.06.13 at 11h 57m 23s.xml">
       <configuration name="Unittests in tests" configurationId="tests" />
     </history-entry>
-    <history-entry file="Unittests_in_tests - 2016.06.10 at 17h 06m 52s.xml">
+    <history-entry file="Unittests_in_tests - 2016.06.13 at 11h 58m 38s.xml">
       <configuration name="Unittests in tests" configurationId="tests" />
     </history-entry>
   </component>
   <component name="TimeTrackingManager">
-    <option name="totallyTimeSpent" value="21407000" />
+    <option name="totallyTimeSpent" value="26671000" />
   </component>
   <component name="ToolWindowManager">
     <frame x="1280" y="-929" width="2560" height="1417" extended-state="6" />
@@ -1010,12 +1015,12 @@
       <window_info id="Event Log" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="7" side_tool="true" content_ui="tabs" />
       <window_info id="Maven Projects" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
       <window_info id="Version Control" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
-      <window_info id="Run" active="true" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.32937685" sideWeight="0.5" order="2" side_tool="false" content_ui="tabs" />
+      <window_info id="Run" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.32789317" sideWeight="0.5" order="2" side_tool="false" content_ui="tabs" />
       <window_info id="CheckStyle" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
       <window_info id="Terminal" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
       <window_info id="Capture Tool" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="2" side_tool="false" content_ui="tabs" />
       <window_info id="Designer" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
-      <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.25" sideWeight="0.5" order="0" side_tool="false" content_ui="combo" />
+      <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.125" sideWeight="0.5" order="0" side_tool="false" content_ui="combo" />
       <window_info id="Database" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
       <window_info id="Structure" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.25" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
       <window_info id="Ant Build" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.25" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
@@ -1054,6 +1059,70 @@
     <option name="FILTER_TARGETS" value="false" />
   </component>
   <component name="editorHistoryManager">
+    <entry file="file://$PROJECT_DIR$/bin/run.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="285">
+          <caret line="22" column="11" selection-start-line="22" selection-start-column="11" selection-end-line="22" selection-end-column="11" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/thrift_cli/thrift_cli.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="1065">
+          <caret line="81" column="38" selection-start-line="81" selection-start-column="38" selection-end-line="81" selection-end-column="38" />
+          <folding>
+            <element signature="e#0#13#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/tests/test_thrift_cli.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="0">
+          <caret line="0" column="0" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
+          <folding>
+            <element signature="e#0#15#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/tests/test_thrift_parser.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="885">
+          <caret line="64" column="46" selection-start-line="64" selection-start-column="46" selection-end-line="64" selection-end-column="46" />
+          <folding>
+            <element signature="e#0#15#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/tests/data/constants.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="1680">
+          <caret line="112" column="63" selection-start-line="112" selection-start-column="37" selection-end-line="112" selection-end-column="63" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/bin/run.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="285">
+          <caret line="22" column="11" selection-start-line="22" selection-start-column="11" selection-end-line="22" selection-end-column="11" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/thrift_cli/thrift_cli.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="0">
+          <caret line="0" column="0" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
+          <folding>
+            <element signature="e#0#13#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
     <entry file="file://$PROJECT_DIR$/bin/run.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="285">
@@ -1142,7 +1211,6 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="555">
           <caret line="59" column="0" selection-start-line="59" selection-start-column="0" selection-end-line="59" selection-end-column="0" />
-          <folding />
         </state>
       </provider>
     </entry>
@@ -1163,34 +1231,10 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/thrift_cli/thrift_service.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="420">
-          <caret line="28" column="29" selection-start-line="28" selection-start-column="29" selection-end-line="28" selection-end-column="29" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/.gitignore">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="0">
           <caret line="0" column="0" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/thrift_cli/thrift_struct.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="30">
-          <caret line="2" column="0" selection-start-line="2" selection-start-column="0" selection-end-line="2" selection-end-column="0" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/tests/data/constants.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="685">
-          <caret line="109" column="32" selection-start-line="109" selection-start-column="32" selection-end-line="109" selection-end-column="32" />
-          <folding />
         </state>
       </provider>
     </entry>
@@ -1202,42 +1246,66 @@
         </state>
       </provider>
     </entry>
+    <entry file="file://$PROJECT_DIR$/tests/data/constants.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="60">
+          <caret line="4" column="20" selection-start-line="4" selection-start-column="20" selection-end-line="4" selection-end-column="20" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
     <entry file="file://$PROJECT_DIR$/tests/test_thrift_parser.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="786">
-          <caret line="64" column="75" selection-start-line="64" selection-start-column="75" selection-end-line="64" selection-end-column="75" />
+        <state relative-caret-position="795">
+          <caret line="53" column="71" selection-start-line="53" selection-start-column="71" selection-end-line="53" selection-end-column="71" />
           <folding>
             <element signature="e#0#15#0" expanded="true" />
           </folding>
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/tests/test_thrift_cli.py">
+    <entry file="file://$PROJECT_DIR$/thrift_cli/thrift_struct.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="531">
-          <caret line="59" column="44" selection-start-line="59" selection-start-column="44" selection-end-line="59" selection-end-column="44" />
-          <folding>
-            <element signature="e#0#15#0" expanded="true" />
-          </folding>
+        <state relative-caret-position="735">
+          <caret line="49" column="78" selection-start-line="49" selection-start-column="78" selection-end-line="49" selection-end-column="78" />
+          <folding />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/thrift_cli/thrift_parser.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="666">
-          <caret line="130" column="34" selection-start-line="130" selection-start-column="8" selection-end-line="130" selection-end-column="34" />
+        <state relative-caret-position="582">
+          <caret line="47" column="33" selection-start-line="47" selection-start-column="33" selection-end-line="47" selection-end-column="33" />
           <folding>
             <element signature="e#0#9#0" expanded="true" />
           </folding>
         </state>
       </provider>
     </entry>
+    <entry file="file://$PROJECT_DIR$/thrift_cli/thrift_service.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="60">
+          <caret line="4" column="36" selection-start-line="4" selection-start-column="36" selection-end-line="4" selection-end-column="36" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
     <entry file="file://$PROJECT_DIR$/thrift_cli/thrift_cli.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="325">
-          <caret line="154" column="34" selection-start-line="154" selection-start-column="34" selection-end-line="154" selection-end-column="34" />
+        <state relative-caret-position="473">
+          <caret line="159" column="28" selection-start-line="159" selection-start-column="28" selection-end-line="159" selection-end-column="28" />
           <folding>
             <element signature="e#0#13#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/tests/test_thrift_cli.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="503">
+          <caret line="75" column="27" selection-start-line="75" selection-start-column="27" selection-end-line="75" selection-end-column="27" />
+          <folding>
+            <element signature="e#0#15#0" expanded="true" />
           </folding>
         </state>
       </provider>

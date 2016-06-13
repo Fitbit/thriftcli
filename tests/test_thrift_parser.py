@@ -63,3 +63,14 @@ class TestThriftParser(unittest.TestCase):
         }
         service_definitions = tparser._parse_service_definitions()
         self.assertEqual(service_definitions, expected_service_definitions)
+
+    def test_split_fields_string(self):
+        tparser = ThriftParser()
+        fields_string = '1:i32 num1, 2:i32 num2, 3:Operation op'
+        expected_field_strings = ['1:i32 num1', '2:i32 num2', '3:Operation op']
+        field_strings = tparser._split_fields_string(fields_string)
+        self.assertEqual(field_strings, expected_field_strings)
+        fields_string = '1:map<string, string> stringMap, 2:set<list<SomeStruct>> setOfLists'
+        expected_field_strings = ['1:map<string, string> stringMap', '2:set<list<SomeStruct>> setOfLists']
+        field_strings = tparser._split_fields_string(fields_string)
+        self.assertEqual(field_strings, expected_field_strings)

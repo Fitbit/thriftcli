@@ -24,7 +24,7 @@ class ThriftStruct(object):
 
         def __str__(self):
             modifier_str = ('%s ' % self.modifier) if self.modifier else ''
-            default_str = (' = %s' % str(self.default)) if self.default != None else ''
+            default_str = (' = %s' % str(self.default)) if self.default is not None else ''
             str_params = (self.index, modifier_str, self.field_type, self.name, default_str)
             return '%s:%s%s %s%s' % str_params
 

@@ -21,7 +21,7 @@ class ThriftParser(object):
             return str({
                 'structs': {name: str(struct) for name, struct in self.structs.items()},
                 'services': {name: str(service) for name, service in self.services.items()},
-                'enums': enums
+                'enums': self.enums
             })
 
     def __init__(self):
@@ -34,7 +34,8 @@ class ThriftParser(object):
         self.endpoints_regex = re.compile(r'^[\r\t ]*(oneway)?\s*([^\n]*)\s+(\w+)\(([a-zA-Z0-9: ,<>]*)\)',
                                           flags=re.MULTILINE)
         self.fields_regex = re.compile(
-            r'^[\r\t ]*([\d+]):\s*(optional|required)?\s*([^\n=]+)?\s+(\w+)(?:\s*=\s*([^,\s]+))?[,|\n]', flags=re.MULTILINE)
+            r'^[\r\t ]*([\d+]):\s*(optional|required)?\s*([^\n=]+)?\s+(\w+)(?:\s*=\s*([^,\s]+))?[,|\n]',
+            flags=re.MULTILINE)
 
     def parse(self, thrift_path):
         self._thrift_path = thrift_path
@@ -42,7 +43,8 @@ class ThriftParser(object):
         self._result = ThriftParser.Result(self._parse_structs(), self._parse_services(), self._parse_enums())
         return self._result
 
-    def _load_file(self, path):
+    @staticmethod
+    def _load_file(path):
         with open(path, 'r') as file:
             return file.read()
 
@@ -106,10 +108,10 @@ class ThriftParser(object):
             elif char == '>':
                 bracket_depth -= 1
             elif char == ',' and bracket_depth == 0:
-                field_string = fields_string[last_index:i]
+                field_string = fields_string[last_index:i].strip()
                 field_strings.append(field_string)
                 last_index = i + 1
-        field_string = fields_string[last_index:]
+        field_string = fields_string[last_index:].strip()
         field_strings.append(field_string)
         return field_strings
 

@@ -24,7 +24,7 @@ class ThriftCLI(object):
         self._server_address = server_address
         self._thrift_parser.parse(self._thrift_path)
         self._generate_and_import_module()
-        self._open_connection()
+        self._open_connection(self._server_address)
 
     def run(self, endpoint, request_body):
         """ Runs the endpoint on the connected server as defined by the thrift file.
@@ -32,7 +32,6 @@ class ThriftCLI(object):
         method = self._get_method_from_endpoint(endpoint)
         [service_name, method_name] = self._split_endpoint(endpoint)
         request_args = self.convert_json_to_args(service_name, method_name, request_body)
-        print request_args
         return method(**request_args)
 
     def cleanup(self):
@@ -93,18 +92,18 @@ class ThriftCLI(object):
     def _get_module_name(self):
         return self._thrift_path[:-len('.thrift')].split('/')[-1]
 
-    def _open_connection(self):
-        (url, port) = self._parse_address_for_hostname_and_port()
+    def _open_connection(self, address):
+        (url, port) = self._parse_address_for_hostname_and_port(address)
         self._transport = TSocket.TSocket(url, port)
         self._transport = TTransport.TBufferedTransport(self._transport)
         self._protocol = TBinaryProtocol.TBinaryProtocol(self._transport)
         self._transport.open()
 
-    def _parse_address_for_hostname_and_port(self):
-        address_to_parse = self._server_address
-        if '//' not in address_to_parse:
-            address_to_parse = '//' + address_to_parse
-        url_obj = urlparse.urlparse(address_to_parse)
+    @staticmethod
+    def _parse_address_for_hostname_and_port(address):
+        if '//' not in address:
+            address = '//' + address
+        url_obj = urlparse.urlparse(address)
         return url_obj.hostname, url_obj.port
 
     def convert_json_to_args(self, service_name, method_name, data):
@@ -162,12 +161,9 @@ class ThriftCLI(object):
             raise ThriftCLIException('Invalid type formatting for map - \'%s\'' % types_string)
         key_type = types_string[:split_index].strip()
         elem_type = types_string[split_index + 1:].strip()
-        if self._thrift_parser.has_struct(key_type):
-            return {self._convert_json_entry_to_arg(key_type, json.loads(key)):
-                        self._convert_json_entry_to_arg(elem_type, elem) for key, elem in value.items()}
-        else:
-            return {self._convert_json_entry_to_arg(key_type, key): self._convert_json_entry_to_arg(elem_type, elem)
-                    for key, elem in value.items()}
+        prep = lambda x: json.loads(x) if self._thrift_parser.has_struct(key_type) else x
+        return {self._convert_json_entry_to_arg(key_type, prep(key)): self._convert_json_entry_to_arg(elem_type, elem)
+                for key, elem in value.items()}
 
     @staticmethod
     def _calc_map_types_split_index(types_string):

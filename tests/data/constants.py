@@ -1,8 +1,8 @@
 from thrift_cli import ThriftService, ThriftStruct, ThriftParser
 
 TEST_SERVER_ADDRESS = 'localhost:9090'
-TEST_SERVER_URL = 'localhost'
-TEST_PORT = 9090
+TEST_SERVER_HOSTNAME = 'localhost'
+TEST_SERVER_PORT = 9090
 TEST_THRIFT_PATH = 'somefolder/something.thrift'
 TEST_THRIFT_MODULE_PATH = 'gen-py/something'
 TEST_THRIFT_MODULE_NAME = 'something'
@@ -94,7 +94,6 @@ TEST_THRIFT_SERVICE_ENDPOINTS3 = {
         'setOfLists': ThriftStruct.Field(1, 'set<list<%s>>' % TEST_THRIFT_STRUCT_NAME, 'setOfLists')
     })
 }
-
 TEST_THRIFT_SERVICE_DEFINITION = ("""
     service %s {
         void ping(),

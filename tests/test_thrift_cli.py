@@ -7,11 +7,11 @@ from thrift_cli import ThriftCLI, ThriftCLIException
 
 
 class TestThriftCLI(unittest.TestCase):
-    @mock.patch('thrift_cli.TSocket.TSocket')
+    @mock.patch('thrift_cli.ThriftCLI._open_connection')
     @mock.patch('thrift_cli.ThriftCLI._import_module')
     @mock.patch('subprocess.call')
     @mock.patch('thrift_cli.ThriftParser._load_file')
-    def test_setup(self, mock_load_file, mock_call, mock_import_module, mock_tsocket):
+    def test_setup(self, mock_load_file, mock_call, mock_import_module, mock_open_connection):
         mock_load_file.return_value = data.TEST_THRIFT_CONTENT
         mock_call.side_effect = None
         cli = ThriftCLI()
@@ -19,7 +19,7 @@ class TestThriftCLI(unittest.TestCase):
         command = 'thrift -r --gen py %s' % data.TEST_THRIFT_PATH
         mock_call.assert_called_with(command, shell=True)
         mock_import_module.assert_called_with(data.TEST_THRIFT_MODULE_NAME)
-        mock_tsocket.assert_called_with(data.TEST_SERVER_URL, data.TEST_PORT)
+        mock_open_connection.assert_called_with(data.TEST_SERVER_ADDRESS)
 
     @mock.patch('thrift_cli.TSocket.TSocket')
     @mock.patch('thrift_cli.ThriftCLI._import_module')
@@ -60,10 +60,19 @@ class TestThriftCLI(unittest.TestCase):
         with self.assertRaises(ThriftCLIException):
             cli._split_endpoint(endpoint)
 
+    @mock.patch('thrift_cli.TTransport.TBufferedTransport.open')
+    @mock.patch('thrift_cli.TSocket.TSocket')
+    def test_open_connection(self, mock_tsocket, mock_transport_open):
+        cli = ThriftCLI()
+        cli._open_connection(data.TEST_SERVER_ADDRESS)
+        mock_tsocket.assert_called_with(data.TEST_SERVER_HOSTNAME, data.TEST_SERVER_PORT)
+        self.assertTrue(mock_transport_open.called)
+
     # @mock.patch('thrift_cli.TSocket.TSocket')
     # @mock.patch('thrift_cli.ThriftParser._load_file')
     # def test_convert_json_to_args(self, mock_load_file, mock_tsocket):
     #     mock_load_file.return_value = data.TEST_THRIFT_CONTENT
+    #     mock_tsocket.side_effect = None
     #     cli = ThriftCLI()
     #     try:
     #         cli.setup(data.TEST_THRIFT_PATH, data.TEST_SERVER_ADDRESS)
@@ -74,3 +83,13 @@ class TestThriftCLI(unittest.TestCase):
     #         self.assertEqual(request_args, expected_request_args)
     #     finally:
     #         cli.cleanup()
+
+    def test_calc_map_types_split_index(self):
+        test_map_type = 'string, string'
+        expected_split_index = len('string')
+        split_index = ThriftCLI._calc_map_types_split_index(test_map_type)
+        self.assertEqual(split_index, expected_split_index)
+        test_map_type = 'map<string, list<i32>>, set<string>'
+        expected_split_index = len('map<string, list<i32>>')
+        split_index = ThriftCLI._calc_map_types_split_index(test_map_type)
+        self.assertEqual(split_index, expected_split_index)
