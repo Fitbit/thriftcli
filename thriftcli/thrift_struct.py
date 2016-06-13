@@ -4,7 +4,10 @@ import thrift_cli
 class ThriftStruct(object):
     class Field(object):
         def __init__(self, index, field_type, name, **kwargs):
-            self.index = int(index)
+            try:
+                self.index = int(index)
+            except ValueError:
+                self.index = None
             self.field_type = field_type
             self.name = name
             self.default = kwargs.get('default', None)

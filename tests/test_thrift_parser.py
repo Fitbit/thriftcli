@@ -21,7 +21,6 @@ class TestThriftParser(unittest.TestCase):
         tparser._thrift_content = data.TEST_THRIFT_CONTENT
         expected_structs = data.TEST_THRIFT_STRUCTS
         structs = tparser._parse_structs()
-        self.maxDiff = None
         self.assertDictEqual(structs, expected_structs)
 
     def test_parse_services(self):

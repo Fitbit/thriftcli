@@ -33,9 +33,9 @@ TEST_THRIFT_STRUCT_FIELDS3 = {
 }
 TEST_THRIFT_STRUCT_DEFINITION = ("""
     struct %s {
-        1:string thing_one,
-        2:double thing_two = 2.0,
-        3:bool thing_three = False
+        string thing_one,
+        double thing_two = 2.0,
+        bool thing_three = False;
     }""" % TEST_THRIFT_STRUCT_NAME).lstrip('\n')
 TEST_THRIFT_STRUCT_DEFINITION2 = ("""
     struct %s {
@@ -97,19 +97,19 @@ TEST_THRIFT_SERVICE_ENDPOINTS3 = {
 TEST_THRIFT_SERVICE_DEFINITION = ("""
     service %s {
         void ping(),
-        i32 doSomething1(1:i32 num1, 2:i32 num2, 3:Operation op),
-        oneway void useSomeStruct(1:SomeStruct someStruct)
+        i32 doSomething1(i32 num1, i32 num2, Operation op),
+        oneway void useSomeStruct(1:SomeStruct someStruct);
     }""" % TEST_THRIFT_SERVICE_NAME).lstrip('\n')
 TEST_THRIFT_SERVICE_DEFINITION2 = ("""
     service %s {
         void ping(),
-        string doSomething2(1:i32 num1)
+        string doSomething2(1:i32 num1),
         void useSomeStruct2(1:SomeStruct2 someStruct)
     }""" % TEST_THRIFT_SERVICE_NAME2).lstrip('\n')
 TEST_THRIFT_SERVICE_DEFINITION3 = ("""
     service %s {
         void ping(),
-        map<string, string> passMap(1:map<string, string> myMap)
+        map<string, string> passMap(1:map<string, string> myMap),
         set<list<%s>> passSetOfLists(1:set<list<%s>> setOfLists)
     }""" % (TEST_THRIFT_SERVICE_NAME3, TEST_THRIFT_STRUCT_NAME, TEST_THRIFT_STRUCT_NAME)).lstrip('\n')
 TEST_THRIFT_SERVICE = ThriftService(TEST_THRIFT_SERVICE_NAME, TEST_THRIFT_SERVICE_ENDPOINTS)

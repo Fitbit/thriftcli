@@ -34,7 +34,7 @@ class ThriftParser(object):
         self.endpoints_regex = re.compile(r'^[\r\t ]*(oneway)?\s*([^\n]*)\s+(\w+)\(([a-zA-Z0-9: ,<>]*)\)',
                                           flags=re.MULTILINE)
         self.fields_regex = re.compile(
-            r'^[\r\t ]*([\d+]):\s*(optional|required)?\s*([^\n=]+)?\s+(\w+)(?:\s*=\s*([^,\s]+))?[,|\n]',
+            r'^[\r\t ]*(?:([\d+]):)?\s*(optional|required)?\s*([^\n=]+)?\s+(\w+)(?:\s*=\s*([^,;\s]+))?[,;\n]',
             flags=re.MULTILINE)
 
     def parse(self, thrift_path):
@@ -63,6 +63,7 @@ class ThriftParser(object):
     def _parse_fields_from_struct_definition(self, definition):
         field_matches = self.fields_regex.findall(definition)
         fields = [self._construct_field_from_field_match(field_match) for field_match in field_matches]
+        self._assign_field_indices(fields)
         fields = {field.name: field for field in fields}
         return fields
 
@@ -95,7 +96,16 @@ class ThriftParser(object):
         field_matches = [self.fields_regex.findall(field_string+'\n') for field_string in field_strings]
         field_matches = [field_match[0] for field_match in field_matches if len(field_match)]
         fields = [self._construct_field_from_field_match(field_match) for field_match in field_matches]
+        self._assign_field_indices(fields)
         return fields
+
+    @staticmethod
+    def _assign_field_indices(fields):
+        last_index = 0
+        for field in fields:
+            if not field.index or field.index <= last_index:
+                field.index = last_index+1
+            last_index = field.index
 
     @staticmethod
     def _split_fields_string(fields_string):
