@@ -3,11 +3,11 @@ import unittest
 import mock
 
 import data
-from thrift_cli import ThriftParser
+from thriftcli import ThriftParser
 
 
 class TestThriftParser(unittest.TestCase):
-    @mock.patch('thrift_cli.ThriftParser._load_file')
+    @mock.patch('thriftcli.ThriftParser._load_file')
     def test_parse(self, mock_load_file):
         mock_load_file.return_value = data.TEST_THRIFT_CONTENT
         tparser = ThriftParser()

@@ -1,6 +1,6 @@
 import unittest
 
-from thrift_cli import ThriftStruct, ThriftCLIException
+from thriftcli import ThriftStruct, ThriftCLIException
 
 
 class TestThriftStruct(unittest.TestCase):

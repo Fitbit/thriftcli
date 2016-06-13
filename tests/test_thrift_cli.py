@@ -3,14 +3,14 @@ import unittest
 import mock
 
 import data
-from thrift_cli import ThriftCLI, ThriftCLIException
+from thriftcli import ThriftCLI, ThriftCLIException
 
 
 class TestThriftCLI(unittest.TestCase):
-    @mock.patch('thrift_cli.ThriftCLI._open_connection')
-    @mock.patch('thrift_cli.ThriftCLI._import_module')
+    @mock.patch('thriftcli.ThriftCLI._open_connection')
+    @mock.patch('thriftcli.ThriftCLI._import_module')
     @mock.patch('subprocess.call')
-    @mock.patch('thrift_cli.ThriftParser._load_file')
+    @mock.patch('thriftcli.ThriftParser._load_file')
     def test_setup(self, mock_load_file, mock_call, mock_import_module, mock_open_connection):
         mock_load_file.return_value = data.TEST_THRIFT_CONTENT
         mock_call.side_effect = None
@@ -21,11 +21,11 @@ class TestThriftCLI(unittest.TestCase):
         mock_import_module.assert_called_with(data.TEST_THRIFT_MODULE_NAME)
         mock_open_connection.assert_called_with(data.TEST_SERVER_ADDRESS)
 
-    @mock.patch('thrift_cli.TSocket.TSocket')
-    @mock.patch('thrift_cli.ThriftCLI._import_module')
+    @mock.patch('thriftcli.TSocket.TSocket')
+    @mock.patch('thriftcli.ThriftCLI._import_module')
     @mock.patch('subprocess.call')
-    @mock.patch('thrift_cli.ThriftParser._load_file')
-    @mock.patch('thrift_cli.ThriftCLI._remove_dir')
+    @mock.patch('thriftcli.ThriftParser._load_file')
+    @mock.patch('thriftcli.ThriftCLI._remove_dir')
     def test_cleanup(self, mock_remove_dir, mock_load_file, mock_call, mock_import_module, mock_tsocket):
         mock_load_file.return_value = data.TEST_THRIFT_CONTENT
         mock_import_module.side_effect = None
@@ -60,16 +60,16 @@ class TestThriftCLI(unittest.TestCase):
         with self.assertRaises(ThriftCLIException):
             cli._split_endpoint(endpoint)
 
-    @mock.patch('thrift_cli.TTransport.TBufferedTransport.open')
-    @mock.patch('thrift_cli.TSocket.TSocket')
+    @mock.patch('thriftcli.TTransport.TBufferedTransport.open')
+    @mock.patch('thriftcli.TSocket.TSocket')
     def test_open_connection(self, mock_tsocket, mock_transport_open):
         cli = ThriftCLI()
         cli._open_connection(data.TEST_SERVER_ADDRESS)
         mock_tsocket.assert_called_with(data.TEST_SERVER_HOSTNAME, data.TEST_SERVER_PORT)
         self.assertTrue(mock_transport_open.called)
 
-    # @mock.patch('thrift_cli.TSocket.TSocket')
-    # @mock.patch('thrift_cli.ThriftParser._load_file')
+    # @mock.patch('thriftcli.TSocket.TSocket')
+    # @mock.patch('thriftcli.ThriftParser._load_file')
     # def test_convert_json_to_args(self, mock_load_file, mock_tsocket):
     #     mock_load_file.return_value = data.TEST_THRIFT_CONTENT
     #     mock_tsocket.side_effect = None

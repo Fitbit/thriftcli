@@ -7,9 +7,9 @@ config = {
     'description': 'Thrift CLI',
     'author': 'Neel Virdy',
     'version': '0.1',
-    'packages': ['thrift_cli'],
+    'packages': ['thriftcli'],
     'scripts': [],
-    'name': 'thrift_cli'
+    'name': 'thriftcli'
 }
 
 setup(**config)

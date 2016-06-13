@@ -2,7 +2,7 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/thrift_cli.iml" filepath="$PROJECT_DIR$/thrift_cli.iml" />
+      <module fileurl="file://$PROJECT_DIR$/thriftcli.iml" filepath="$PROJECT_DIR$/thriftcli.iml" />
     </modules>
   </component>
 </project>

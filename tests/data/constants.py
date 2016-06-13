@@ -1,4 +1,4 @@
-from thrift_cli import ThriftService, ThriftStruct, ThriftParser
+from thriftcli import ThriftService, ThriftStruct, ThriftParser
 
 TEST_SERVER_ADDRESS = 'localhost:9090'
 TEST_SERVER_HOSTNAME = 'localhost'

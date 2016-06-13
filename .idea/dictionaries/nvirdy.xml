@@ -2,6 +2,7 @@
   <dictionary name="nvirdy">
     <words>
       <w>submodule</w>
+      <w>thriftcli</w>
       <w>tparser</w>
       <w>ttypes</w>
     </words>

@@ -1,7 +1,7 @@
 import json
 import sys
 
-from thrift_cli import ThriftCLI
+from thriftcli import ThriftCLI
 
 
 def _print_help():
