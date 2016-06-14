@@ -12,6 +12,12 @@ from thrift.protocol import TBinaryProtocol
 
 
 class ThriftCLI(object):
+    """ Provides an interface for setting up a client, making requests, and cleaning up.
+
+    Call setup to open a connection with a server and inform ThriftCLI of the available endpoints.
+    Call run to make a request.
+    Call cleanup to close the connection and delete the generated python code.
+    """
     def __init__(self):
         self._thrift_path = None
         self._server_address = None
@@ -19,7 +25,14 @@ class ThriftCLI(object):
         self._transport = None
 
     def setup(self, thrift_path, server_address):
-        """ Opens a connection between the given thrift file and server. """
+        """ Opens a connection between the given thrift file and server.
+
+        :param thrift_path: The path to the thrift file being used.
+        :type thrift_path: str
+        :param server_address: The address of the server to make requests to.
+        :type server_address: str
+        :returns: None
+        """
         self._thrift_path = thrift_path
         self._server_address = server_address
         self._thrift_parser.parse(self._thrift_path)
@@ -28,14 +41,23 @@ class ThriftCLI(object):
 
     def run(self, endpoint, request_body):
         """ Runs the endpoint on the connected server as defined by the thrift file.
-        The request_body is transformed into the endpoint's arguments. """
+
+        :param endpoint: The name of the endpoint to ask the server to run.
+        :type endpoint: str
+        :param request_body: The arguments to provide as arguments to the endpoint.
+        :type request_body: JSON or None
+        :returns: endpoint result
+        """
         method = self._get_method_from_endpoint(endpoint)
         [service_name, method_name] = self._split_endpoint(endpoint)
-        request_args = self.convert_json_to_args(service_name, method_name, request_body)
+        request_args = self._convert_json_to_args(service_name, method_name, request_body)
         return method(**request_args)
 
     def cleanup(self):
-        """ Deletes the gen-py code and closes the transport with the server. """
+        """ Deletes the gen-py code and closes the transport with the server.
+
+        :returns: None
+        """
         self._remove_dir('gen-py')
         if self._transport:
             self._transport.close()
@@ -106,7 +128,8 @@ class ThriftCLI(object):
         url_obj = urlparse.urlparse(address)
         return url_obj.hostname, url_obj.port
 
-    def convert_json_to_args(self, service_name, method_name, data):
+    def _convert_json_to_args(self, service_name, method_name, data):
+
         fields = self._thrift_parser.get_fields_for_endpoint(service_name, method_name)
         return self._convert_json_to_args_given_fields(fields, data)
 

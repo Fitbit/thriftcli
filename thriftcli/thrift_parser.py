@@ -5,6 +5,11 @@ from .thrift_struct import ThriftStruct
 
 
 class ThriftParser(object):
+    """ Extracts struct, service, and enum definitions from thrift files.
+
+    Call parse to extract definitions. The parser only knows about the last thrift file it parsed.
+    Getters are provided to inspect the parse results.
+    """
     class Result(object):
         def __init__(self, structs, services, enums):
             self.structs = structs
@@ -28,16 +33,24 @@ class ThriftParser(object):
         self._thrift_path = None
         self._thrift_content = None
         self._result = None
-        self.structs_regex = re.compile(r'^([\r\t ]*?struct (\w+)[^}]+})', flags=re.MULTILINE)
-        self.services_regex = re.compile(r'^([\r\t ]*?service (\w+)[^}]+})', flags=re.MULTILINE)
-        self.enums_regex = re.compile(r'^[\r\t ]*?enum (\w+)[^}]+}', flags=re.MULTILINE)
-        self.endpoints_regex = re.compile(r'^[\r\t ]*(oneway)?\s*([^\n]*)\s+(\w+)\(([a-zA-Z0-9: ,<>]*)\)',
+        self._structs_regex = re.compile(r'^([\r\t ]*?struct (\w+)[^}]+})', flags=re.MULTILINE)
+        self._services_regex = re.compile(r'^([\r\t ]*?service (\w+)[^}]+})', flags=re.MULTILINE)
+        self._enums_regex = re.compile(r'^[\r\t ]*?enum (\w+)[^}]+}', flags=re.MULTILINE)
+        self._endpoints_regex = re.compile(r'^[\r\t ]*(oneway)?\s*([^\n]*)\s+(\w+)\(([a-zA-Z0-9: ,<>]*)\)',
                                           flags=re.MULTILINE)
-        self.fields_regex = re.compile(
+        self._fields_regex = re.compile(
             r'^[\r\t ]*(?:([\d+]):)?\s*(optional|required)?\s*([^\n=]+)?\s+(\w+)(?:\s*=\s*([^,;\s]+))?[,;\n]',
             flags=re.MULTILINE)
 
     def parse(self, thrift_path):
+        """ Parses a thrift file into its structs, services, and enums.
+
+        :param thrift_path: The path to the thrift file being parsed.
+        :type thrift_path: str
+        :returns: Parse result object containing definitions of structs, services, and enums.
+        :rtype: ThriftParser.Result
+
+        """
         self._thrift_path = thrift_path
         self._thrift_content = self._load_file(thrift_path)
         self._result = ThriftParser.Result(self._parse_structs(), self._parse_services(), self._parse_enums())
@@ -56,12 +69,12 @@ class ThriftParser(object):
         return structs
 
     def _parse_struct_definitions(self):
-        structs_list = self.structs_regex.findall(self._thrift_content)
+        structs_list = self._structs_regex.findall(self._thrift_content)
         structs = {name: definition for (definition, name) in structs_list}
         return structs
 
     def _parse_fields_from_struct_definition(self, definition):
-        field_matches = self.fields_regex.findall(definition)
+        field_matches = self._fields_regex.findall(definition)
         fields = [self._construct_field_from_field_match(field_match) for field_match in field_matches]
         self._assign_field_indices(fields)
         fields = {field.name: field for field in fields}
@@ -75,12 +88,12 @@ class ThriftParser(object):
         return services
 
     def _parse_service_definitions(self):
-        services_list = self.services_regex.findall(self._thrift_content)
+        services_list = self._services_regex.findall(self._thrift_content)
         services = {name: definition for (definition, name) in services_list}
         return services
 
     def _parse_endpoints_from_service_definition(self, definition):
-        endpoint_matches = self.endpoints_regex.findall(definition)
+        endpoint_matches = self._endpoints_regex.findall(definition)
         (oneways, return_types, names, fields_strings) = zip(*endpoint_matches)
         (oneways, return_types, names, fields_strings) = \
             (list(oneways), list(return_types), list(names), list(fields_strings))
@@ -93,7 +106,7 @@ class ThriftParser(object):
 
     def _parse_fields_from_fields_string(self, fields_string):
         field_strings = self._split_fields_string(fields_string)
-        field_matches = [self.fields_regex.findall(field_string+'\n') for field_string in field_strings]
+        field_matches = [self._fields_regex.findall(field_string+'\n') for field_string in field_strings]
         field_matches = [field_match[0] for field_match in field_matches if len(field_match)]
         fields = [self._construct_field_from_field_match(field_match) for field_match in field_matches]
         self._assign_field_indices(fields)
@@ -126,7 +139,7 @@ class ThriftParser(object):
         return field_strings
 
     def _parse_enums(self):
-        enums_list = self.enums_regex.findall(self._thrift_content)
+        enums_list = self._enums_regex.findall(self._thrift_content)
         enums = set(enums_list)
         return enums
 
@@ -139,13 +152,47 @@ class ThriftParser(object):
         return ThriftStruct.Field(index, field_type, name, required=required, optional=optional, default=default)
 
     def get_fields_for_endpoint(self, service_name, method_name):
+        """ Returns all argument fields declared for a given endpoint.
+
+        :param service_name: The name of the service declaring the endpoint.
+        :type service_name: str
+        :param method_name: The name of the method representing the endpoint.
+        :type method_name: str
+        :returns: Fields that are declared as arguments for the provided endpoint.
+        :rtype: list of ThriftStruct.Field
+
+        """
         return self._result.services[service_name].endpoints[method_name].fields
 
     def get_fields_for_struct_name(self, struct_name):
+        """ Returns all fields that compromise the given struct.
+
+        :param struct_name: The name of the struct.
+        :type struct_name: str
+        :returns: Fields that are declared as components for the provided struct.
+        :rtype: list of ThriftStruct.Field
+
+        """
         return self._result.structs[struct_name].fields
 
     def has_struct(self, struct_name):
+        """ Checks if the given struct was found in the last parse.
+
+        :param struct_name: The name of the struct to check for.
+        :type struct_name: str
+        :returns: True if the struct was declared in the last parsed thrift file. False otherwise.
+        :rtype: bool
+
+        """
         return struct_name in self._result.structs
 
     def has_enum(self, enum_name):
+        """ Checks if the given enum was found in the last parse.
+
+        :param enum_name: The name of the enum to check for.
+        :type enum_name: str
+        :returns: True if the enum was declared in the last parsed thrift file. False otherwise.
+        :rtype: bool
+
+        """
         return enum_name in self._result.enums

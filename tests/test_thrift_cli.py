@@ -77,7 +77,7 @@ class TestThriftCLI(unittest.TestCase):
     #     try:
     #         cli.setup(data.TEST_THRIFT_PATH, data.TEST_SERVER_ADDRESS)
     #         cli._endpoint = data.TEST_THRIFT_ENDPOINT_NAME
-    #         request_args = cli.convert_json_to_args(
+    #         request_args = cli._convert_json_to_args(
     #             data.TEST_THRIFT_SERVICE_NAME, data.TEST_THRIFT_METHOD_NAME, data.TEST_REQUEST_JSON)
     #         expected_request_args = data.TEST_REQUEST_ARGS
     #         self.assertEqual(request_args, expected_request_args)
