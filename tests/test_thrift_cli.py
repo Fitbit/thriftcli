@@ -31,6 +31,7 @@ class TestThriftCLI(unittest.TestCase):
         mock_import_module.side_effect = None
         mock_call.side_effect = None
         mock_remove_dir.side_effect = None
+        mock_tsocket.side_effect = None
         cli = ThriftCLI()
         cli.setup(data.TEST_THRIFT_PATH, data.TEST_SERVER_ADDRESS)
         cli.cleanup()
@@ -67,6 +68,17 @@ class TestThriftCLI(unittest.TestCase):
         cli._open_connection(data.TEST_SERVER_ADDRESS)
         mock_tsocket.assert_called_with(data.TEST_SERVER_HOSTNAME, data.TEST_SERVER_PORT)
         self.assertTrue(mock_transport_open.called)
+
+    def test_parse_address_for_hostname_and_url(self):
+        hostname, port = ThriftCLI._parse_address_for_hostname_and_port(data.TEST_SERVER_ADDRESS)
+        hostname2, port2 = ThriftCLI._parse_address_for_hostname_and_port(data.TEST_SERVER_ADDRESS2)
+        hostname3, port3 = ThriftCLI._parse_address_for_hostname_and_port(data.TEST_SERVER_ADDRESS3)
+        expected_hostname, expected_port = data.TEST_SERVER_HOSTNAME, data.TEST_SERVER_PORT
+        expected_hostname2, expected_port2 = data.TEST_SERVER_HOSTNAME2, data.TEST_SERVER_PORT2
+        expected_hostname3, expected_port3 = data.TEST_SERVER_HOSTNAME3, data.TEST_SERVER_PORT3
+        self.assertEqual((hostname, port), (expected_hostname, expected_port))
+        self.assertEqual((hostname2, port2), (expected_hostname2, expected_port2))
+        self.assertEqual((hostname3, port3), (expected_hostname3, expected_port3))
 
     # @mock.patch('thriftcli.TSocket.TSocket')
     # @mock.patch('thriftcli.ThriftParser._load_file')

@@ -32,6 +32,7 @@ class ThriftCLI(object):
         :param server_address: The address of the server to make requests to.
         :type server_address: str
         :returns: None
+
         """
         self._thrift_path = thrift_path
         self._server_address = server_address
@@ -47,6 +48,7 @@ class ThriftCLI(object):
         :param request_body: The arguments to provide as arguments to the endpoint.
         :type request_body: JSON or None
         :returns: endpoint result
+
         """
         method = self._get_method_from_endpoint(endpoint)
         [service_name, method_name] = self._split_endpoint(endpoint)
@@ -57,6 +59,7 @@ class ThriftCLI(object):
         """ Deletes the gen-py code and closes the transport with the server.
 
         :returns: None
+
         """
         self._remove_dir('gen-py')
         if self._transport:

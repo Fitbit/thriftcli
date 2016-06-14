@@ -37,6 +37,13 @@ class TestThriftParser(unittest.TestCase):
         enums = tparser._parse_enums()
         self.assertEqual(enums, expected_enums)
 
+    def test_parse_typedefs(self):
+        tparser = ThriftParser()
+        tparser._thrift_content = data.TEST_THRIFT_CONTENT
+        expected_typedefs = data.TEST_THRIFT_TYPEDEFS
+        typedefs = tparser._parse_typedefs()
+        self.assertEqual(typedefs, expected_typedefs)
+
     def test_parse_endpoints_from_service_definition(self):
         tparser = ThriftParser()
         endpoints = tparser._parse_endpoints_from_service_definition(data.TEST_THRIFT_SERVICE_DEFINITION)
