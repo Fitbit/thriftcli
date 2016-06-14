@@ -132,7 +132,6 @@ class ThriftCLI(object):
         return url_obj.hostname, url_obj.port
 
     def _convert_json_to_args(self, service_name, method_name, data):
-
         fields = self._thrift_parser.get_fields_for_endpoint(service_name, method_name)
         return self._convert_json_to_args_given_fields(fields, data)
 
@@ -142,6 +141,7 @@ class ThriftCLI(object):
         return args
 
     def _convert_json_entry_to_arg(self, field_type, value):
+        field_type = self.thrift_parser.unalias_type(field_type)
         if self._thrift_parser.has_struct(field_type):
             fields = self._thrift_parser.get_fields_for_struct_name(field_type)
             value = self._convert_json_to_args_given_fields(fields, value)

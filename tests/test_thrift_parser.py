@@ -3,7 +3,7 @@ import unittest
 import mock
 
 import data
-from thriftcli import ThriftParser
+from thriftcli import ThriftParser, ThriftCLIException
 
 
 class TestThriftParser(unittest.TestCase):
@@ -82,3 +82,21 @@ class TestThriftParser(unittest.TestCase):
         expected_field_strings = ['1:map<string, string> stringMap', '2:set<list<SomeStruct>> setOfLists']
         field_strings = tparser._split_fields_string(fields_string)
         self.assertEqual(field_strings, expected_field_strings)
+
+    @mock.patch('thriftcli.ThriftParser._load_file')
+    def test_unalias_type(self, mock_load_file):
+        mock_load_file.return_value = data.TEST_THRIFT_CONTENT
+        tparser = ThriftParser()
+        tparser.parse(data.TEST_THRIFT_PATH)
+        expected_unaliased = data.TEST_THRIFT_UNALIASED_TYPES
+        unaliased = {alias: tparser.unalias_type(alias) for alias in data.TEST_THRIFT_UNALIASED_TYPES}
+        self.assertDictEqual(unaliased, expected_unaliased)
+
+    @mock.patch('thriftcli.ThriftParser._load_file')
+    def test_unalias_type_circular(self, mock_load_file):
+        mock_load_file.return_value = data.TEST_THRIFT_CONTENT_CIRCULAR_TYPEDEFS
+        tparser = ThriftParser()
+        tparser.parse(data.TEST_THRIFT_PATH)
+        for alias in data.TEST_THRIFT_CIRCULAR_TYPEDEFS:
+            with self.assertRaises(ThriftCLIException):
+                tparser.unalias_type(alias)

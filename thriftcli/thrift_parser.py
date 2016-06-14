@@ -2,10 +2,11 @@ import re
 
 from .thrift_service import ThriftService
 from .thrift_struct import ThriftStruct
+import thrift_cli
 
 
 class ThriftParser(object):
-    """ Extracts struct, service, and enum definitions from thrift files.
+    """ Extracts struct, service, enum, and typedef definitions from thrift files.
 
     Call parse to extract definitions. The parser only knows about the last thrift file it parsed.
     Getters are provided to inspect the parse results.
@@ -47,11 +48,11 @@ class ThriftParser(object):
         self._typedefs_regex = re.compile(r'^[\r\t ]*typedef\s+([^\n]*)[\r\t ]+([^,;\n]*)', flags=re.MULTILINE)
 
     def parse(self, thrift_path):
-        """ Parses a thrift file into its structs, services, and enums.
+        """ Parses a thrift file into its structs, services, enums, and typedefs.
 
         :param thrift_path: The path to the thrift file being parsed.
         :type thrift_path: str
-        :returns: Parse result object containing definitions of structs, services, and enums.
+        :returns: Parse result object containing definitions of structs, services, enums, and typedefs.
         :rtype: ThriftParser.Result
 
         """
@@ -170,6 +171,7 @@ class ThriftParser(object):
         :type method_name: str
         :returns: Fields that are declared as arguments for the provided endpoint.
         :rtype: list of ThriftStruct.Field
+        :raises: KeyError
 
         """
         return self._result.services[service_name].endpoints[method_name].fields
@@ -181,6 +183,7 @@ class ThriftParser(object):
         :type struct_name: str
         :returns: Fields that are declared as components for the provided struct.
         :rtype: list of ThriftStruct.Field
+        :raises: KeyError
 
         """
         return self._result.structs[struct_name].fields
@@ -206,3 +209,42 @@ class ThriftParser(object):
 
         """
         return enum_name in self._result.enums
+
+    def has_typedef(self, alias):
+        """ Checks if there was a typedef for the given alias found in the last parse.
+
+        :param alias: The alias of the typedef to check for.
+        :type alias: str
+        :returns: True if a typedef was declared for the alias in the last parsed thrift file. False otherwise.
+        :rtype: bool
+
+        """
+        return alias in self._result.typedefs
+
+    def get_typedef(self, alias):
+        """ Returns the thrift type for the given alias according to the typedefs found in the last parse.
+
+        :param alias: The alias of the typedef to check for.
+        :type alias: str
+        :returns: The thrift type for the given alias according to the typedefs in the last parsed thrift file.
+        :raises: KeyError
+
+        """
+        return self._result.typedefs[alias]
+
+    def unalias_type(self, field_type):
+        """ Returns the unaliased thrift type according to the typedefs found in the last parse.
+
+        :param field_type: The potentially aliased thrift type.
+        :type field_type: str
+        :returns: The unaliased thrift type according to the typedefs in the last parsed thrift file.
+        :raises: ThriftCLIException
+
+        """
+        type_set = set([field_type])
+        while self.has_typedef(field_type):
+            field_type = self.get_typedef(field_type)
+            if field_type in type_set:
+                raise thrift_cli.ThriftCLIException('Circular typedef dependency involving \'%s\'' % field_type)
+            type_set.add(field_type)
+        return field_type
