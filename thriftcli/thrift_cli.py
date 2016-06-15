@@ -1,15 +1,14 @@
+import json
 import shutil
 import subprocess
 import sys
 import urlparse
-import json
-import re
 
-from .thrift_parser import ThriftParser
-
+from thrift.protocol import TBinaryProtocol
 from thrift.transport import TSocket
 from thrift.transport import TTransport
-from thrift.protocol import TBinaryProtocol
+
+from .thrift_parser import ThriftParser
 
 __version__ = '0.0.1'
 
@@ -224,7 +223,7 @@ def _print_help():
         '                       For each argument, the JSON should map the argument name to its value.',
         '                       For a struct argument, its value should be a JSON object of field names to values.',
         '                       This parameter can be omitted for endpoints that take no arguments.'
-        ])
+    ])
     print help_text
 
 

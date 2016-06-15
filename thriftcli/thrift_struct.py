@@ -3,6 +3,7 @@ import thrift_cli
 
 class ThriftStruct(object):
     """ Provides a representation of a struct declared in thrift. """
+
     class Field(object):
         def __init__(self, index, field_type, name, **kwargs):
             try:

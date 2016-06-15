@@ -7,7 +7,6 @@ from thriftcli import ThriftParser
 
 
 class TestThriftParser(unittest.TestCase):
-
     @mock.patch('thriftcli.ThriftParser._load_file')
     def test_parse(self, mock_load_file):
         mock_load_file.return_value = data.TEST_THRIFT_CONTENT

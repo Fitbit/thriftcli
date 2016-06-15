@@ -10,6 +10,7 @@ class ThriftParser(object):
     Call parse to extract definitions. The parser only knows about the last thrift file it parsed.
     Getters are provided to inspect the parse results.
     """
+
     class Result(object):
         def __init__(self, structs, services, enums):
             self.structs = structs
@@ -37,7 +38,7 @@ class ThriftParser(object):
         self._services_regex = re.compile(r'^([\r\t ]*?service (\w+)[^}]+})', flags=re.MULTILINE)
         self._enums_regex = re.compile(r'^[\r\t ]*?enum (\w+)[^}]+}', flags=re.MULTILINE)
         self._endpoints_regex = re.compile(r'^[\r\t ]*(oneway)?\s*([^\n]*)\s+(\w+)\(([a-zA-Z0-9: ,<>]*)\)',
-                                          flags=re.MULTILINE)
+                                           flags=re.MULTILINE)
         self._fields_regex = re.compile(
             r'^[\r\t ]*(?:([\d+]):)?\s*(optional|required)?\s*([^\n=]+)?\s+(\w+)(?:\s*=\s*([^,;\s]+))?[,;\n]',
             flags=re.MULTILINE)
@@ -106,7 +107,7 @@ class ThriftParser(object):
 
     def _parse_fields_from_fields_string(self, fields_string):
         field_strings = self._split_fields_string(fields_string)
-        field_matches = [self._fields_regex.findall(field_string+'\n') for field_string in field_strings]
+        field_matches = [self._fields_regex.findall(field_string + '\n') for field_string in field_strings]
         field_matches = [field_match[0] for field_match in field_matches if len(field_match)]
         fields = [self._construct_field_from_field_match(field_match) for field_match in field_matches]
         self._assign_field_indices(fields)
@@ -117,7 +118,7 @@ class ThriftParser(object):
         last_index = 0
         for field in fields:
             if not field.index or field.index <= last_index:
-                field.index = last_index+1
+                field.index = last_index + 1
             last_index = field.index
 
     @staticmethod

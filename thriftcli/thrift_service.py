@@ -1,7 +1,7 @@
 class ThriftService(object):
     """ Provides a representation of a service declared in thrift. """
-    class Endpoint(object):
 
+    class Endpoint(object):
         def __init__(self, return_type, name, fields={}, oneway=False):
             self.return_type = return_type
             self.name = name
