@@ -3,9 +3,9 @@ from thriftcli import ThriftService, ThriftStruct, ThriftParser
 TEST_SERVER_ADDRESS = 'localhost:9090'
 TEST_SERVER_HOSTNAME = 'localhost'
 TEST_SERVER_PORT = 9090
-TEST_THRIFT_PATH = 'somefolder/something.thrift'
-TEST_THRIFT_MODULE_PATH = 'gen-py/something'
-TEST_THRIFT_MODULE_NAME = 'something'
+TEST_THRIFT_PATH = 'somefolder/Something.thrift'
+TEST_THRIFT_MODULE_PATH = 'gen-py/Something'
+TEST_THRIFT_MODULE_NAME = 'Something'
 TEST_THRIFT_STRUCT_NAME = 'SomeStruct'
 TEST_THRIFT_STRUCT_NAME2 = 'SomeStruct2'
 TEST_THRIFT_STRUCT_NAME3 = 'SomeStruct3'
@@ -151,32 +151,55 @@ TEST_THRIFT_SERVICES = {
     TEST_THRIFT_SERVICE_NAME2: TEST_THRIFT_SERVICE2,
     TEST_THRIFT_SERVICE_NAME3: TEST_THRIFT_SERVICE3
 }
-TEST_THRIFT_ENUMS = set([TEST_THRIFT_ENUM, TEST_THRIFT_ENUM2])
+TEST_THRIFT_ENUMS = {TEST_THRIFT_ENUM, TEST_THRIFT_ENUM2}
 TEST_THRIFT_PARSE_RESULT = ThriftParser.Result(TEST_THRIFT_STRUCTS, TEST_THRIFT_SERVICES, TEST_THRIFT_ENUMS)
+TEST_THRIFT_INCLUDE_STATEMENT = 'include "Stuff.thrift"'
+TEST_THRIFT_INCLUDED_NAMESPACE = 'Stuff'
+TEST_THRIFT_INCLUDED_ENUM = 'SomeStuffEnum'
+TEST_THRIFT_INCLUDED_ENUM_DEFINITION = ("""
+    enum %s {
+        THIS_STUFF,
+        THAT_STUFF,
+        MORE_STUFF
+    }
+""" % TEST_THRIFT_INCLUDED_ENUM).lstrip('\n')
+TEST_THRIFT_INCLUDED_STRUCT_NAME = 'SomeStuffStruct'
+TEST_THRIFT_INCLUDED_STRUCT_DEFINITION = ("""
+    struct %s {
+        1:string some_string,
+        2:%s my_enum
+    }
+""" % (TEST_THRIFT_INCLUDED_STRUCT_NAME, TEST_THRIFT_INCLUDED_ENUM)).lstrip('\n')
+TEST_THRIFT_INCLUDED_STRUCT_FIELDS = {
+    'some_string': ThriftStruct.Field(1, 'string', 'some_string'),
+    'my_enum': ThriftStruct.Field(2, TEST_THRIFT_INCLUDED_ENUM, 'my_enum')
+}
+TEST_THRIFT_INCLUDED_STRUCT = ThriftStruct(TEST_THRIFT_INCLUDED_STRUCT_NAME, TEST_THRIFT_INCLUDED_STRUCT_FIELDS)
+TEST_THRIFT_INCLUDED_SERVICE_NAME = 'SomeStuffService'
+TEST_THRIFT_INCLUDED_SERVICE_DEFINITION = ("""
+    service %s {
+        %s passSomeStuff(1:%s someStuff),
+    }""" % (
+    TEST_THRIFT_INCLUDED_SERVICE_NAME, TEST_THRIFT_INCLUDED_STRUCT_NAME, TEST_THRIFT_INCLUDED_STRUCT_NAME)).lstrip('\n')
+TEST_THRIFT_INCLUDED_SERVICE_ENDPOINTS = {
+    'passSomeStuff': ThriftService.Endpoint(TEST_THRIFT_INCLUDED_STRUCT_NAME, 'passSomeStuff', {
+        'someStuff': ThriftStruct.Field(1, TEST_THRIFT_INCLUDED_STRUCT_NAME, 'someStuff')
+    })
+}
+TEST_THRIFT_INCLUDED_SERVICE = ThriftStruct(TEST_THRIFT_INCLUDED_SERVICE_NAME, TEST_THRIFT_INCLUDED_SERVICE_ENDPOINTS)
+TEST_THRIFT_INCLUDED_STRUCTS = {
+    TEST_THRIFT_INCLUDED_STRUCT_NAME: TEST_THRIFT_INCLUDED_STRUCT
+}
+TEST_THRIFT_INCLUDED_SERVICES = {
+    TEST_THRIFT_INCLUDED_SERVICE_NAME: TEST_THRIFT_INCLUDED_SERVICE
+}
+TEST_THRIFT_INCLUDED_ENUMS = {TEST_THRIFT_INCLUDED_ENUM}
+TEST_THRIFT_INCLUDED_PARSE_RESULT = ThriftParser.Result(TEST_THRIFT_INCLUDED_STRUCTS, TEST_THRIFT_INCLUDED_SERVICES,
+                                                        TEST_THRIFT_INCLUDED_ENUMS)
+TEST_THRIFT_INCLUDED_CONTENT = '\n'.join([
+    TEST_THRIFT_INCLUDED_ENUM_DEFINITION,
+    TEST_THRIFT_INCLUDED_STRUCT_DEFINITION,
+    TEST_THRIFT_INCLUDED_SERVICE_DEFINITION
+])
 TEST_THRIFT_ENDPOINT_NAME = 'SomeService.useSomeStruct'
 TEST_THRIFT_METHOD_NAME = 'useSomeStruct'
-TEST_REQUEST_JSON = {
-    "someStruct": {
-        "thing_one": "some string",
-        "thing_two": 1.5,
-        "thing_three": True,
-    }
-}
-
-
-class SomeStruct(object):
-    def __init__(self, thing_one, thing_two, thing_three):
-        self._thing_one = thing_one
-        self._thing_two = thing_two
-        self._thing_three = thing_three
-
-    def __eq__(self, other):
-        return type(other) is type(self) and self.__dict__ == other.__dict__
-
-    def __ne__(self, other):
-        return not self.__eq__(other)
-
-
-TEST_REQUEST_ARGS = {
-    'someStruct': SomeStruct('some string', 1.5, True)
-}
