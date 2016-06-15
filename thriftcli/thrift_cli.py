@@ -3,6 +3,7 @@ import subprocess
 import sys
 import urlparse
 import json
+import re
 
 from .thrift_parser import ThriftParser
 
@@ -20,6 +21,7 @@ class ThriftCLI(object):
     Call run to make a request.
     Call cleanup to close the connection and delete the generated python code.
     """
+
     def __init__(self):
         self._thrift_path = None
         self._server_address = None
@@ -205,37 +207,74 @@ class ThriftCLI(object):
 
 def _print_help():
     help_text = '\n'.join([
-        'Usage:',
-        '  ./run <server_address> <endpoint_name> <thrift_file_path> <json_request_body_file_path>',
-        '  (i.e.) ./run localhost:12201 Animals.create Animals.thrift request.json'
-    ])
+        'Usage: ',
+        '  thriftcli server_address endpoint_name thrift_file_path [json_request_body]',
+        'Examples:',
+        '  thriftcli localhost:9090 Calculator.ping ./Calculator.thrift',
+        '  thriftcli localhost:9090 Calculator.add ./Calculator.thrift add_request_body.json',
+        '  thriftcli localhost:9090 Calculator.doWork ./Calculator.thrift ' +
+        '{\\"work\\": {\\"num1\\": 1, \\"num2\\": 3, \\"op\\": \\"ADD\\"}}',
+        'Arguments:',
+        '  server_address       URL to send the request to. ',
+        '                       This server should listen for and implement the requested endpoint.',
+        '  endpoint_name        Service name and function name representing the request to send to the server.',
+        '  thrift_file_path     Path to the thrift file containing the endpoint\'s declaration',
+        '  body_file_path       Path to the JSON file containing the request body to send for the endpoint.',
+        '                       For each argument, the JSON should map the argument name to its value.',
+        '                       For a struct argument, its value should be a JSON object of field names to values.',
+        '                       This parameter can be omitted for endpoints that take no arguments.'
+        ])
     print help_text
 
 
-def _load_request_body(request_body_path):
-    if not request_body_path:
+def _load_request_body(request_body_arg):
+    if not request_body_arg:
         return {}
-    with open(request_body_path, 'r') as request_body_file:
-        return json.load(request_body_file)
+    try:
+        return json.loads(request_body_arg)
+    except ValueError:
+        try:
+            with open(request_body_arg, 'r') as request_body_file:
+                return json.load(request_body_file)
+        except IOError:
+            raise ThriftCLIException('Invalid JSON arg - not a path to JSON file and not a valid JSON string.\n' +
+                                     'Note that double quotes need to be escaped in bash.')
+        except ValueError as e:
+            raise ThriftCLIException('Request body file contains invalid JSON.', e.message)
+
+
+def _parse_args(argv):
+    if len(argv) < 4:
+        raise ThriftCLIException('Invalid arguments')
+    server_address = argv[1]
+    endpoint_name = sys.argv[2]
+    thrift_path = sys.argv[3]
+    request_body_arg = ' '.join(sys.argv[4:]) if len(sys.argv) > 4 else None
+    request_body = _load_request_body(request_body_arg)
+    return server_address, endpoint_name, thrift_path, request_body
+
+
+def _run_cli(server_address, endpoint_name, thrift_path, request_body):
+    cli = ThriftCLI()
+    try:
+        cli.setup(thrift_path, server_address)
+        result = cli.run(endpoint_name, request_body)
+        if result is not None:
+            print result
+    finally:
+        cli.cleanup()
 
 
 def main():
     if len(sys.argv) < 4:
         _print_help()
         sys.exit(1)
-    server_address = sys.argv[1]
-    endpoint = sys.argv[2]
-    thrift_path = sys.argv[3]
-    request_body_path = sys.argv[4] if len(sys.argv) > 4 else None
-    request_body = _load_request_body(request_body_path)
-    cli = ThriftCLI()
     try:
-        cli.setup(thrift_path, server_address)
-        result = cli.run(endpoint, request_body)
-        if result is not None:
-            print result
-    finally:
-        cli.cleanup()
+        server_address, endpoint_name, thrift_path, request_body = _parse_args(sys.argv)
+    except ThriftCLIException as e:
+        print e.message
+        sys.exit(1)
+    _run_cli(server_address, endpoint_name, thrift_path, request_body)
 
 
 class ThriftCLIException(Exception):
