@@ -1,15 +1,23 @@
-try:
-    from setuptools import setup
-except ImportError:
-    from distutils.core import setup
+import re
+from setuptools import setup
+
+
+version = re.search(
+    '^__version__\s*=\s*\'(.*)\'',
+    open('thriftcli/thrift_cli.py').read(),
+    flags=re.MULTILINE
+).group(1)
 
 config = {
+    'name': 'thriftcli',
     'description': 'Thrift CLI',
     'author': 'Neel Virdy',
-    'version': '0.1',
+    'version': version,
     'packages': ['thriftcli'],
-    'scripts': [],
-    'name': 'thriftcli'
+    'entry_points': {
+        'console_scripts': ['thriftcli = thriftcli.thrift_cli:main']
+    },
+    'install_requires': ['thrift']
 }
 
 setup(**config)

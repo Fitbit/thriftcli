@@ -1,15 +1,22 @@
 ## Usage
 
-From the thriftcli directory:
+First, navigate to the project directory (contains setup.py): 
+
+Next, install the thriftcli Python module:
+```
+python setup.py install
+```
+
+Now you have a command line application called thriftcli in your path:
 
 ```
-./bin/run <server_address> <endpoint> <path_to_thrift_file> <path_to_json_file>
+thriftcli <server_address> <endpoint> <path_to_thrift_file> <path_to_json_file>
 ```
 
 For example:
 
 ```
-./bin/run localhost:9090 MyService.doSomething ../my_project/something.thrift request_body.json
+thriftcli localhost:9090 MyService.doSomething ../my_project/something.thrift request_body.json
 ```
 
 This example assumes that:
