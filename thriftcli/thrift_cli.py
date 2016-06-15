@@ -219,7 +219,8 @@ def _print_help():
         '                       This server should listen for and implement the requested endpoint.',
         '  endpoint_name        Service name and function name representing the request to send to the server.',
         '  thrift_file_path     Path to the thrift file containing the endpoint\'s declaration',
-        '  body_file_path       Path to the JSON file containing the request body to send for the endpoint.',
+        '  body_file_path       Either a JSON string containing the request body to send for the endpoint ' +
+        'or a path to such a JSON file.',
         '                       For each argument, the JSON should map the argument name to its value.',
         '                       For a struct argument, its value should be a JSON object of field names to values.',
         '                       This parameter can be omitted for endpoints that take no arguments.'
