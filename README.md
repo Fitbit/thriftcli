@@ -3,6 +3,14 @@
 From the thriftcli directory:
 
 ```
+pip install thrift
+python setup.py install
+brew install thrift
+```
+
+From the thriftcli directory:
+
+```
 ./bin/run <server_address> <endpoint> <path_to_thrift_file> <path_to_json_file>
 ```
 

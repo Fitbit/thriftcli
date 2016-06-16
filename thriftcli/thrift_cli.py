@@ -99,7 +99,8 @@ class ThriftCLI(object):
 
     def _generate_and_import_module(self):
         command = 'thrift -r --gen py %s' % self._thrift_path
-        subprocess.call(command, shell=True)
+        if subprocess.call(command, shell=True):
+            raise ThriftCLIException('Thrift generation command failed.')
         sys.path.append('gen-py')
         self._import_module(self._get_module_name())
 

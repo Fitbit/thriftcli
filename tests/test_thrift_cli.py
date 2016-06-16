@@ -13,7 +13,7 @@ class TestThriftCLI(unittest.TestCase):
     @mock.patch('thriftcli.ThriftParser._load_file')
     def test_setup(self, mock_load_file, mock_call, mock_import_module, mock_open_connection):
         mock_load_file.return_value = data.TEST_THRIFT_CONTENT
-        mock_call.side_effect = None
+        mock_call.return_value = 0
         cli = ThriftCLI()
         cli.setup(data.TEST_THRIFT_PATH, data.TEST_SERVER_ADDRESS)
         command = 'thrift -r --gen py %s' % data.TEST_THRIFT_PATH
@@ -29,7 +29,7 @@ class TestThriftCLI(unittest.TestCase):
     def test_cleanup(self, mock_remove_dir, mock_load_file, mock_call, mock_import_module, mock_tsocket):
         mock_load_file.return_value = data.TEST_THRIFT_CONTENT
         mock_import_module.side_effect = None
-        mock_call.side_effect = None
+        mock_call.return_value = 0
         mock_remove_dir.side_effect = None
         cli = ThriftCLI()
         cli.setup(data.TEST_THRIFT_PATH, data.TEST_SERVER_ADDRESS)
