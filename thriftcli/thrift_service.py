@@ -19,8 +19,12 @@ class ThriftService(object):
             str_params = ('oneway ' if self.oneway else '', self.return_type, self.name, fields_list)
             return '%s%s %s(%s)' % str_params
 
-    def __init__(self, name, endpoints):
-        self.name = name
+    def __init__(self, reference, endpoints):
+        """
+        :param reference: A unique reference to the struct, defined as 'Namespace.name'.
+        :param endpoints: A dictionary from endpoint names to endpoint objects that compromise the service.
+        """
+        self.reference = reference
         self.endpoints = endpoints
 
     def __eq__(self, other):
@@ -30,4 +34,4 @@ class ThriftService(object):
         return not self.__eq__(other)
 
     def __str__(self):
-        return '%s ' % self.name + ''.join(['\n\t%s' % str(endpoint) for endpoint in self.endpoints.values()])
+        return '%s ' % self.reference + ''.join(['\n\t%s' % str(endpoint) for endpoint in self.endpoints.values()])

@@ -34,8 +34,12 @@ class ThriftStruct(object):
             str_params = (self.index, modifier_str, self.field_type, self.name, default_str)
             return '%s:%s%s %s%s' % str_params
 
-    def __init__(self, name, fields={}):
-        self.name = name
+    def __init__(self, reference, fields={}):
+        """
+        :param reference: A unique reference to the struct, defined as 'Namespace.name'.
+        :param fields: A dictionary from field names to field objects that compromise the struct.
+        """
+        self.reference = reference
         self.fields = fields
 
     def __eq__(self, other):
@@ -46,4 +50,4 @@ class ThriftStruct(object):
 
     def __str__(self):
         sorted_fields = sorted(self.fields.values(), key=lambda field: field.index)
-        return '%s ' % self.name + ''.join(['\n\t%s' % str(field) for field in sorted_fields])
+        return '%s ' % self.reference + ''.join(['\n\t%s' % str(field) for field in sorted_fields])
