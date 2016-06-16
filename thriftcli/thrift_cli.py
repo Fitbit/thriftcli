@@ -94,7 +94,7 @@ class ThriftCLI(object):
             raise ThriftCLIException('Endpoint should be in format \'Service.method\'')
 
     def _get_service_module(self, service_name):
-        service_reference = '.'.join([self._get_module_name(), service_name])
+        service_reference = '.'.join([self.get_module_name(self._thrift_path), service_name])
         try:
             return sys.modules[service_reference]
         except KeyError:
@@ -104,7 +104,7 @@ class ThriftCLI(object):
         command = 'thrift -r --gen py %s' % self._thrift_path
         subprocess.call(command, shell=True)
         sys.path.append('gen-py')
-        self._import_module(self._get_module_name())
+        self._import_module(self.get_module_name(self._thrift_path))
 
     @staticmethod
     def _import_module(module_name):
@@ -114,8 +114,9 @@ class ThriftCLI(object):
             submodule_name = '.'.join([module_name, submodule])
             __import__(submodule_name, globals())
 
-    def _get_module_name(self):
-        return self._thrift_path[:-len('.thrift')].split('/')[-1]
+    @staticmethod
+    def get_module_name(thrift_path):
+        return thrift_path[:-len('.thrift')].split('/')[-1]
 
     def _open_connection(self, address):
         (url, port) = self._parse_address_for_hostname_and_port(address)
@@ -182,7 +183,7 @@ class ThriftCLI(object):
 
     def _construct_map_arg(self, field_type, value):
         types_string = field_type[field_type.index('<') + 1:field_type.rindex('>')]
-        split_index = self._calc_map_types_split_index(types_string)
+        split_index = self.calc_map_types_split_index(types_string)
         if split_index == -1:
             raise ThriftCLIException('Invalid type formatting for map - \'%s\'' % types_string)
         key_type = types_string[:split_index].strip()
@@ -192,7 +193,7 @@ class ThriftCLI(object):
                 for key, elem in value.items()}
 
     @staticmethod
-    def _calc_map_types_split_index(types_string):
+    def calc_map_types_split_index(types_string):
         bracket_depth = 0
         for i, char in enumerate(types_string):
             if char == '<':

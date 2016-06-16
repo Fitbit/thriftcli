@@ -13,7 +13,7 @@ class ThriftParser(object):
     """
 
     class Result(object):
-        def __init__(self, structs, services, enums, typedefs):
+        def __init__(self, structs={}, services={}, enums={}, typedefs={}):
             self.structs = structs
             self.services = services
             self.enums = enums
@@ -36,7 +36,9 @@ class ThriftParser(object):
     def __init__(self):
         self._thrift_path = None
         self._thrift_content = None
+        self._namespace = None
         self._result = None
+        self._defined_references = None
         self._structs_regex = re.compile(r'^([\r\t ]*?struct (\w+)[^}]+})', flags=re.MULTILINE)
         self._services_regex = re.compile(r'^([\r\t ]*?service (\w+)[^}]+})', flags=re.MULTILINE)
         self._enums_regex = re.compile(r'^[\r\t ]*?enum (\w+)[^}]+}', flags=re.MULTILINE)
@@ -57,9 +59,14 @@ class ThriftParser(object):
 
         """
         self._thrift_path = thrift_path
+        self._namespace = thrift_cli.ThriftCLI.get_module_name(thrift_path)
         self._thrift_content = self._load_file(thrift_path)
-        self._result = ThriftParser.Result(
-            self._parse_structs(), self._parse_services(), self._parse_enums(), self._parse_typedefs())
+        self._defined_references = self._get_defined_references()
+        self._result = ThriftParser.Result()
+        self._result.typedefs = self._parse_typedefs()
+        self._result.enums = self._parse_enums()
+        self._result.structs = self._parse_structs()
+        self._result.services = self._parse_services()
         return self._result
 
     @staticmethod
@@ -67,16 +74,25 @@ class ThriftParser(object):
         with open(path, 'r') as file_to_read:
             return file_to_read.read()
 
+    def _get_defined_references(self):
+        struct_names = {name for _, name in self._structs_regex.findall(self._thrift_content)}
+        service_names = {name for _, name in self._services_regex.findall(self._thrift_content)}
+        enum_names = {name for name in self._enums_regex.findall(self._thrift_content)}
+        typedef_names = {name for _, name in self._typedefs_regex.findall(self._thrift_content)}
+        names = struct_names | service_names | enum_names | typedef_names
+        references = {'%s.%s' % (self._namespace, name) for name in names}
+        return references
+
     def _parse_structs(self):
-        definitions_by_name = self._parse_struct_definitions()
-        fields_by_name = {name: self._parse_fields_from_struct_definition(definition) for name, definition in
-                          definitions_by_name.items()}
-        structs = {name: ThriftStruct(name, fields) for name, fields in fields_by_name.items()}
+        definitions_by_reference = self._parse_struct_definitions()
+        fields_by_reference = {reference: self._parse_fields_from_struct_definition(definition)
+                               for reference, definition in definitions_by_reference.items()}
+        structs = {reference: ThriftStruct(reference, fields) for reference, fields in fields_by_reference.items()}
         return structs
 
     def _parse_struct_definitions(self):
         structs_list = self._structs_regex.findall(self._thrift_content)
-        structs = {name: definition for (definition, name) in structs_list}
+        structs = {'%s.%s' % (self._namespace, name): definition for definition, name in structs_list}
         return structs
 
     def _parse_fields_from_struct_definition(self, definition):
@@ -87,15 +103,16 @@ class ThriftParser(object):
         return fields
 
     def _parse_services(self):
-        definitions_by_name = self._parse_service_definitions()
-        endpoints_by_name = {name: self._parse_endpoints_from_service_definition(definition) for name, definition in
-                             definitions_by_name.items()}
-        services = {name: ThriftService(name, endpoints) for name, endpoints in endpoints_by_name.items()}
+        definitions_by_reference = self._parse_service_definitions()
+        endpoints_by_reference = {reference: self._parse_endpoints_from_service_definition(definition)
+                                  for reference, definition in definitions_by_reference.items()}
+        services = {reference: ThriftService(reference, endpoints)
+                    for reference, endpoints in endpoints_by_reference.items()}
         return services
 
     def _parse_service_definitions(self):
         services_list = self._services_regex.findall(self._thrift_content)
-        services = {name: definition for (definition, name) in services_list}
+        services = {'%s.%s' % (self._namespace, name): definition for definition, name in services_list}
         return services
 
     def _parse_endpoints_from_service_definition(self, definition):
@@ -103,6 +120,7 @@ class ThriftParser(object):
         (oneways, return_types, names, fields_strings) = zip(*endpoint_matches)
         (oneways, return_types, names, fields_strings) = \
             (list(oneways), list(return_types), list(names), list(fields_strings))
+        return_types = [self._apply_field_namespace(return_type) for return_type in return_types]
         fields_lists = [self._parse_fields_from_fields_string(fields_string) for fields_string in fields_strings]
         fields_dicts = [{field.name: field for field in field_list} for field_list in fields_lists]
         endpoints = [ThriftService.Endpoint(return_type, name, fields, oneway=oneway) for
@@ -146,17 +164,41 @@ class ThriftParser(object):
 
     def _parse_enums(self):
         enums_list = self._enums_regex.findall(self._thrift_content)
-        enums = set(enums_list)
+        enums = {'%s.%s' % (self._namespace, enum) for enum in enums_list}
         return enums
 
     def _parse_typedefs(self):
         typedef_matches = self._typedefs_regex.findall(self._thrift_content)
-        typedef_dict = {alias: field_type for field_type, alias in typedef_matches}
-        return typedef_dict
+        typedefs = {'%s.%s' % (self._namespace, alias): self._apply_field_namespace(field_type)
+                    for (field_type, alias) in typedef_matches}
+        return typedefs
 
-    @staticmethod
-    def _construct_field_from_field_match(field_match):
+    def _apply_field_namespace(self, field_type):
+        ns_field_type = '%s.%s' % (self._namespace, field_type)
+        if ns_field_type in self._defined_references:
+            return ns_field_type
+        elif field_type.startswith('list<'):
+            elem_type = field_type[field_type.index('<') + 1:field_type.rindex('>')]
+            return 'list<%s>' % self._apply_field_namespace(elem_type)
+        elif field_type.startswith('set<'):
+            elem_type = field_type[field_type.index('<') + 1:field_type.rindex('>')]
+            return 'set<%s>' % self._apply_field_namespace(elem_type)
+        elif field_type.startswith('map<'):
+            return self._apply_map_namespace(field_type)
+        return field_type
+
+    def _apply_map_namespace(self, field_type):
+        types_string = field_type[field_type.index('<') + 1:field_type.rindex('>')]
+        split_index = thrift_cli.ThriftCLI.calc_map_types_split_index(types_string)
+        if split_index == -1:
+            raise thrift_cli.ThriftCLIException('Invalid type formatting for map - \'%s\'' % types_string)
+        key_type = types_string[:split_index].strip()
+        elem_type = types_string[split_index + 1:].strip()
+        return 'map<%s, %s>' % (self._apply_field_namespace(key_type), self._apply_field_namespace(elem_type))
+
+    def _construct_field_from_field_match(self, field_match):
         (index, modifier, field_type, name, default) = field_match
+        field_type = self._apply_field_namespace(field_type)
         required = True if modifier == 'required' else None
         optional = True if modifier == 'optional' else None
         default = default if len(default) else None
@@ -174,6 +216,8 @@ class ThriftParser(object):
         :raises: KeyError
 
         """
+        if not self._result:
+            return False
         return self._result.services[service_name].endpoints[method_name].fields
 
     def get_fields_for_struct_name(self, struct_name):
@@ -186,6 +230,8 @@ class ThriftParser(object):
         :raises: KeyError
 
         """
+        if not self._result:
+            return False
         return self._result.structs[struct_name].fields
 
     def has_struct(self, struct_name):
@@ -197,6 +243,8 @@ class ThriftParser(object):
         :rtype: bool
 
         """
+        if not self._result:
+            return False
         return struct_name in self._result.structs
 
     def has_enum(self, enum_name):
@@ -208,6 +256,8 @@ class ThriftParser(object):
         :rtype: bool
 
         """
+        if not self._result:
+            return False
         return enum_name in self._result.enums
 
     def has_typedef(self, alias):
@@ -219,6 +269,8 @@ class ThriftParser(object):
         :rtype: bool
 
         """
+        if not self._result:
+            return False
         return alias in self._result.typedefs
 
     def get_typedef(self, alias):
@@ -230,6 +282,8 @@ class ThriftParser(object):
         :raises: KeyError
 
         """
+        if not self._result:
+            return False
         return self._result.typedefs[alias]
 
     def unalias_type(self, field_type):
@@ -241,7 +295,7 @@ class ThriftParser(object):
         :raises: ThriftCLIException
 
         """
-        type_set = set([field_type])
+        type_set = {field_type}
         while self.has_typedef(field_type):
             field_type = self.get_typedef(field_type)
             if field_type in type_set:

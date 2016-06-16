@@ -19,6 +19,8 @@ class TestThriftParser(unittest.TestCase):
     def test_parse_structs(self):
         tparser = ThriftParser()
         tparser._thrift_content = data.TEST_THRIFT_CONTENT
+        tparser._namespace = data.TEST_THRIFT_NAMESPACE
+        tparser._defined_references = data.TEST_THRIFT_DEFINED_REFERENCES
         expected_structs = data.TEST_THRIFT_STRUCTS
         structs = tparser._parse_structs()
         self.assertDictEqual(structs, expected_structs)
@@ -26,6 +28,10 @@ class TestThriftParser(unittest.TestCase):
     def test_parse_services(self):
         tparser = ThriftParser()
         tparser._thrift_content = data.TEST_THRIFT_CONTENT
+        tparser._namespace = data.TEST_THRIFT_NAMESPACE
+        tparser._defined_references = data.TEST_THRIFT_DEFINED_REFERENCES
+        tparser._result = ThriftParser.Result(
+            data.TEST_THRIFT_STRUCTS, {}, data.TEST_THRIFT_ENUMS, data.TEST_THRIFT_TYPEDEFS)
         expected_services = data.TEST_THRIFT_SERVICES
         services = tparser._parse_services()
         self.assertDictEqual(services, expected_services)
@@ -33,6 +39,8 @@ class TestThriftParser(unittest.TestCase):
     def test_parse_enums(self):
         tparser = ThriftParser()
         tparser._thrift_content = data.TEST_THRIFT_CONTENT
+        tparser._namespace = data.TEST_THRIFT_NAMESPACE
+        tparser._defined_references = data.TEST_THRIFT_DEFINED_REFERENCES
         expected_enums = data.TEST_THRIFT_ENUMS
         enums = tparser._parse_enums()
         self.assertEqual(enums, expected_enums)
@@ -40,12 +48,25 @@ class TestThriftParser(unittest.TestCase):
     def test_parse_typedefs(self):
         tparser = ThriftParser()
         tparser._thrift_content = data.TEST_THRIFT_CONTENT
+        tparser._namespace = data.TEST_THRIFT_NAMESPACE
+        tparser._defined_references = data.TEST_THRIFT_DEFINED_REFERENCES
+        tparser._result = ThriftParser.Result(data.TEST_THRIFT_STRUCTS)
         expected_typedefs = data.TEST_THRIFT_TYPEDEFS
         typedefs = tparser._parse_typedefs()
         self.assertEqual(typedefs, expected_typedefs)
 
+    def test_get_defined_references(self):
+        tparser = ThriftParser()
+        tparser._thrift_content = data.TEST_THRIFT_CONTENT
+        tparser._namespace = data.TEST_THRIFT_NAMESPACE
+        expected_defined_references = data.TEST_THRIFT_DEFINED_REFERENCES
+        defined_references = tparser._get_defined_references()
+        self.assertEqual(defined_references, expected_defined_references)
+
     def test_parse_endpoints_from_service_definition(self):
         tparser = ThriftParser()
+        tparser._namespace = data.TEST_THRIFT_NAMESPACE
+        tparser._defined_references = data.TEST_THRIFT_DEFINED_REFERENCES
         endpoints = tparser._parse_endpoints_from_service_definition(data.TEST_THRIFT_SERVICE_DEFINITION)
         expected_endpoints = data.TEST_THRIFT_SERVICE_ENDPOINTS
         self.assertEqual(endpoints, expected_endpoints)
@@ -53,10 +74,11 @@ class TestThriftParser(unittest.TestCase):
     def test_parse_struct_definitions(self):
         tparser = ThriftParser()
         tparser._thrift_content = data.TEST_THRIFT_CONTENT
+        tparser._namespace = data.TEST_THRIFT_NAMESPACE
         expected_struct_definitions = {
-            data.TEST_THRIFT_STRUCT_NAME: data.TEST_THRIFT_STRUCT_DEFINITION,
-            data.TEST_THRIFT_STRUCT_NAME2: data.TEST_THRIFT_STRUCT_DEFINITION2,
-            data.TEST_THRIFT_STRUCT_NAME3: data.TEST_THRIFT_STRUCT_DEFINITION3
+            data.TEST_THRIFT_STRUCT_REFERENCE: data.TEST_THRIFT_STRUCT_DEFINITION,
+            data.TEST_THRIFT_STRUCT_REFERENCE2: data.TEST_THRIFT_STRUCT_DEFINITION2,
+            data.TEST_THRIFT_STRUCT_REFERENCE3: data.TEST_THRIFT_STRUCT_DEFINITION3
         }
         struct_definitions = tparser._parse_struct_definitions()
         self.assertEqual(struct_definitions, expected_struct_definitions)
@@ -64,10 +86,11 @@ class TestThriftParser(unittest.TestCase):
     def test_parse_service_definitions(self):
         tparser = ThriftParser()
         tparser._thrift_content = data.TEST_THRIFT_CONTENT
+        tparser._namespace = data.TEST_THRIFT_NAMESPACE
         expected_service_definitions = {
-            data.TEST_THRIFT_SERVICE_NAME: data.TEST_THRIFT_SERVICE_DEFINITION,
-            data.TEST_THRIFT_SERVICE_NAME2: data.TEST_THRIFT_SERVICE_DEFINITION2,
-            data.TEST_THRIFT_SERVICE_NAME3: data.TEST_THRIFT_SERVICE_DEFINITION3
+            data.TEST_THRIFT_SERVICE_REFERENCE: data.TEST_THRIFT_SERVICE_DEFINITION,
+            data.TEST_THRIFT_SERVICE_REFERENCE2: data.TEST_THRIFT_SERVICE_DEFINITION2,
+            data.TEST_THRIFT_SERVICE_REFERENCE3: data.TEST_THRIFT_SERVICE_DEFINITION3
         }
         service_definitions = tparser._parse_service_definitions()
         self.assertEqual(service_definitions, expected_service_definitions)

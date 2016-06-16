@@ -42,10 +42,8 @@ class TestThriftCLI(unittest.TestCase):
         mock_remove_dir.assert_called_with(expected_rm_path)
 
     def test_get_module_name(self):
-        cli = ThriftCLI()
-        cli._thrift_path = data.TEST_THRIFT_PATH
         expected_module_name = data.TEST_THRIFT_MODULE_NAME
-        module_name = cli._get_module_name()
+        module_name = ThriftCLI.get_module_name(data.TEST_THRIFT_PATH)
         self.assertEqual(module_name, expected_module_name)
 
     def test_split_endpoint(self):
@@ -99,9 +97,9 @@ class TestThriftCLI(unittest.TestCase):
     def test_calc_map_types_split_index(self):
         test_map_type = 'string, string'
         expected_split_index = len('string')
-        split_index = ThriftCLI._calc_map_types_split_index(test_map_type)
+        split_index = ThriftCLI.calc_map_types_split_index(test_map_type)
         self.assertEqual(split_index, expected_split_index)
         test_map_type = 'map<string, list<i32>>, set<string>'
         expected_split_index = len('map<string, list<i32>>')
-        split_index = ThriftCLI._calc_map_types_split_index(test_map_type)
+        split_index = ThriftCLI.calc_map_types_split_index(test_map_type)
         self.assertEqual(split_index, expected_split_index)

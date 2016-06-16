@@ -14,12 +14,62 @@ TEST_THRIFT_MODULE_NAME = 'Something'
 TEST_THRIFT_NAMESPACE = 'Something'
 TEST_SERVER_PORT2 = 12201
 TEST_SERVER_PORT3 = None
+TEST_THRIFT_ENUM_NAME = 'SomeEnum'
+TEST_THRIFT_ENUM_NAME2 = 'SomeEnum2'
+TEST_THRIFT_ENUM_REFERENCE = '%s.%s' % (TEST_THRIFT_NAMESPACE, TEST_THRIFT_ENUM_NAME)
+TEST_THRIFT_ENUM_REFERENCE2 = '%s.%s' % (TEST_THRIFT_NAMESPACE, TEST_THRIFT_ENUM_NAME2)
+TEST_THRIFT_TYPEDEF_ALIAS_NAME = 'UserId'
+TEST_THRIFT_TYPEDEF_ALIAS_NAME2 = 'MapType'
+TEST_THRIFT_TYPEDEF_ALIAS_NAME3 = 'SomeStructs'
+TEST_THRIFT_TYPEDEF_ALIAS_NAME4 = 'UserIdentifier'
+TEST_THRIFT_TYPEDEF_ALIAS_REFERENCE = '%s.%s' % (TEST_THRIFT_NAMESPACE, TEST_THRIFT_TYPEDEF_ALIAS_NAME)
+TEST_THRIFT_TYPEDEF_ALIAS_REFERENCE2 = '%s.%s' % (TEST_THRIFT_NAMESPACE, TEST_THRIFT_TYPEDEF_ALIAS_NAME2)
+TEST_THRIFT_TYPEDEF_ALIAS_REFERENCE3 = '%s.%s' % (TEST_THRIFT_NAMESPACE, TEST_THRIFT_TYPEDEF_ALIAS_NAME3)
+TEST_THRIFT_TYPEDEF_ALIAS_REFERENCE4 = '%s.%s' % (TEST_THRIFT_NAMESPACE, TEST_THRIFT_TYPEDEF_ALIAS_NAME4)
 TEST_THRIFT_STRUCT_NAME = 'SomeStruct'
 TEST_THRIFT_STRUCT_NAME2 = 'SomeStruct2'
 TEST_THRIFT_STRUCT_NAME3 = 'SomeStruct3'
 TEST_THRIFT_STRUCT_REFERENCE = '%s.%s' % (TEST_THRIFT_NAMESPACE, TEST_THRIFT_STRUCT_NAME)
 TEST_THRIFT_STRUCT_REFERENCE2 = '%s.%s' % (TEST_THRIFT_NAMESPACE, TEST_THRIFT_STRUCT_NAME2)
 TEST_THRIFT_STRUCT_REFERENCE3 = '%s.%s' % (TEST_THRIFT_NAMESPACE, TEST_THRIFT_STRUCT_NAME3)
+TEST_THRIFT_SERVICE_NAME = 'SomeService'
+TEST_THRIFT_SERVICE_NAME2 = 'SomeService2'
+TEST_THRIFT_SERVICE_NAME3 = 'SomeService3'
+TEST_THRIFT_SERVICE_REFERENCE = '%s.%s' % (TEST_THRIFT_NAMESPACE, TEST_THRIFT_SERVICE_NAME)
+TEST_THRIFT_SERVICE_REFERENCE2 = '%s.%s' % (TEST_THRIFT_NAMESPACE, TEST_THRIFT_SERVICE_NAME2)
+TEST_THRIFT_SERVICE_REFERENCE3 = '%s.%s' % (TEST_THRIFT_NAMESPACE, TEST_THRIFT_SERVICE_NAME3)
+
+TEST_THRIFT_ENUM_DEFINITION = ("""
+    enum %s {
+        A,
+        B,
+        C,
+        D
+    }""" % TEST_THRIFT_ENUM_NAME).lstrip('\n')
+TEST_THRIFT_ENUM_DEFINITION2 = ("""
+    enum %s {
+        W,
+        X = 4,
+        Y = 0xf2a,
+        Z
+    }""" % TEST_THRIFT_ENUM_NAME2).lstrip('\n')
+TEST_THRIFT_TYPEDEF_DEFINITION = 'typedef i64 %s' % TEST_THRIFT_TYPEDEF_ALIAS_NAME
+TEST_THRIFT_TYPEDEF_DEFINITION2 = 'typedef map<string, string> %s' % TEST_THRIFT_TYPEDEF_ALIAS_NAME2
+TEST_THRIFT_TYPEDEF_DEFINITION3 = 'typedef list<%s> %s' % (TEST_THRIFT_STRUCT_NAME, TEST_THRIFT_TYPEDEF_ALIAS_NAME3)
+TEST_THRIFT_TYPEDEF_DEFINITION4 = 'typedef %s %s' % (TEST_THRIFT_TYPEDEF_ALIAS_NAME, TEST_THRIFT_TYPEDEF_ALIAS_NAME4)
+TEST_THRIFT_TYPEDEFS = {
+    TEST_THRIFT_TYPEDEF_ALIAS_REFERENCE: 'i64',
+    TEST_THRIFT_TYPEDEF_ALIAS_REFERENCE2: 'map<string, string>',
+    TEST_THRIFT_TYPEDEF_ALIAS_REFERENCE3: 'list<%s>' % TEST_THRIFT_STRUCT_REFERENCE,
+    TEST_THRIFT_TYPEDEF_ALIAS_REFERENCE4: TEST_THRIFT_TYPEDEF_ALIAS_REFERENCE
+}
+TEST_THRIFT_UNALIASED_TYPES = {
+    TEST_THRIFT_TYPEDEF_ALIAS_REFERENCE: 'i64',
+    TEST_THRIFT_TYPEDEF_ALIAS_REFERENCE2: 'map<string, string>',
+    TEST_THRIFT_TYPEDEF_ALIAS_REFERENCE3: 'list<%s>' % TEST_THRIFT_STRUCT_REFERENCE,
+    TEST_THRIFT_TYPEDEF_ALIAS_REFERENCE4: 'i64'
+}
+
 TEST_THRIFT_STRUCT_FIELDS = {
     'thing_one': ThriftStruct.Field(1, 'string', 'thing_one'),
     'thing_two': ThriftStruct.Field(2, 'double', 'thing_two', default='2.0'),
@@ -37,10 +87,10 @@ TEST_THRIFT_STRUCT_FIELDS3 = {
     'thing_one': ThriftStruct.Field(1, 'list<string>', 'thing_one', required=True),
     'thing_two': ThriftStruct.Field(2, 'set<i8>', 'thing_two', optional=True),
     'thing_three': ThriftStruct.Field(3, 'map<string, string>', 'thing_three', required=True),
-    'thing_four': ThriftStruct.Field(4, 'list<%s>' % TEST_THRIFT_STRUCT_NAME, 'thing_four'),
-    'thing_five': ThriftStruct.Field(5, 'map<%s, %s>' % (TEST_THRIFT_STRUCT_NAME, TEST_THRIFT_STRUCT_NAME2),
+    'thing_four': ThriftStruct.Field(4, 'list<%s>' % TEST_THRIFT_STRUCT_REFERENCE, 'thing_four'),
+    'thing_five': ThriftStruct.Field(5, 'map<%s, %s>' % (TEST_THRIFT_STRUCT_REFERENCE, TEST_THRIFT_STRUCT_REFERENCE2),
                                      'thing_five'),
-    'thing_six': ThriftStruct.Field(6, 'set<list<%s>>' % TEST_THRIFT_STRUCT_NAME2, 'thing_six')
+    'thing_six': ThriftStruct.Field(6, 'set<list<%s>>' % TEST_THRIFT_STRUCT_REFERENCE2, 'thing_six')
 }
 TEST_THRIFT_STRUCT_DEFINITION = ("""
     struct %s {
@@ -73,21 +123,15 @@ TEST_THRIFT_STRUCT_DEFINITION3 = ("""
 TEST_THRIFT_STRUCT = ThriftStruct(TEST_THRIFT_STRUCT_REFERENCE, TEST_THRIFT_STRUCT_FIELDS)
 TEST_THRIFT_STRUCT2 = ThriftStruct(TEST_THRIFT_STRUCT_REFERENCE2, TEST_THRIFT_STRUCT_FIELDS2)
 TEST_THRIFT_STRUCT3 = ThriftStruct(TEST_THRIFT_STRUCT_REFERENCE3, TEST_THRIFT_STRUCT_FIELDS3)
-TEST_THRIFT_SERVICE_NAME = 'SomeService'
-TEST_THRIFT_SERVICE_NAME2 = 'SomeService2'
-TEST_THRIFT_SERVICE_NAME3 = 'SomeService3'
-TEST_THRIFT_SERVICE_REFERENCE = '%s.%s' % (TEST_THRIFT_NAMESPACE, TEST_THRIFT_SERVICE_NAME)
-TEST_THRIFT_SERVICE_REFERENCE2 = '%s.%s' % (TEST_THRIFT_NAMESPACE, TEST_THRIFT_SERVICE_NAME2)
-TEST_THRIFT_SERVICE_REFERENCE3 = '%s.%s' % (TEST_THRIFT_NAMESPACE, TEST_THRIFT_SERVICE_NAME3)
 TEST_THRIFT_SERVICE_ENDPOINTS = {
     'ping': ThriftService.Endpoint('void', 'ping'),
     'doSomething1': ThriftService.Endpoint('i32', 'doSomething1', {
         'num1': ThriftStruct.Field(1, 'i32', 'num1'),
         'num2': ThriftStruct.Field(2, 'i32', 'num2'),
-        'op': ThriftStruct.Field(3, 'Operation', 'op')
+        'op': ThriftStruct.Field(3, TEST_THRIFT_ENUM_REFERENCE, 'op')
     }),
     'useSomeStruct': ThriftService.Endpoint('void', 'useSomeStruct', {
-        'someStruct': ThriftStruct.Field(1, 'SomeStruct', 'someStruct')
+        'someStruct': ThriftStruct.Field(1, TEST_THRIFT_STRUCT_REFERENCE, 'someStruct')
     }, oneway=True)
 }
 TEST_THRIFT_SERVICE_ENDPOINTS2 = {
@@ -96,13 +140,13 @@ TEST_THRIFT_SERVICE_ENDPOINTS2 = {
         'num1': ThriftStruct.Field(1, 'i32', 'num1')
     }),
     'useSomeStruct2': ThriftService.Endpoint('void', 'useSomeStruct2', {
-        'someStruct': ThriftStruct.Field(1, 'SomeStruct2', 'someStruct')
+        'someStruct': ThriftStruct.Field(1, TEST_THRIFT_STRUCT_REFERENCE2, 'someStruct')
     })
 }
 TEST_THRIFT_SERVICE_ENDPOINTS3 = {
     'ping': ThriftService.Endpoint('void', 'ping'),
-    'passMap': ThriftService.Endpoint('MapType', 'passMap', {
-        'myMap': ThriftStruct.Field(1, 'MapType', 'myMap')
+    'passMap': ThriftService.Endpoint(TEST_THRIFT_TYPEDEF_ALIAS_REFERENCE2, 'passMap', {
+        'myMap': ThriftStruct.Field(1, TEST_THRIFT_TYPEDEF_ALIAS_REFERENCE2, 'myMap')
     }),
     'passSetOfLists': ThriftService.Endpoint('set<list<%s>>' % TEST_THRIFT_STRUCT_REFERENCE, 'passSetOfLists', {
         'setOfLists': ThriftStruct.Field(1, 'set<list<%s>>' % TEST_THRIFT_STRUCT_REFERENCE, 'setOfLists')
@@ -111,9 +155,9 @@ TEST_THRIFT_SERVICE_ENDPOINTS3 = {
 TEST_THRIFT_SERVICE_DEFINITION = ("""
     service %s {
         void ping(),
-        i32 doSomething1(i32 num1, i32 num2, Operation op),
+        i32 doSomething1(i32 num1, i32 num2, %s op),
         oneway void useSomeStruct(1:SomeStruct someStruct);
-    }""" % TEST_THRIFT_SERVICE_NAME).lstrip('\n')
+    }""" % (TEST_THRIFT_SERVICE_NAME, TEST_THRIFT_ENUM_NAME)).lstrip('\n')
 TEST_THRIFT_SERVICE_DEFINITION2 = ("""
     service %s {
         void ping(),
@@ -129,39 +173,19 @@ TEST_THRIFT_SERVICE_DEFINITION3 = ("""
 TEST_THRIFT_SERVICE = ThriftService(TEST_THRIFT_SERVICE_REFERENCE, TEST_THRIFT_SERVICE_ENDPOINTS)
 TEST_THRIFT_SERVICE2 = ThriftService(TEST_THRIFT_SERVICE_REFERENCE2, TEST_THRIFT_SERVICE_ENDPOINTS2)
 TEST_THRIFT_SERVICE3 = ThriftService(TEST_THRIFT_SERVICE_REFERENCE3, TEST_THRIFT_SERVICE_ENDPOINTS3)
-TEST_THRIFT_ENUM_NAME = 'SomeEnum'
-TEST_THRIFT_ENUM_NAME2 = 'SomeEnum2'
-TEST_THRIFT_ENUM_DEFINITION = ("""
-    enum %s {
-        A,
-        B,
-        C,
-        D
-    }""" % TEST_THRIFT_ENUM_NAME).lstrip('\n')
-TEST_THRIFT_ENUM_DEFINITION2 = ("""
-    enum %s {
-        W,
-        X = 4,
-        Y = 0xf2a,
-        Z
-    }""" % TEST_THRIFT_ENUM_NAME2).lstrip('\n')
-TEST_THRIFT_ENUM_REFERENCE = '%s.%s' % (TEST_THRIFT_NAMESPACE, TEST_THRIFT_ENUM_NAME)
-TEST_THRIFT_ENUM_REFERENCE2 = '%s.%s' % (TEST_THRIFT_NAMESPACE, TEST_THRIFT_ENUM_NAME2)
-TEST_THRIFT_TYPEDEF_DEFINITION = 'typedef i64 UserId'
-TEST_THRIFT_TYPEDEF_DEFINITION2 = 'typedef map<string, string> MapType'
-TEST_THRIFT_TYPEDEF_DEFINITION3 = 'typedef list<SomeStruct> SomeStructs'
-TEST_THRIFT_TYPEDEF_DEFINITION4 = 'typedef UserId UserIdentifier'
-TEST_THRIFT_TYPEDEFS = {
-    '%s.UserId' % TEST_THRIFT_NAMESPACE: 'i64',
-    '%s.MapType' % TEST_THRIFT_NAMESPACE: 'map<string, string>',
-    '%s.SomeStructs' % TEST_THRIFT_NAMESPACE: 'list<%s.SomeStruct>' % TEST_THRIFT_NAMESPACE,
-    '%s.UserIdentifier' % TEST_THRIFT_NAMESPACE: '%s.UserId' % TEST_THRIFT_NAMESPACE
-}
-TEST_THRIFT_UNALIASED_TYPES = {
-    '%s.UserId' % TEST_THRIFT_NAMESPACE: 'i64',
-    '%s.MapType' % TEST_THRIFT_NAMESPACE: 'map<string, string>',
-    '%s.SomeStructs' % TEST_THRIFT_NAMESPACE: 'list<%s.SomeStruct>' % TEST_THRIFT_NAMESPACE,
-    '%s.UserIdentifier' % TEST_THRIFT_NAMESPACE: 'i64'
+TEST_THRIFT_DEFINED_REFERENCES = {
+    TEST_THRIFT_ENUM_REFERENCE,
+    TEST_THRIFT_ENUM_REFERENCE2,
+    TEST_THRIFT_TYPEDEF_ALIAS_REFERENCE,
+    TEST_THRIFT_TYPEDEF_ALIAS_REFERENCE2,
+    TEST_THRIFT_TYPEDEF_ALIAS_REFERENCE3,
+    TEST_THRIFT_TYPEDEF_ALIAS_REFERENCE4,
+    TEST_THRIFT_STRUCT_REFERENCE,
+    TEST_THRIFT_STRUCT_REFERENCE2,
+    TEST_THRIFT_STRUCT_REFERENCE3,
+    TEST_THRIFT_SERVICE_REFERENCE,
+    TEST_THRIFT_SERVICE_REFERENCE2,
+    TEST_THRIFT_SERVICE_REFERENCE3
 }
 TEST_THRIFT_CONTENT = '\n'.join([
     TEST_THRIFT_ENUM_DEFINITION,
