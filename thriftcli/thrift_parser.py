@@ -120,7 +120,7 @@ class ThriftParser(object):
         (oneways, return_types, names, fields_strings) = zip(*endpoint_matches)
         (oneways, return_types, names, fields_strings) = \
             (list(oneways), list(return_types), list(names), list(fields_strings))
-        return_types = [self._apply_field_namespace(return_type) for return_type in return_types]
+        return_types = [self._apply_namespace(return_type) for return_type in return_types]
         fields_lists = [self._parse_fields_from_fields_string(fields_string) for fields_string in fields_strings]
         fields_dicts = [{field.name: field for field in field_list} for field_list in fields_lists]
         endpoints = [ThriftService.Endpoint(return_type, name, fields, oneway=oneway) for
@@ -169,20 +169,20 @@ class ThriftParser(object):
 
     def _parse_typedefs(self):
         typedef_matches = self._typedefs_regex.findall(self._thrift_content)
-        typedefs = {'%s.%s' % (self._namespace, alias): self._apply_field_namespace(field_type)
+        typedefs = {'%s.%s' % (self._namespace, alias): self._apply_namespace(field_type)
                     for (field_type, alias) in typedef_matches}
         return typedefs
 
-    def _apply_field_namespace(self, field_type):
+    def _apply_namespace(self, field_type):
         ns_field_type = '%s.%s' % (self._namespace, field_type)
         if ns_field_type in self._defined_references:
             return ns_field_type
         elif field_type.startswith('list<'):
             elem_type = field_type[field_type.index('<') + 1:field_type.rindex('>')]
-            return 'list<%s>' % self._apply_field_namespace(elem_type)
+            return 'list<%s>' % self._apply_namespace(elem_type)
         elif field_type.startswith('set<'):
             elem_type = field_type[field_type.index('<') + 1:field_type.rindex('>')]
-            return 'set<%s>' % self._apply_field_namespace(elem_type)
+            return 'set<%s>' % self._apply_namespace(elem_type)
         elif field_type.startswith('map<'):
             return self._apply_map_namespace(field_type)
         return field_type
@@ -194,11 +194,11 @@ class ThriftParser(object):
             raise thrift_cli.ThriftCLIException('Invalid type formatting for map - \'%s\'' % types_string)
         key_type = types_string[:split_index].strip()
         elem_type = types_string[split_index + 1:].strip()
-        return 'map<%s, %s>' % (self._apply_field_namespace(key_type), self._apply_field_namespace(elem_type))
+        return 'map<%s, %s>' % (self._apply_namespace(key_type), self._apply_namespace(elem_type))
 
     def _construct_field_from_field_match(self, field_match):
         (index, modifier, field_type, name, default) = field_match
-        field_type = self._apply_field_namespace(field_type)
+        field_type = self._apply_namespace(field_type)
         required = True if modifier == 'required' else None
         optional = True if modifier == 'optional' else None
         default = default if len(default) else None

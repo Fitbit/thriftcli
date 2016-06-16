@@ -123,3 +123,49 @@ class TestThriftParser(unittest.TestCase):
         for alias in data.TEST_THRIFT_CIRCULAR_TYPEDEFS:
             with self.assertRaises(ThriftCLIException):
                 tparser.unalias_type(alias)
+
+    @mock.patch('thriftcli.ThriftParser._load_file')
+    def test_apply_namespace_on_defined_references(self, mock_load_file):
+        mock_load_file.return_value = data.TEST_THRIFT_CONTENT
+        tparser = ThriftParser()
+        tparser.parse(data.TEST_THRIFT_PATH)
+        self.assertEqual(tparser._apply_namespace(data.TEST_THRIFT_ENUM_NAME), data.TEST_THRIFT_ENUM_REFERENCE)
+        self.assertEqual(tparser._apply_namespace(data.TEST_THRIFT_ENUM_NAME2), data.TEST_THRIFT_ENUM_REFERENCE2)
+        self.assertEqual(tparser._apply_namespace(data.TEST_THRIFT_STRUCT_NAME), data.TEST_THRIFT_STRUCT_REFERENCE)
+        self.assertEqual(tparser._apply_namespace(data.TEST_THRIFT_STRUCT_NAME2), data.TEST_THRIFT_STRUCT_REFERENCE2)
+        self.assertEqual(tparser._apply_namespace(data.TEST_THRIFT_STRUCT_NAME3), data.TEST_THRIFT_STRUCT_REFERENCE3)
+        self.assertEqual(tparser._apply_namespace(data.TEST_THRIFT_SERVICE_NAME), data.TEST_THRIFT_SERVICE_REFERENCE)
+        self.assertEqual(tparser._apply_namespace(data.TEST_THRIFT_SERVICE_NAME2), data.TEST_THRIFT_SERVICE_REFERENCE2)
+        self.assertEqual(tparser._apply_namespace(data.TEST_THRIFT_SERVICE_NAME3), data.TEST_THRIFT_SERVICE_REFERENCE3)
+        self.assertEqual(tparser._apply_namespace(data.TEST_THRIFT_TYPEDEF_ALIAS_NAME),
+                         data.TEST_THRIFT_TYPEDEF_ALIAS_REFERENCE)
+        self.assertEqual(tparser._apply_namespace(data.TEST_THRIFT_TYPEDEF_ALIAS_NAME2),
+                         data.TEST_THRIFT_TYPEDEF_ALIAS_REFERENCE2)
+        self.assertEqual(tparser._apply_namespace(data.TEST_THRIFT_TYPEDEF_ALIAS_NAME3),
+                         data.TEST_THRIFT_TYPEDEF_ALIAS_REFERENCE3)
+        self.assertEqual(tparser._apply_namespace(data.TEST_THRIFT_TYPEDEF_ALIAS_NAME4),
+                         data.TEST_THRIFT_TYPEDEF_ALIAS_REFERENCE4)
+
+    @mock.patch('thriftcli.ThriftParser._load_file')
+    def test_apply_namespace_on_primitives(self, mock_load_file):
+        mock_load_file.return_value = data.TEST_THRIFT_CONTENT
+        tparser = ThriftParser()
+        tparser.parse(data.TEST_THRIFT_PATH)
+        self.assertEqual(tparser._apply_namespace('i32'), 'i32')
+        self.assertEqual(tparser._apply_namespace('bool'), 'bool')
+        self.assertEqual(tparser._apply_namespace('string'), 'string')
+        self.assertEqual(tparser._apply_namespace('binary'), 'binary')
+
+    @mock.patch('thriftcli.ThriftParser._load_file')
+    def test_apply_namespace_on_data_structures(self, mock_load_file):
+        mock_load_file.return_value = data.TEST_THRIFT_CONTENT
+        tparser = ThriftParser()
+        tparser.parse(data.TEST_THRIFT_PATH)
+        self.assertEqual(tparser._apply_namespace('set<bool>'), 'set<bool>')
+        self.assertEqual(tparser._apply_namespace('map<string, map<string, list<set<binary>>>>'),
+                         'map<string, map<string, list<set<binary>>>>')
+        self.assertEqual(tparser._apply_namespace('list<set<%s>>' % data.TEST_THRIFT_TYPEDEF_ALIAS_NAME),
+                         'list<set<%s>>' % data.TEST_THRIFT_TYPEDEF_ALIAS_REFERENCE)
+        self.assertEqual(tparser._apply_namespace('map<%s, list<%s>>' %
+                                                  (data.TEST_THRIFT_STRUCT_NAME, data.TEST_THRIFT_ENUM_NAME)),
+                         'map<%s, list<%s>>' % (data.TEST_THRIFT_STRUCT_REFERENCE, data.TEST_THRIFT_ENUM_REFERENCE))
