@@ -51,7 +51,10 @@ class ThriftCLI(object):
 
         """
         method = self._get_method_from_endpoint(endpoint)
-        [service_name, method_name] = self._split_endpoint(endpoint)
+        try:
+            [service_name, method_name] = self._split_reference(endpoint)
+        except ValueError:
+            raise ThriftCLIException('Endpoint should be in the format \'Service.method\'')
         request_args = self._convert_json_to_args(service_name, method_name, request_body)
         return method(**request_args)
 
@@ -75,7 +78,8 @@ class ThriftCLI(object):
     def _get_method_from_endpoint(self, endpoint):
         class_name = 'Client'
         [service_name, method_name] = self._split_endpoint(endpoint)
-        client_constructor = getattr(self._get_service_module(service_name), class_name)
+        service_module_name = '%s.%s' % (self.get_module_name(self._thrift_path), service_name)
+        client_constructor = getattr(self._get_module(service_module_name), class_name)
         client = client_constructor(self._protocol)
         try:
             method = getattr(client, method_name)
@@ -84,21 +88,17 @@ class ThriftCLI(object):
         return method
 
     @staticmethod
-    def _split_endpoint(endpoint):
-        try:
-            split = endpoint.split('.')
-            if not split or len(split) != 2:
-                raise ValueError()
-            return split
-        except ValueError:
-            raise ThriftCLIException('Endpoint should be in format \'Service.method\'')
+    def _split_reference(reference):
+        split = reference.split('.')
+        if not split or len(split) != 2:
+            raise ValueError()
+        return split
 
-    def _get_service_module(self, service_name):
-        service_reference = '.'.join([self.get_module_name(self._thrift_path), service_name])
+    def _get_module(self, module_name):
         try:
-            return sys.modules[service_reference]
+            return sys.modules[module_name]
         except KeyError:
-            raise ThriftCLIException('Invalid service \'%s\' provided' % service_name)
+            raise ThriftCLIException('Invalid module \'%s\' provided' % module_name)
 
     def _generate_and_import_module(self):
         command = 'thrift -r --gen py %s' % self._thrift_path
@@ -163,10 +163,18 @@ class ThriftCLI(object):
         return value
 
     def _construct_struct_arg(self, field_type, value):
-        return getattr(self._get_service_module('ttypes'), field_type)(**value)
+        try:
+            package, struct = self._split_reference(field_type)
+        except ValueError:
+            raise ThriftCLIException('Invalid formatting for type %s, expected format \'package.name\'' % field_type)
+        return getattr(self._get_module('%s.ttypes' % package), struct)(**value)
 
     def _construct_enum_arg(self, field_type, value):
-        enum_class = getattr(self._get_service_module('ttypes'), field_type)
+        try:
+            package, struct = self._split_reference(field_type)
+        except ValueError:
+            raise ThriftCLIException('Invalid formatting for type %s, expected format \'package.name\'' % field_type)
+        enum_class = getattr(self._get_module('%s.ttypes' % package), struct)
         if isinstance(value, (int, long)):
             return value
         elif isinstance(value, basestring):

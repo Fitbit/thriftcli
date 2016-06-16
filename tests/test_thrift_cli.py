@@ -3,7 +3,7 @@ import unittest
 import mock
 
 import data
-from thriftcli import ThriftCLI, ThriftCLIException
+from thriftcli import ThriftCLI
 
 
 class TestThriftCLI(unittest.TestCase):
@@ -46,18 +46,18 @@ class TestThriftCLI(unittest.TestCase):
         module_name = ThriftCLI.get_module_name(data.TEST_THRIFT_PATH)
         self.assertEqual(module_name, expected_module_name)
 
-    def test_split_endpoint(self):
+    def test_split_reference(self):
         cli = ThriftCLI()
         endpoint = '%s.%s' % (data.TEST_THRIFT_SERVICE_NAME, data.TEST_THRIFT_METHOD_NAME)
         expected_service_name, expected_method_name = data.TEST_THRIFT_SERVICE_NAME, data.TEST_THRIFT_METHOD_NAME
-        service_name, method_name = cli._split_endpoint(endpoint)
+        service_name, method_name = cli._split_reference(endpoint)
         self.assertEqual((service_name, method_name), (expected_service_name, expected_method_name))
         endpoint = '%s%s' % (data.TEST_THRIFT_SERVICE_NAME, data.TEST_THRIFT_METHOD_NAME)
-        with self.assertRaises(ThriftCLIException):
-            cli._split_endpoint(endpoint)
+        with self.assertRaises(ValueError):
+            cli._split_reference(endpoint)
         endpoint = '%s.%s.abc' % (data.TEST_THRIFT_SERVICE_NAME, data.TEST_THRIFT_METHOD_NAME)
-        with self.assertRaises(ThriftCLIException):
-            cli._split_endpoint(endpoint)
+        with self.assertRaises(ValueError):
+            cli._split_reference(endpoint)
 
     @mock.patch('thriftcli.TTransport.TBufferedTransport.open')
     @mock.patch('thriftcli.TSocket.TSocket')
