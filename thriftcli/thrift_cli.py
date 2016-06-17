@@ -37,7 +37,7 @@ class ThriftCLI(object):
         self._thrift_path = thrift_path
         self._server_address = server_address
         self._thrift_parser.parse(self._thrift_path)
-        self._generate_and_import_module()
+        self._generate_and_import_packages()
         self._open_connection(self._server_address)
 
     def run(self, endpoint, request_body):
@@ -55,7 +55,8 @@ class ThriftCLI(object):
             [service_name, method_name] = self._split_reference(endpoint)
         except ValueError:
             raise ThriftCLIException('Endpoint should be in the format \'Service.method\'')
-        request_args = self._convert_json_to_args(service_name, method_name, request_body)
+        service_reference = '%s.%s' % (self.get_package_name(self._thrift_path), service_name)
+        request_args = self._convert_json_to_args(service_reference, method_name, request_body)
         return method(**request_args)
 
     def cleanup(self):
@@ -77,8 +78,8 @@ class ThriftCLI(object):
 
     def _get_method_from_endpoint(self, endpoint):
         class_name = 'Client'
-        [service_name, method_name] = self._split_endpoint(endpoint)
-        service_module_name = '%s.%s' % (self.get_module_name(self._thrift_path), service_name)
+        [service_name, method_name] = self._split_reference(endpoint)
+        service_module_name = '%s.%s' % (self.get_package_name(self._thrift_path), service_name)
         client_constructor = getattr(self._get_module(service_module_name), class_name)
         client = client_constructor(self._protocol)
         try:
@@ -100,22 +101,22 @@ class ThriftCLI(object):
         except KeyError:
             raise ThriftCLIException('Invalid module \'%s\' provided' % module_name)
 
-    def _generate_and_import_module(self):
+    def _generate_and_import_packages(self):
         command = 'thrift -r --gen py %s' % self._thrift_path
         subprocess.call(command, shell=True)
         sys.path.append('gen-py')
-        self._import_module(self.get_module_name(self._thrift_path))
+        self._import_package(self.get_package_name(self._thrift_path))
 
     @staticmethod
-    def _import_module(module_name):
-        module = __import__(module_name, globals())
-        submodules = module.__all__
-        for submodule in submodules:
-            submodule_name = '.'.join([module_name, submodule])
-            __import__(submodule_name, globals())
+    def _import_package(package_name):
+        package = __import__(package_name, globals())
+        modules = package.__all__
+        for module in modules:
+            module_name = '.'.join([package_name, module])
+            __import__(module_name, globals())
 
     @staticmethod
-    def get_module_name(thrift_path):
+    def get_package_name(thrift_path):
         return thrift_path[:-len('.thrift')].split('/')[-1]
 
     def _open_connection(self, address):
@@ -142,7 +143,7 @@ class ThriftCLI(object):
         return args
 
     def _convert_json_entry_to_arg(self, field_type, value):
-        field_type = self.thrift_parser.unalias_type(field_type)
+        field_type = self._thrift_parser.unalias_type(field_type)
         if self._thrift_parser.has_struct(field_type):
             fields = self._thrift_parser.get_fields_for_struct_name(field_type)
             value = self._convert_json_to_args_given_fields(fields, value)
