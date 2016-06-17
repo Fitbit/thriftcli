@@ -1,7 +1,5 @@
 import unittest
-
 import mock
-
 import data
 from thriftcli import ThriftParser, ThriftCLIException
 
@@ -22,9 +20,25 @@ class TestThriftParser(unittest.TestCase):
         tparser = ThriftParser()
         expected_tparse_result = data.TEST_THRIFT_INCLUDING_PARSE_RESULT
         tparse_result = tparser.parse(data.TEST_THRIFT_INCLUDING_PATH, data.TEST_THRIFT_DIR_PATH)
-        self.maxDiff = None
-        print tparse_result.structs
+        expected_call_args_list = [mock.call(data.TEST_THRIFT_INCLUDING_PATH),
+                                   mock.call(data.TEST_THRIFT_INCLUDED_PATH)]
+        self.assertEqual(mock_load_file.call_args_list, expected_call_args_list)
         self.assertEqual(tparse_result, expected_tparse_result)
+
+    def test_get_thrift_dir_path(self):
+        tparser = ThriftParser()
+        tparser._thrift_path = 'somefolder/Something.thrift'
+        expected_thrift_dir_path = 'somefolder/'
+        thrift_dir_path = tparser._get_thrift_dir_path()
+        self.assertEqual(thrift_dir_path, expected_thrift_dir_path)
+        given_thrift_dir_path = 'some/other/folder'
+        expected_thrift_dir_path = 'some/other/folder/'
+        thrift_dir_path = tparser._get_thrift_dir_path(given_thrift_dir_path)
+        self.assertEqual(thrift_dir_path, expected_thrift_dir_path)
+        tparser._thrift_path = 'Something.thrift'
+        expected_thrift_dir_path = ''
+        thrift_dir_path = tparser._get_thrift_dir_path()
+        self.assertEqual(thrift_dir_path, expected_thrift_dir_path)
 
     def test_parse_structs(self):
         tparser = ThriftParser()
@@ -60,7 +74,7 @@ class TestThriftParser(unittest.TestCase):
         tparser._thrift_content = data.TEST_THRIFT_CONTENT
         tparser._namespace = data.TEST_THRIFT_NAMESPACE
         tparser._defined_references = data.TEST_THRIFT_DEFINED_REFERENCES
-        tparser.result = ThriftParser.Result(data.TEST_THRIFT_STRUCTS)
+        tparser.result = ThriftParser.Result(data.TEST_THRIFT_STRUCTS, {}, set([]), {})
         expected_typedefs = data.TEST_THRIFT_TYPEDEFS
         typedefs = tparser._parse_typedefs()
         self.assertEqual(typedefs, expected_typedefs)

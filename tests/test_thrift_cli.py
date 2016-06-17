@@ -1,7 +1,5 @@
 import unittest
-
 import mock
-
 import data
 from thriftcli import ThriftCLI
 

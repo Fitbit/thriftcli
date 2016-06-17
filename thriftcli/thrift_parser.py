@@ -13,7 +13,14 @@ class ThriftParser(object):
     """
 
     class Result(object):
-        def __init__(self, structs={}, services={}, enums=set([]), typedefs={}):
+        def __init__(self, structs, services, enums, typedefs):
+            """ Container for results from parsing a thrift file.
+
+            :param structs: Dictionary from struct reference to ThriftStruct object.
+            :param services: Dictionary from service reference to ThriftService object.
+            :param enums: Set of enum references.
+            :param typedefs: Dictionary from typedef alias reference to unaliased field type.
+            """
             self.structs = structs
             self.services = services
             self.enums = enums
@@ -69,7 +76,7 @@ class ThriftParser(object):
         self._thrift_content = self._load_file(thrift_path)
         self._dependency_parsers = self._parse_dependencies()
         self._defined_references = self.get_defined_references()
-        self.result = ThriftParser.Result()
+        self.result = ThriftParser.Result({}, {}, set([]), {})
         self._merge_dependencies_into_result()
         self.result.typedefs.update(self._parse_typedefs())
         self.result.enums.update(self._parse_enums())
