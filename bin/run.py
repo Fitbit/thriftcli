@@ -27,11 +27,16 @@ def main():
     server_address = sys.argv[1]
     endpoint = sys.argv[2]
     thrift_path = sys.argv[3]
-    request_body_path = sys.argv[4] if len(sys.argv) > 4 else None
+    if sys.argv[4] == '-d':
+        thrift_dir_path = [sys.argv[5]]
+        request_body_path = sys.argv[6] if len(sys.argv) > 6 else None
+    else:
+        thrift_dir_path = []
+        request_body_path = sys.argv[4] if len(sys.argv) > 4 else None
     request_body = _load_request_body(request_body_path)
     cli = ThriftCLI()
     try:
-        cli.setup(thrift_path, server_address)
+        cli.setup(thrift_path, server_address, thrift_dir_path)
         result = cli.run(endpoint, request_body)
         if result is not None:
             print result

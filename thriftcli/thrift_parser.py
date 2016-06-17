@@ -1,4 +1,6 @@
 import re
+import os
+import itertools
 
 from .thrift_service import ThriftService
 from .thrift_struct import ThriftStruct
@@ -42,7 +44,7 @@ class ThriftParser(object):
 
     def __init__(self):
         self._thrift_path = None
-        self._thrift_dir_path = None
+        self._thrift_dir_paths = None
         self._thrift_content = None
         self._namespace = None
         self.result = None
@@ -59,19 +61,17 @@ class ThriftParser(object):
         self._typedefs_regex = re.compile(r'^[\r\t ]*typedef\s+([^\n]*)[\r\t ]+([^,;\n]*)', flags=re.MULTILINE)
         self._includes_regex = re.compile(r'^include\s+\"(\w+.thrift)\"', flags=re.MULTILINE)
 
-    def parse(self, thrift_path, thrift_dir_path=None):
+    def parse(self, thrift_path, thrift_dir_paths=[]):
         """ Parses a thrift file into its structs, services, enums, and typedefs.
 
         :param thrift_path: The path to the thrift file being parsed.
         :type thrift_path: str
-        :param thrift_dir_path: The path to the folder where thrift dependencies are located.
-        :type thrift_dir_path: str
         :returns: Parse result object containing definitions of structs, services, enums, and typedefs.
         :rtype: ThriftParser.Result
 
         """
         self._thrift_path = thrift_path
-        self._thrift_dir_path = self._get_thrift_dir_path(thrift_dir_path)
+        self._thrift_dir_paths = [self._get_containing_directory(thrift_path)] + thrift_dir_paths
         self._namespace = thrift_cli.ThriftCLI.get_package_name(thrift_path)
         self._thrift_content = self._load_file(thrift_path)
         self._dependency_parsers = self._parse_dependencies()
@@ -89,20 +89,24 @@ class ThriftParser(object):
         with open(path, 'r') as file_to_read:
             return file_to_read.read()
 
-    def _get_thrift_dir_path(self, thrift_dir_path=None):
-        if thrift_dir_path:
-            return thrift_dir_path if thrift_dir_path[-1] == '/' else thrift_dir_path + '/'
-        elif '/' in self._thrift_path:
-            return self._thrift_path[:self._thrift_path.rindex('/') + 1]
-        else:
-            return ''
+    @staticmethod
+    def _get_containing_directory(path):
+        return path[:path.rindex('/')+1]
 
     def _parse_dependencies(self):
-        includes_names = self._includes_regex.findall(self._thrift_content)
-        includes_paths = [self._thrift_dir_path + includes_name for includes_name in includes_names]
-        dependency_parsers = [ThriftParser() for _ in includes_paths]
-        for parser, path in zip(dependency_parsers, includes_paths):
-            parser.parse(path, self._thrift_dir_path)
+        names_to_include = set(self._includes_regex.findall(self._thrift_content))
+        names_found = set([])
+        include_paths = []
+        for thrift_dir_path, name in itertools.product(self._thrift_dir_paths, names_to_include):
+            if name in names_found:
+                continue
+            path = thrift_dir_path + name
+            if os.path.isfile(path):
+                include_paths.append(path)
+                names_found.add(name)
+        dependency_parsers = [ThriftParser() for _ in include_paths]
+        for parser, path in zip(dependency_parsers, include_paths):
+            parser.parse(path, self._thrift_dir_paths)
         return dependency_parsers
 
     def get_defined_references(self):

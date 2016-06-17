@@ -21,10 +21,11 @@ class ThriftCLI(object):
     def __init__(self):
         self._thrift_path = None
         self._server_address = None
+        self._thrift_dir_paths = None
         self._thrift_parser = ThriftParser()
         self._transport = None
 
-    def setup(self, thrift_path, server_address):
+    def setup(self, thrift_path, server_address, thrift_dir_paths=[]):
         """ Opens a connection between the given thrift file and server.
 
         :param thrift_path: The path to the thrift file being used.
@@ -36,7 +37,8 @@ class ThriftCLI(object):
         """
         self._thrift_path = thrift_path
         self._server_address = server_address
-        self._thrift_parser.parse(self._thrift_path)
+        self._thrift_dir_paths = self._clean_thrift_dir_paths(thrift_dir_paths)
+        self._thrift_parser.parse(self._thrift_path, self._thrift_dir_paths)
         self._generate_and_import_packages()
         self._open_connection(self._server_address)
 
@@ -68,6 +70,17 @@ class ThriftCLI(object):
         self._remove_dir('gen-py')
         if self._transport:
             self._transport.close()
+
+    @staticmethod
+    def _clean_thrift_dir_paths(thrift_dir_paths=[]):
+        return [ThriftCLI._clean_thrift_dir_path(thrift_dir_path) for thrift_dir_path in thrift_dir_paths]
+
+    @staticmethod
+    def _clean_thrift_dir_path(thrift_dir_path=''):
+        if thrift_dir_path:
+            return thrift_dir_path if thrift_dir_path[-1] == '/' else thrift_dir_path + '/'
+        else:
+            return ''
 
     @staticmethod
     def _remove_dir(path):
@@ -102,7 +115,8 @@ class ThriftCLI(object):
             raise ThriftCLIException('Invalid module \'%s\' provided' % module_name)
 
     def _generate_and_import_packages(self):
-        command = 'thrift -r --gen py %s' % self._thrift_path
+        thrift_dir_options = ''.join([' -I %s' % thrift_dir_path for thrift_dir_path in self._thrift_dir_paths])
+        command = 'thrift -r%s --gen py %s' % (thrift_dir_options, self._thrift_path)
         subprocess.call(command, shell=True)
         sys.path.append('gen-py')
         self._import_package(self.get_package_name(self._thrift_path))

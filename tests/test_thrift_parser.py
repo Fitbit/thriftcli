@@ -14,31 +14,18 @@ class TestThriftParser(unittest.TestCase):
         tparse_result = tparser.parse(data.TEST_THRIFT_PATH)
         self.assertEqual(tparse_result, expected_tparse_result)
 
+    @mock.patch('os.path.isfile')
     @mock.patch('thriftcli.ThriftParser._load_file')
-    def test_parse_including(self, mock_load_file):
+    def test_parse_including(self, mock_load_file, mock_is_file):
         mock_load_file.side_effect = [data.TEST_THRIFT_INCLUDING_CONTENT, data.TEST_THRIFT_INCLUDED_CONTENT]
+        mock_is_file.side_effect = lambda path: path == data.TEST_THRIFT_INCLUDED_PATH
         tparser = ThriftParser()
         expected_tparse_result = data.TEST_THRIFT_INCLUDING_PARSE_RESULT
-        tparse_result = tparser.parse(data.TEST_THRIFT_INCLUDING_PATH, data.TEST_THRIFT_DIR_PATH)
+        tparse_result = tparser.parse(data.TEST_THRIFT_INCLUDING_PATH, [data.TEST_THRIFT_DIR_PATH])
         expected_call_args_list = [mock.call(data.TEST_THRIFT_INCLUDING_PATH),
                                    mock.call(data.TEST_THRIFT_INCLUDED_PATH)]
         self.assertEqual(mock_load_file.call_args_list, expected_call_args_list)
         self.assertEqual(tparse_result, expected_tparse_result)
-
-    def test_get_thrift_dir_path(self):
-        tparser = ThriftParser()
-        tparser._thrift_path = 'somefolder/Something.thrift'
-        expected_thrift_dir_path = 'somefolder/'
-        thrift_dir_path = tparser._get_thrift_dir_path()
-        self.assertEqual(thrift_dir_path, expected_thrift_dir_path)
-        given_thrift_dir_path = 'some/other/folder'
-        expected_thrift_dir_path = 'some/other/folder/'
-        thrift_dir_path = tparser._get_thrift_dir_path(given_thrift_dir_path)
-        self.assertEqual(thrift_dir_path, expected_thrift_dir_path)
-        tparser._thrift_path = 'Something.thrift'
-        expected_thrift_dir_path = ''
-        thrift_dir_path = tparser._get_thrift_dir_path()
-        self.assertEqual(thrift_dir_path, expected_thrift_dir_path)
 
     def test_parse_structs(self):
         tparser = ThriftParser()
