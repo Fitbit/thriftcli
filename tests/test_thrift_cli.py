@@ -1,36 +1,35 @@
 import unittest
-
 import mock
-
 import data
-from thriftcli import ThriftCLI, ThriftCLIException
+from thriftcli import ThriftCLI
 
 
 class TestThriftCLI(unittest.TestCase):
     @mock.patch('thriftcli.ThriftCLI._open_connection')
-    @mock.patch('thriftcli.ThriftCLI._import_module')
+    @mock.patch('thriftcli.ThriftCLI._import_package')
     @mock.patch('subprocess.call')
     @mock.patch('thriftcli.ThriftParser._load_file')
-    def test_setup(self, mock_load_file, mock_call, mock_import_module, mock_open_connection):
+    def test_setup(self, mock_load_file, mock_call, mock_import_package, mock_open_connection):
         mock_load_file.return_value = data.TEST_THRIFT_CONTENT
         mock_call.return_value = 0
         cli = ThriftCLI()
         cli.setup(data.TEST_THRIFT_PATH, data.TEST_SERVER_ADDRESS)
         command = 'thrift -r --gen py %s' % data.TEST_THRIFT_PATH
         mock_call.assert_called_with(command, shell=True)
-        mock_import_module.assert_called_with(data.TEST_THRIFT_MODULE_NAME)
+        mock_import_package.assert_called_with(data.TEST_THRIFT_MODULE_NAME)
         mock_open_connection.assert_called_with(data.TEST_SERVER_ADDRESS)
 
     @mock.patch('thriftcli.TSocket.TSocket')
-    @mock.patch('thriftcli.ThriftCLI._import_module')
+    @mock.patch('thriftcli.ThriftCLI._import_package')
     @mock.patch('subprocess.call')
     @mock.patch('thriftcli.ThriftParser._load_file')
     @mock.patch('thriftcli.ThriftCLI._remove_dir')
-    def test_cleanup(self, mock_remove_dir, mock_load_file, mock_call, mock_import_module, mock_tsocket):
+    def test_cleanup(self, mock_remove_dir, mock_load_file, mock_call, mock_import_package, mock_tsocket):
         mock_load_file.return_value = data.TEST_THRIFT_CONTENT
-        mock_import_module.side_effect = None
         mock_call.return_value = 0
+        mock_import_package.side_effect = None
         mock_remove_dir.side_effect = None
+        mock_tsocket.side_effect = None
         cli = ThriftCLI()
         cli.setup(data.TEST_THRIFT_PATH, data.TEST_SERVER_ADDRESS)
         cli.cleanup()
@@ -40,33 +39,42 @@ class TestThriftCLI(unittest.TestCase):
         self.assertTrue(mock_remove_dir.called)
         mock_remove_dir.assert_called_with(expected_rm_path)
 
-    def test_get_module_name(self):
-        cli = ThriftCLI()
-        cli._thrift_path = data.TEST_THRIFT_PATH
+    def test_get_package_name(self):
         expected_module_name = data.TEST_THRIFT_MODULE_NAME
-        module_name = cli._get_module_name()
+        module_name = ThriftCLI.get_package_name(data.TEST_THRIFT_PATH)
         self.assertEqual(module_name, expected_module_name)
 
-    def test_split_endpoint(self):
+    def test_split_reference(self):
         cli = ThriftCLI()
         endpoint = '%s.%s' % (data.TEST_THRIFT_SERVICE_NAME, data.TEST_THRIFT_METHOD_NAME)
         expected_service_name, expected_method_name = data.TEST_THRIFT_SERVICE_NAME, data.TEST_THRIFT_METHOD_NAME
-        service_name, method_name = cli._split_endpoint(endpoint)
+        service_name, method_name = cli._split_reference(endpoint)
         self.assertEqual((service_name, method_name), (expected_service_name, expected_method_name))
         endpoint = '%s%s' % (data.TEST_THRIFT_SERVICE_NAME, data.TEST_THRIFT_METHOD_NAME)
-        with self.assertRaises(ThriftCLIException):
-            cli._split_endpoint(endpoint)
+        with self.assertRaises(ValueError):
+            cli._split_reference(endpoint)
         endpoint = '%s.%s.abc' % (data.TEST_THRIFT_SERVICE_NAME, data.TEST_THRIFT_METHOD_NAME)
-        with self.assertRaises(ThriftCLIException):
-            cli._split_endpoint(endpoint)
+        with self.assertRaises(ValueError):
+            cli._split_reference(endpoint)
 
-    @mock.patch('thriftcli.TTransport.TBufferedTransport.open')
+    @mock.patch('thriftcli.TTransport.TFramedTransport.open')
     @mock.patch('thriftcli.TSocket.TSocket')
     def test_open_connection(self, mock_tsocket, mock_transport_open):
         cli = ThriftCLI()
         cli._open_connection(data.TEST_SERVER_ADDRESS)
         mock_tsocket.assert_called_with(data.TEST_SERVER_HOSTNAME, data.TEST_SERVER_PORT)
         self.assertTrue(mock_transport_open.called)
+
+    def test_parse_address_for_hostname_and_url(self):
+        hostname, port = ThriftCLI._parse_address_for_hostname_and_port(data.TEST_SERVER_ADDRESS)
+        hostname2, port2 = ThriftCLI._parse_address_for_hostname_and_port(data.TEST_SERVER_ADDRESS2)
+        hostname3, port3 = ThriftCLI._parse_address_for_hostname_and_port(data.TEST_SERVER_ADDRESS3)
+        expected_hostname, expected_port = data.TEST_SERVER_HOSTNAME, data.TEST_SERVER_PORT
+        expected_hostname2, expected_port2 = data.TEST_SERVER_HOSTNAME2, data.TEST_SERVER_PORT2
+        expected_hostname3, expected_port3 = data.TEST_SERVER_HOSTNAME3, data.TEST_SERVER_PORT3
+        self.assertEqual((hostname, port), (expected_hostname, expected_port))
+        self.assertEqual((hostname2, port2), (expected_hostname2, expected_port2))
+        self.assertEqual((hostname3, port3), (expected_hostname3, expected_port3))
 
     # @mock.patch('thriftcli.TSocket.TSocket')
     # @mock.patch('thriftcli.ThriftParser._load_file')
@@ -87,9 +95,15 @@ class TestThriftCLI(unittest.TestCase):
     def test_calc_map_types_split_index(self):
         test_map_type = 'string, string'
         expected_split_index = len('string')
-        split_index = ThriftCLI._calc_map_types_split_index(test_map_type)
+        split_index = ThriftCLI.calc_map_types_split_index(test_map_type)
         self.assertEqual(split_index, expected_split_index)
         test_map_type = 'map<string, list<i32>>, set<string>'
         expected_split_index = len('map<string, list<i32>>')
-        split_index = ThriftCLI._calc_map_types_split_index(test_map_type)
+        split_index = ThriftCLI.calc_map_types_split_index(test_map_type)
         self.assertEqual(split_index, expected_split_index)
+
+    def test_clean_thrift_dir_paths(self):
+        thrift_dir_paths = ['somefolder', '', 'some/other/folder', '/some/last/folder/']
+        expected_clean_thrift_dir_paths = ['somefolder/', '', 'some/other/folder/', '/some/last/folder/']
+        clean_thrift_dir_paths = ThriftCLI._clean_thrift_dir_paths(thrift_dir_paths)
+        self.assertEqual(clean_thrift_dir_paths, expected_clean_thrift_dir_paths)

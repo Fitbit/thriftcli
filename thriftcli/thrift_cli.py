@@ -21,22 +21,27 @@ class ThriftCLI(object):
     def __init__(self):
         self._thrift_path = None
         self._server_address = None
+        self._thrift_dir_paths = None
         self._thrift_parser = ThriftParser()
         self._transport = None
 
-    def setup(self, thrift_path, server_address):
+    def setup(self, thrift_path, server_address, thrift_dir_paths=[]):
         """ Opens a connection between the given thrift file and server.
 
         :param thrift_path: The path to the thrift file being used.
         :type thrift_path: str
+        :param thrift_dir_paths: Additional directories to search for included thrift files in.
+        :type thrift_dir_paths: list of str
         :param server_address: The address of the server to make requests to.
         :type server_address: str
         :returns: None
+
         """
         self._thrift_path = thrift_path
         self._server_address = server_address
-        self._thrift_parser.parse(self._thrift_path)
-        self._generate_and_import_module()
+        self._thrift_dir_paths = self._clean_thrift_dir_paths(thrift_dir_paths)
+        self._thrift_parser.parse(self._thrift_path, self._thrift_dir_paths)
+        self._generate_and_import_packages()
         self._open_connection(self._server_address)
 
     def run(self, endpoint, request_body):
@@ -47,20 +52,37 @@ class ThriftCLI(object):
         :param request_body: The arguments to provide as arguments to the endpoint.
         :type request_body: JSON or None
         :returns: endpoint result
+
         """
         method = self._get_method_from_endpoint(endpoint)
-        [service_name, method_name] = self._split_endpoint(endpoint)
-        request_args = self._convert_json_to_args(service_name, method_name, request_body)
+        try:
+            [service_name, method_name] = self._split_reference(endpoint)
+        except ValueError:
+            raise ThriftCLIException('Endpoint should be in the format \'Service.method\'')
+        service_reference = '%s.%s' % (self.get_package_name(self._thrift_path), service_name)
+        request_args = self._convert_json_to_args(service_reference, method_name, request_body)
         return method(**request_args)
 
     def cleanup(self):
         """ Deletes the gen-py code and closes the transport with the server.
 
         :returns: None
+
         """
         self._remove_dir('gen-py')
         if self._transport:
             self._transport.close()
+
+    @staticmethod
+    def _clean_thrift_dir_paths(thrift_dir_paths=[]):
+        return [ThriftCLI._clean_thrift_dir_path(thrift_dir_path) for thrift_dir_path in thrift_dir_paths]
+
+    @staticmethod
+    def _clean_thrift_dir_path(thrift_dir_path=''):
+        if thrift_dir_path:
+            return thrift_dir_path if thrift_dir_path[-1] == '/' else thrift_dir_path + '/'
+        else:
+            return ''
 
     @staticmethod
     def _remove_dir(path):
@@ -71,8 +93,9 @@ class ThriftCLI(object):
 
     def _get_method_from_endpoint(self, endpoint):
         class_name = 'Client'
-        [service_name, method_name] = self._split_endpoint(endpoint)
-        client_constructor = getattr(self._get_service_module(service_name), class_name)
+        [service_name, method_name] = self._split_reference(endpoint)
+        service_module_name = '%s.%s' % (self.get_package_name(self._thrift_path), service_name)
+        client_constructor = getattr(self._get_module(service_module_name), class_name)
         client = client_constructor(self._protocol)
         try:
             method = getattr(client, method_name)
@@ -81,44 +104,42 @@ class ThriftCLI(object):
         return method
 
     @staticmethod
-    def _split_endpoint(endpoint):
-        try:
-            split = endpoint.split('.')
-            if not split or len(split) != 2:
-                raise ValueError()
-            return split
-        except ValueError:
-            raise ThriftCLIException('Endpoint should be in format \'Service.method\'')
+    def _split_reference(reference):
+        split = reference.split('.')
+        if not split or len(split) != 2:
+            raise ValueError()
+        return split
 
-    def _get_service_module(self, service_name):
-        service_reference = '.'.join([self._get_module_name(), service_name])
+    def _get_module(self, module_name):
         try:
-            return sys.modules[service_reference]
+            return sys.modules[module_name]
         except KeyError:
-            raise ThriftCLIException('Invalid service \'%s\' provided' % service_name)
+            raise ThriftCLIException('Invalid module \'%s\' provided' % module_name)
 
-    def _generate_and_import_module(self):
-        command = 'thrift -r --gen py %s' % self._thrift_path
+    def _generate_and_import_packages(self):
+        thrift_dir_options = ''.join([' -I %s' % thrift_dir_path for thrift_dir_path in self._thrift_dir_paths])
+        command = 'thrift -r%s --gen py %s' % (thrift_dir_options, self._thrift_path)
         if subprocess.call(command, shell=True):
             raise ThriftCLIException('Thrift generation command failed.')
         sys.path.append('gen-py')
-        self._import_module(self._get_module_name())
+        self._import_package(self.get_package_name(self._thrift_path))
 
     @staticmethod
-    def _import_module(module_name):
-        module = __import__(module_name, globals())
-        submodules = module.__all__
-        for submodule in submodules:
-            submodule_name = '.'.join([module_name, submodule])
-            __import__(submodule_name, globals())
+    def _import_package(package_name):
+        package = __import__(package_name, globals())
+        modules = package.__all__
+        for module in modules:
+            module_name = '.'.join([package_name, module])
+            __import__(module_name, globals())
 
-    def _get_module_name(self):
-        return self._thrift_path[:-len('.thrift')].split('/')[-1]
+    @staticmethod
+    def get_package_name(thrift_path):
+        return thrift_path[:-len('.thrift')].split('/')[-1]
 
     def _open_connection(self, address):
         (url, port) = self._parse_address_for_hostname_and_port(address)
         self._transport = TSocket.TSocket(url, port)
-        self._transport = TTransport.TBufferedTransport(self._transport)
+        self._transport = TTransport.TFramedTransport(self._transport)
         self._protocol = TBinaryProtocol.TBinaryProtocol(self._transport)
         self._transport.open()
 
@@ -130,7 +151,6 @@ class ThriftCLI(object):
         return url_obj.hostname, url_obj.port
 
     def _convert_json_to_args(self, service_name, method_name, data):
-
         fields = self._thrift_parser.get_fields_for_endpoint(service_name, method_name)
         return self._convert_json_to_args_given_fields(fields, data)
 
@@ -140,6 +160,7 @@ class ThriftCLI(object):
         return args
 
     def _convert_json_entry_to_arg(self, field_type, value):
+        field_type = self._thrift_parser.unalias_type(field_type)
         if self._thrift_parser.has_struct(field_type):
             fields = self._thrift_parser.get_fields_for_struct_name(field_type)
             value = self._convert_json_to_args_given_fields(fields, value)
@@ -160,10 +181,18 @@ class ThriftCLI(object):
         return value
 
     def _construct_struct_arg(self, field_type, value):
-        return getattr(self._get_service_module('ttypes'), field_type)(**value)
+        try:
+            package, struct = self._split_reference(field_type)
+        except ValueError:
+            raise ThriftCLIException('Invalid formatting for type %s, expected format \'package.name\'' % field_type)
+        return getattr(self._get_module('%s.ttypes' % package), struct)(**value)
 
     def _construct_enum_arg(self, field_type, value):
-        enum_class = getattr(self._get_service_module('ttypes'), field_type)
+        try:
+            package, struct = self._split_reference(field_type)
+        except ValueError:
+            raise ThriftCLIException('Invalid formatting for type %s, expected format \'package.name\'' % field_type)
+        enum_class = getattr(self._get_module('%s.ttypes' % package), struct)
         if isinstance(value, (int, long)):
             return value
         elif isinstance(value, basestring):
@@ -180,7 +209,7 @@ class ThriftCLI(object):
 
     def _construct_map_arg(self, field_type, value):
         types_string = field_type[field_type.index('<') + 1:field_type.rindex('>')]
-        split_index = self._calc_map_types_split_index(types_string)
+        split_index = self.calc_map_types_split_index(types_string)
         if split_index == -1:
             raise ThriftCLIException('Invalid type formatting for map - \'%s\'' % types_string)
         key_type = types_string[:split_index].strip()
@@ -190,7 +219,7 @@ class ThriftCLI(object):
                 for key, elem in value.items()}
 
     @staticmethod
-    def _calc_map_types_split_index(types_string):
+    def calc_map_types_split_index(types_string):
         bracket_depth = 0
         for i, char in enumerate(types_string):
             if char == '<':
