@@ -26,7 +26,7 @@ def _parse_args(argv):
     thrift_path = argv[3]
     arg_index = 4
     thrift_dir_paths = []
-    while argv[arg_index] == '-I' and len(argv) > arg_index + 1:
+    while len(argv) > arg_index + 1 and argv[arg_index] == '-I':
         thrift_dir_paths.append(argv[arg_index + 1])
         arg_index += 2
     request_body_path = argv[arg_index] if len(argv) > arg_index else None
