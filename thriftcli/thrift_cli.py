@@ -284,8 +284,8 @@ def _parse_args(argv):
     while len(argv) > arg_index + 1 and argv[arg_index] == '-I':
         thrift_dir_paths.append(argv[arg_index + 1])
         arg_index += 2
-    request_body_path = argv[arg_index] if len(argv) > arg_index else None
-    request_body = _load_request_body(request_body_path)
+    request_body_arg = ' '.join(argv[arg_index:]) if len(argv) > arg_index else None
+    request_body = _load_request_body(request_body_arg)
     return server_address, endpoint_name, thrift_path, thrift_dir_paths, request_body
 
 
