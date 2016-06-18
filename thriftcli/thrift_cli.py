@@ -10,6 +10,7 @@ from thrift.transport import TSocket
 from thrift.transport import TTransport
 from thrift.protocol import TBinaryProtocol
 
+
 class ThriftCLI(object):
     """ Provides an interface for setting up a client, making requests, and cleaning up.
 
@@ -29,6 +30,8 @@ class ThriftCLI(object):
 
         :param thrift_path: The path to the thrift file being used.
         :type thrift_path: str
+        :param thrift_dir_paths: Additional directories to search for included thrift files in.
+        :type thrift_dir_paths: list of str
         :param server_address: The address of the server to make requests to.
         :type server_address: str
         :returns: None

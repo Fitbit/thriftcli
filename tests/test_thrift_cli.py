@@ -57,7 +57,7 @@ class TestThriftCLI(unittest.TestCase):
         with self.assertRaises(ValueError):
             cli._split_reference(endpoint)
 
-    @mock.patch('thriftcli.TTransport.TBufferedTransport.open')
+    @mock.patch('thriftcli.TTransport.TFramedTransport.open')
     @mock.patch('thriftcli.TSocket.TSocket')
     def test_open_connection(self, mock_tsocket, mock_transport_open):
         cli = ThriftCLI()
