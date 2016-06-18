@@ -10,7 +10,6 @@ from thrift.transport import TSocket
 from thrift.transport import TTransport
 from thrift.protocol import TBinaryProtocol
 
-
 class ThriftCLI(object):
     """ Provides an interface for setting up a client, making requests, and cleaning up.
 
@@ -136,7 +135,7 @@ class ThriftCLI(object):
     def _open_connection(self, address):
         (url, port) = self._parse_address_for_hostname_and_port(address)
         self._transport = TSocket.TSocket(url, port)
-        self._transport = TTransport.TBufferedTransport(self._transport)
+        self._transport = TTransport.TFramedTransport(self._transport)
         self._protocol = TBinaryProtocol.TBinaryProtocol(self._transport)
         self._transport.open()
 
