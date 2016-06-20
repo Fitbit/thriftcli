@@ -4,7 +4,6 @@ First, navigate to the project directory (contains setup.py):
 
 Next, install the thriftcli Python module and thrift:
 ```
-pip install thrift
 python setup.py install
 brew install thrift
 ```
@@ -12,13 +11,14 @@ brew install thrift
 Now you have a command line application called thriftcli in your path:
 
 ```
-thriftcli server_address endpoint_name thrift_file_path [json_request_body]
+thriftcli server_address endpoint_name thrift_file_path [-I thrift_dir_path]... [json_request_body]
 ```
 
 Arguments:
 - **server_address**       URL to send the request to. This server should listen for and implement the requested endpoint.
 - **endpoint_name**        Service name and function name representing the request to send to the server.
 - **thrift_file_path**     Path to the thrift file containing the endpoint\'s declaration.
+- **thrift_dir_path**      Path to additional directory to search in when locating thrift file dependencies.
 - **json_request_body**    Either a JSON string containing the request body to send for the endpoint or a path to such a JSON file.
                            For each argument, the JSON should map the argument name to its value.
                            For a struct argument, its value should be a JSON object of field names to values.
