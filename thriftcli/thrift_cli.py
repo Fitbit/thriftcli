@@ -18,33 +18,25 @@ __version__ = '0.0.1'
 class ThriftCLI(object):
     """ Provides an interface for setting up a client, making requests, and cleaning up.
 
-    Call setup to open a connection with a server and inform ThriftCLI of the available endpoints.
+    Call init to open a connection with a server and inform ThriftCLI of the available endpoints.
     Call run to make a request.
     Call cleanup to close the connection and delete the generated python code.
     """
 
-    def __init__(self):
-        self._thrift_path = None
-        self._server_address = None
-        self._thrift_dir_paths = None
-        self._thrift_parser = ThriftParser()
-        self._transport = None
-
-    def setup(self, thrift_path, server_address, thrift_dir_paths=[]):
-        """ Opens a connection between the given thrift file and server.
-
+    def __init__(self, thrift_path, server_address, thrift_dir_paths=[]):
+        """
         :param thrift_path: The path to the thrift file being used.
         :type thrift_path: str
         :param thrift_dir_paths: Additional directories to search for included thrift files in.
         :type thrift_dir_paths: list of str
         :param server_address: The address of the server to make requests to.
         :type server_address: str
-        :returns: None
 
         """
         self._thrift_path = thrift_path
         self._server_address = server_address
         self._thrift_dir_paths = thrift_dir_paths
+        self._thrift_parser = ThriftParser()
         self._thrift_parser.parse(self._thrift_path, self._thrift_dir_paths)
         self._generate_and_import_packages()
         self._open_connection(self._server_address)
@@ -291,14 +283,14 @@ def _make_parser():
 
 
 def _run_cli(server_address, endpoint_name, thrift_path, thrift_dir_paths, request_body, cleanup=False):
-    cli = ThriftCLI()
+    cli = None
     try:
-        cli.setup(thrift_path, server_address, thrift_dir_paths)
+        cli = ThriftCLI(thrift_path, server_address, thrift_dir_paths)
         result = cli.run(endpoint_name, request_body)
         if result is not None:
             print result
     finally:
-        if cleanup:
+        if cli and cleanup:
             cli.cleanup()
 
 
