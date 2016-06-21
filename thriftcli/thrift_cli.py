@@ -3,6 +3,7 @@ import shutil
 import subprocess
 import sys
 import urlparse
+import textwrap
 
 from thrift.protocol import TBinaryProtocol
 from thrift.transport import TSocket
@@ -235,26 +236,26 @@ class ThriftCLI(object):
 
 
 def _print_help():
-    help_text = '\n'.join([
-        'Usage: ',
-        '  thriftcli server_address endpoint_name thrift_file_path [-I thrift_dir_path]... [json_request_body]',
-        'Examples:',
-        '  thriftcli localhost:9090 Calculator.ping ./Calculator.thrift',
-        '  thriftcli localhost:9090 Calculator.add ./Calculator.thrift add_request_body.json',
-        '  thriftcli localhost:9090 Calculator.doWork ./Calculator.thrift ' +
-        '{\\"work\\": {\\"num1\\": 1, \\"num2\\": 3, \\"op\\": \\"ADD\\"}}',
-        'Arguments:',
-        '  server_address       URL to send the request to. ',
-        '                       This server should listen for and implement the requested endpoint.',
-        '  endpoint_name        Service name and function name representing the request to send to the server.',
-        '  thrift_file_path     Path to the thrift file containing the endpoint\'s declaration.',
-        '  thrift_dir_path      Path to additional directory to search in when locating thrift file dependencies.',
-        '  body_file_path       Either a JSON string containing the request body to send for the endpoint ' +
-        'or a path to such a JSON file.',
-        '                       For each argument, the JSON should map the argument name to its value.',
-        '                       For a struct argument, its value should be a JSON object of field names to values.',
-        '                       This parameter can be omitted for endpoints that take no arguments.'
-    ])
+    help_text = textwrap.dedent("""\
+        Usage:
+          thriftcli server_address endpoint_name thrift_file_path [-I thrift_dir_path]... [json_request_body]
+        Examples:
+          thriftcli localhost:9090 Calculator.ping ./Calculator.thrift
+          thriftcli localhost:9090 Calculator.add ./Calculator.thrift add_request_body.json
+          thriftcli localhost:9090 Calculator.doWork ./Calculator.thrift \
+{\\"work\\": {\\"num1\\": 1, \\"num2\\": 3, \\"op\\": \\"ADD\\"}}
+        Arguments:
+          server_address       URL to send the request to.
+                               This server should listen for and implement the requested endpoint.
+          endpoint_name        Service name and function name representing the request to send to the server.
+          thrift_file_path     Path to the thrift file containing the endpoint\'s declaration.
+          thrift_dir_path      Path to additional directory to search in when locating thrift file dependencies.
+          body_file_path       Either a JSON string containing the request body to send for the endpoint or a path to \
+such a JSON file.
+                               For each argument, the JSON should map the argument name to its value.
+                               For a struct argument, its value should be a JSON object of field names to values.
+                               This parameter can be omitted for endpoints that take no arguments.
+    """)
     print help_text
 
 
