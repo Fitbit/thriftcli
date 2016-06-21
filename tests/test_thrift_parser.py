@@ -1,7 +1,7 @@
 import unittest
 import mock
 import data
-from thriftcli import ThriftParser, ThriftCLIException
+from thriftcli import ThriftParser, ThriftCLIError
 
 
 class TestThriftParser(unittest.TestCase):
@@ -132,7 +132,7 @@ class TestThriftParser(unittest.TestCase):
         tparser = ThriftParser()
         tparser.parse(data.TEST_THRIFT_PATH)
         for alias in data.TEST_THRIFT_CIRCULAR_TYPEDEFS:
-            with self.assertRaises(ThriftCLIException):
+            with self.assertRaises(ThriftCLIError):
                 tparser.unalias_type(alias)
 
     @mock.patch('thriftcli.ThriftParser._load_file')
@@ -180,3 +180,18 @@ class TestThriftParser(unittest.TestCase):
         self.assertEqual(tparser._apply_namespace('map<%s, list<%s>>' %
                                                   (data.TEST_THRIFT_STRUCT_NAME, data.TEST_THRIFT_ENUM_NAME)),
                          'map<%s, list<%s>>' % (data.TEST_THRIFT_STRUCT_REFERENCE, data.TEST_THRIFT_ENUM_REFERENCE))
+
+    def test_calc_map_types_split_index(self):
+        test_map_type = 'string, string'
+        test_map_type2 = 'map<string, list<i32>>, set<string>'
+        expected_split_index = len('string')
+        expected_split_index2 = len('map<string, list<i32>>')
+        split_index = ThriftParser.calc_map_types_split_index(test_map_type)
+        split_index2 = ThriftParser.calc_map_types_split_index(test_map_type2)
+        self.assertEqual(split_index, expected_split_index)
+        self.assertEqual(split_index2, expected_split_index2)
+
+    def test_get_package_name(self):
+        expected_module_name = data.TEST_THRIFT_MODULE_NAME
+        module_name = ThriftParser.get_package_name(data.TEST_THRIFT_PATH)
+        self.assertEqual(module_name, expected_module_name)

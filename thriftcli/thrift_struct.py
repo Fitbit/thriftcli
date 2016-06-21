@@ -1,4 +1,4 @@
-import thrift_cli
+from .thrift_cli_error import ThriftCLIError
 
 
 class ThriftStruct(object):
@@ -17,7 +17,7 @@ class ThriftStruct(object):
             required_explicit = kwargs.get('required', None)
             if optional_explicit is not None and required_explicit is not None \
                     and required_explicit == optional_explicit:
-                raise thrift_cli.ThriftCLIException(
+                raise ThriftCLIError(
                     'Contradicting modifiers on required and optional for field - %s:%s %s' % (index, field_type, name))
             self.optional = (optional_explicit if optional_explicit is not None else True) and not required_explicit
             self.required = not self.optional and kwargs.get('required', True)
@@ -35,13 +35,13 @@ class ThriftStruct(object):
             str_params = (self.index, modifier_str, self.field_type, self.name, default_str)
             return '%s:%s%s %s%s' % str_params
 
-    def __init__(self, reference, fields={}):
+    def __init__(self, reference, fields=None):
         """
         :param reference: A unique reference to the struct, defined as 'Namespace.name'.
         :param fields: A dictionary from field names to field objects that compromise the struct.
         """
         self.reference = reference
-        self.fields = fields
+        self.fields = fields if fields is not None else {}
 
     def __eq__(self, other):
         return type(other) is type(self) and self.__dict__ == other.__dict__

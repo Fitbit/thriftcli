@@ -10,6 +10,7 @@ from thrift.protocol import TBinaryProtocol
 from thrift.transport import TSocket
 from thrift.transport import TTransport
 
+from .thrift_cli_error import ThriftCLIError
 from .thrift_parser import ThriftParser
 
 __version__ = '0.0.1'
@@ -23,7 +24,7 @@ class ThriftCLI(object):
     Call cleanup to close the connection and delete the generated python code.
     """
 
-    def __init__(self, thrift_path, server_address, thrift_dir_paths=[]):
+    def __init__(self, thrift_path, server_address, thrift_dir_paths=None):
         """
         :param thrift_path: The path to the thrift file being used.
         :type thrift_path: str
@@ -33,6 +34,8 @@ class ThriftCLI(object):
         :type server_address: str
 
         """
+        if thrift_dir_paths is None:
+            thrift_dir_paths = []
         self._thrift_path = thrift_path
         self._server_address = server_address
         self._thrift_dir_paths = thrift_dir_paths
@@ -47,7 +50,7 @@ class ThriftCLI(object):
         :param endpoint: The name of the endpoint to ask the server to run.
         :type endpoint: str
         :param request_body: The arguments to provide as arguments to the endpoint.
-        :type request_body: JSON or None
+        :type request_body: dict
         :returns: endpoint result
 
         """
@@ -55,17 +58,13 @@ class ThriftCLI(object):
         try:
             [service_name, method_name] = self._split_reference(endpoint)
         except ValueError:
-            raise ThriftCLIException('Endpoint should be in the format \'Service.method\'')
-        service_reference = '%s.%s' % (self.get_package_name(self._thrift_path), service_name)
+            raise ThriftCLIError('Endpoint should be in the format \'Service.method\'')
+        service_reference = '%s.%s' % (ThriftParser.get_package_name(self._thrift_path), service_name)
         request_args = self._convert_json_to_args(service_reference, method_name, request_body)
         return method(**request_args)
 
     def cleanup(self):
-        """ Deletes the gen-py code and closes the transport with the server.
-
-        :returns: None
-
-        """
+        """ Deletes the gen-py code and closes the transport with the server. """
         self._remove_dir('gen-py')
         if self._transport:
             self._transport.close()
@@ -80,13 +79,13 @@ class ThriftCLI(object):
     def _get_method_from_endpoint(self, endpoint):
         class_name = 'Client'
         [service_name, method_name] = self._split_reference(endpoint)
-        service_module_name = '%s.%s' % (self.get_package_name(self._thrift_path), service_name)
+        service_module_name = '%s.%s' % (ThriftParser.get_package_name(self._thrift_path), service_name)
         client_constructor = getattr(self._get_module(service_module_name), class_name)
         client = client_constructor(self._protocol)
         try:
             method = getattr(client, method_name)
         except AttributeError:
-            raise ThriftCLIException('\'%s\' service has no method \'%s\'' % (service_name, method_name))
+            raise ThriftCLIError('\'%s\' service has no method \'%s\'' % (service_name, method_name))
         return method
 
     @staticmethod
@@ -96,19 +95,20 @@ class ThriftCLI(object):
             raise ValueError()
         return split
 
-    def _get_module(self, module_name):
+    @staticmethod
+    def _get_module(module_name):
         try:
             return sys.modules[module_name]
         except KeyError:
-            raise ThriftCLIException('Invalid module \'%s\' provided' % module_name)
+            raise ThriftCLIError('Invalid module \'%s\' provided' % module_name)
 
     def _generate_and_import_packages(self):
         thrift_dir_options = ''.join([' -I %s' % thrift_dir_path for thrift_dir_path in self._thrift_dir_paths])
         command = 'thrift -r%s --gen py %s' % (thrift_dir_options, self._thrift_path)
         if subprocess.call(command, shell=True):
-            raise ThriftCLIException('Thrift generation command failed: \'%s\'' % command)
+            raise ThriftCLIError('Thrift generation command failed: \'%s\'' % command)
         sys.path.append('gen-py')
-        self._import_package(self.get_package_name(self._thrift_path))
+        self._import_package(ThriftParser.get_package_name(self._thrift_path))
 
     @staticmethod
     def _import_package(package_name):
@@ -117,10 +117,6 @@ class ThriftCLI(object):
         for module in modules:
             module_name = '.'.join([package_name, module])
             __import__(module_name, globals())
-
-    @staticmethod
-    def get_package_name(thrift_path):
-        return thrift_path[:-len('.thrift')].split('/')[-1]
 
     def _open_connection(self, address):
         (url, port) = self._parse_address_for_hostname_and_port(address)
@@ -170,20 +166,20 @@ class ThriftCLI(object):
         try:
             package, struct = self._split_reference(field_type)
         except ValueError:
-            raise ThriftCLIException('Invalid formatting for type %s, expected format \'package.name\'' % field_type)
+            raise ThriftCLIError('Invalid formatting for type %s, expected format \'package.name\'' % field_type)
         return getattr(self._get_module('%s.ttypes' % package), struct)(**value)
 
     def _construct_enum_arg(self, field_type, value):
         try:
             package, struct = self._split_reference(field_type)
         except ValueError:
-            raise ThriftCLIException('Invalid formatting for type %s, expected format \'package.name\'' % field_type)
+            raise ThriftCLIError('Invalid formatting for type %s, expected format \'package.name\'' % field_type)
         enum_class = getattr(self._get_module('%s.ttypes' % package), struct)
         if isinstance(value, (int, long)):
             return value
         elif isinstance(value, basestring):
             return enum_class._NAMES_TO_VALUES[value]
-        raise ThriftCLIException('Invalid value provided for enum %s: %s' % (field_type.str(value)))
+        raise ThriftCLIError('Invalid value provided for enum %s: %s' % (field_type.str(value)))
 
     def _construct_list_arg(self, field_type, value):
         elem_type = field_type[field_type.index('<') + 1:field_type.rindex('>')]
@@ -195,26 +191,14 @@ class ThriftCLI(object):
 
     def _construct_map_arg(self, field_type, value):
         types_string = field_type[field_type.index('<') + 1:field_type.rindex('>')]
-        split_index = self.calc_map_types_split_index(types_string)
+        split_index = ThriftParser.calc_map_types_split_index(types_string)
         if split_index == -1:
-            raise ThriftCLIException('Invalid type formatting for map - \'%s\'' % types_string)
+            raise ThriftCLIError('Invalid type formatting for map - \'%s\'' % types_string)
         key_type = types_string[:split_index].strip()
         elem_type = types_string[split_index + 1:].strip()
         prep = lambda x: json.loads(x) if self._thrift_parser.has_struct(key_type) else x
         return {self._convert_json_entry_to_arg(key_type, prep(key)): self._convert_json_entry_to_arg(elem_type, elem)
                 for key, elem in value.items()}
-
-    @staticmethod
-    def calc_map_types_split_index(types_string):
-        bracket_depth = 0
-        for i, char in enumerate(types_string):
-            if char == '<':
-                bracket_depth += 1
-            elif char == '>':
-                bracket_depth -= 1
-            elif char == ',' and bracket_depth == 0:
-                return i
-        return -1
 
 
 def _print_help():
@@ -252,10 +236,10 @@ def _load_request_body(request_body_arg):
             with open(request_body_arg, 'r') as request_body_file:
                 return json.load(request_body_file)
         except IOError:
-            raise ThriftCLIException('Invalid JSON arg - not a path to JSON file and not a valid JSON string.\n' +
-                                     'Note that double quotes need to be escaped in bash.')
+            raise ThriftCLIError('Invalid JSON arg - not a path to JSON file and not a valid JSON string.\n' +
+                                 'Note that double quotes need to be escaped in bash.')
         except ValueError as e:
-            raise ThriftCLIException('Request body file contains invalid JSON.', e.message)
+            raise ThriftCLIError('Request body file contains invalid JSON.', e.message)
 
 
 def _parse_namespace(args):
@@ -299,8 +283,3 @@ def main():
     namespace = parser.parse_args()
     server_address, endpoint_name, thrift_path, thrift_dir_paths, request_body = _parse_namespace(namespace)
     _run_cli(server_address, endpoint_name, thrift_path, thrift_dir_paths, request_body)
-
-
-class ThriftCLIException(Exception):
-    def __init__(self, *args, **kwargs):
-        Exception.__init__(self, *args, **kwargs)

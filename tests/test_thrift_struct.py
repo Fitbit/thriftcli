@@ -1,6 +1,6 @@
 import unittest
 
-from thriftcli import ThriftStruct, ThriftCLIException
+from thriftcli import ThriftStruct, ThriftCLIError
 
 
 class TestThriftStruct(unittest.TestCase):
@@ -17,7 +17,7 @@ class TestThriftStruct(unittest.TestCase):
         self.assertTrue(field4.required and not field4.optional)
         self.assertTrue(field5.required and not field5.optional)
         self.assertTrue(not field6.required and field6.optional)
-        with self.assertRaises(ThriftCLIException):
+        with self.assertRaises(ThriftCLIError):
             ThriftStruct.Field(7, 'void', 'someField5', required=True, optional=True)
-        with self.assertRaises(ThriftCLIException):
+        with self.assertRaises(ThriftCLIError):
             ThriftStruct.Field(8, 'void', 'someField6', required=False, optional=False)

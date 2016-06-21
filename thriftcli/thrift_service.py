@@ -2,10 +2,10 @@ class ThriftService(object):
     """ Provides a representation of a service declared in thrift. """
 
     class Endpoint(object):
-        def __init__(self, return_type, name, fields={}, oneway=False):
+        def __init__(self, return_type, name, fields=None, oneway=False):
             self.return_type = return_type
             self.name = name
-            self.fields = fields
+            self.fields = fields if fields is not None else {}
             self.oneway = True if oneway else False
 
         def __eq__(self, other):

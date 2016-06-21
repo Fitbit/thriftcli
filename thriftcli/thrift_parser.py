@@ -4,7 +4,7 @@ import itertools
 
 from .thrift_service import ThriftService
 from .thrift_struct import ThriftStruct
-import thrift_cli
+from .thrift_cli_error import ThriftCLIError
 
 
 class ThriftParser(object):
@@ -69,7 +69,7 @@ class ThriftParser(object):
         self._defined_references = None
         self._dependency_parsers = None
 
-    def parse(self, thrift_path, thrift_dir_paths=[]):
+    def parse(self, thrift_path, thrift_dir_paths=None):
         """ Parses a thrift file into its structs, services, enums, and typedefs.
 
         :param thrift_path: The path to the thrift file being parsed.
@@ -80,9 +80,11 @@ class ThriftParser(object):
         :rtype: ThriftParser.Result
 
         """
+        if thrift_dir_paths is None:
+            thrift_dir_paths = []
         self._thrift_path = thrift_path
         self._thrift_dir_paths = [os.path.dirname(thrift_path)] + thrift_dir_paths
-        self._namespace = thrift_cli.ThriftCLI.get_package_name(thrift_path)
+        self._namespace = ThriftParser.get_package_name(thrift_path)
         self._thrift_content = self._load_file(thrift_path)
         self._dependency_parsers = self._parse_dependencies()
         self._defined_references = self.get_defined_references()
@@ -91,6 +93,10 @@ class ThriftParser(object):
         for parser in self._dependency_parsers:
             self.result.merge_result(parser.result)
         return self.result
+
+    @staticmethod
+    def get_package_name(thrift_path):
+        return thrift_path[:-len('.thrift')].split('/')[-1]
 
     @staticmethod
     def _load_file(path):
@@ -235,9 +241,9 @@ class ThriftParser(object):
 
     def _apply_map_namespace(self, field_type):
         types_string = field_type[field_type.index('<') + 1:field_type.rindex('>')]
-        split_index = thrift_cli.ThriftCLI.calc_map_types_split_index(types_string)
+        split_index = ThriftParser.calc_map_types_split_index(types_string)
         if split_index == -1:
-            raise thrift_cli.ThriftCLIException('Invalid type formatting for map - \'%s\'' % types_string)
+            raise ThriftCLIError('Invalid type formatting for map - \'%s\'' % types_string)
         key_type = types_string[:split_index].strip()
         elem_type = types_string[split_index + 1:].strip()
         return 'map<%s, %s>' % (self._apply_namespace(key_type), self._apply_namespace(elem_type))
@@ -249,6 +255,24 @@ class ThriftParser(object):
         optional = True if modifier == 'optional' else None
         default = default if len(default) else None
         return ThriftStruct.Field(index, field_type, name, required=required, optional=optional, default=default)
+
+    @staticmethod
+    def calc_map_types_split_index(types_string):
+        """ Returns the index of the comma separating the key and value types in a map type.
+
+        :param types_string:
+        :return: index of top-level separating comma
+        :rtype: int
+        """
+        bracket_depth = 0
+        for i, char in enumerate(types_string):
+            if char == '<':
+                bracket_depth += 1
+            elif char == '>':
+                bracket_depth -= 1
+            elif char == ',' and bracket_depth == 0:
+                return i
+        return -1
 
     def get_fields_for_endpoint(self, service_reference, method_name):
         """ Returns all argument fields declared for a given endpoint.
@@ -334,13 +358,13 @@ class ThriftParser(object):
         :param field_type: The potentially aliased thrift type.
         :type field_type: str
         :returns: The unaliased thrift type according to the typedefs in the last parsed thrift file.
-        :raises: ThriftCLIException
+        :raises: ThriftCLIError
 
         """
         type_set = {field_type}
         while self.has_typedef(field_type):
             field_type = self.get_typedef(field_type)
             if field_type in type_set:
-                raise thrift_cli.ThriftCLIException('Circular typedef dependency involving \'%s\'' % field_type)
+                raise ThriftCLIError('Circular typedef dependency involving \'%s\'' % field_type)
             type_set.add(field_type)
         return field_type
