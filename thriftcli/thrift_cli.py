@@ -4,6 +4,7 @@ import subprocess
 import sys
 import urlparse
 import textwrap
+import argparse
 
 from thrift.protocol import TBinaryProtocol
 from thrift.transport import TSocket
@@ -255,6 +256,7 @@ such a JSON file.
                                For each argument, the JSON should map the argument name to its value.
                                For a struct argument, its value should be a JSON object of field names to values.
                                This parameter can be omitted for endpoints that take no arguments.
+                               Remember to wrap double quotes around this parameter if choosing the JSON string route.
     """)
     print help_text
 
@@ -275,20 +277,28 @@ def _load_request_body(request_body_arg):
             raise ThriftCLIException('Request body file contains invalid JSON.', e.message)
 
 
-def _parse_args(argv):
-    if len(argv) < 4:
-        raise ThriftCLIException('Invalid arguments')
-    server_address = argv[1]
-    endpoint_name = argv[2]
-    thrift_path = argv[3]
-    arg_index = 4
-    thrift_dir_paths = []
-    while len(argv) > arg_index + 1 and argv[arg_index] == '-I':
-        thrift_dir_paths.append(argv[arg_index + 1])
-        arg_index += 2
-    request_body_arg = ' '.join(argv[arg_index:]) if len(argv) > arg_index else None
-    request_body = _load_request_body(request_body_arg)
-    return server_address, endpoint_name, thrift_path, thrift_dir_paths, request_body
+def _parse_namespace(args):
+    server_address = args.server_address
+    endpoint = args.endpoint
+    thrift_path = args.thrift_path
+    thrift_dir_paths = args.include
+    request_body = _load_request_body(args.body)
+    return server_address, endpoint, thrift_path, thrift_dir_paths, request_body
+
+
+def _make_parser():
+    parser = argparse.ArgumentParser(description='Execute thrift endpoints on a running server.')
+    parser.add_argument('server_address', type=str,
+                        help='address of running server that implements the endpoint')
+    parser.add_argument('endpoint', type=str,
+                        help='name of endpoint, defined as Service.function')
+    parser.add_argument('thrift_path', type=str,
+                        help='path to thrift file declaring the endpoint')
+    parser.add_argument('-I', '--include', type=str, nargs='*', default=[],
+                        help='path to directory containing included thrift files')
+    parser.add_argument('-b', '--body', type=str, nargs='?',
+                        help='json string or path to json file encoding the request body')
+    return parser
 
 
 def _run_cli(server_address, endpoint_name, thrift_path, thrift_dir_paths, request_body, cleanup=False):
@@ -304,14 +314,9 @@ def _run_cli(server_address, endpoint_name, thrift_path, thrift_dir_paths, reque
 
 
 def main():
-    if len(sys.argv) < 4:
-        _print_help()
-        sys.exit(1)
-    try:
-        server_address, endpoint_name, thrift_path, thrift_dir_paths, request_body = _parse_args(sys.argv)
-    except ThriftCLIException as e:
-        print e.message
-        sys.exit(1)
+    parser = _make_parser()
+    namespace = parser.parse_args()
+    server_address, endpoint_name, thrift_path, thrift_dir_paths, request_body = _parse_namespace(namespace)
     _run_cli(server_address, endpoint_name, thrift_path, thrift_dir_paths, request_body)
 
 
