@@ -76,3 +76,6 @@ ENV/
 atlassian-ide-plugin.xml
 *.iml
 modules.xml
+
+# Thrift generated code
+gen-py/

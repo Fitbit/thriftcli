@@ -123,7 +123,7 @@ class ThriftCLI(object):
         thrift_dir_options = ''.join([' -I %s' % thrift_dir_path for thrift_dir_path in self._thrift_dir_paths])
         command = 'thrift -r%s --gen py %s' % (thrift_dir_options, self._thrift_path)
         if subprocess.call(command, shell=True):
-            raise ThriftCLIException('Thrift generation command failed.')
+            raise ThriftCLIException('Thrift generation command failed: \'%s\'' % command)
         sys.path.append('gen-py')
         self._import_package(self.get_package_name(self._thrift_path))
 
@@ -290,7 +290,7 @@ def _parse_args(argv):
     return server_address, endpoint_name, thrift_path, thrift_dir_paths, request_body
 
 
-def _run_cli(server_address, endpoint_name, thrift_path, thrift_dir_paths, request_body):
+def _run_cli(server_address, endpoint_name, thrift_path, thrift_dir_paths, request_body, cleanup=False):
     cli = ThriftCLI()
     try:
         cli.setup(thrift_path, server_address, thrift_dir_paths)
@@ -298,7 +298,8 @@ def _run_cli(server_address, endpoint_name, thrift_path, thrift_dir_paths, reque
         if result is not None:
             print result
     finally:
-        cli.cleanup()
+        if cleanup:
+            cli.cleanup()
 
 
 def main():
