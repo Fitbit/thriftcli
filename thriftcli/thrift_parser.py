@@ -14,7 +14,19 @@ class ThriftParser(object):
     Getters are provided to inspect the parse results.
     """
 
+    INCLUDES_REGEX = re.compile(r'^include\s+\"(\w+.thrift)\"', flags=re.MULTILINE)
+    STRUCTS_REGEX = re.compile(r'^([\r\t ]*?struct (\w+)[^}]+})', flags=re.MULTILINE)
+    SERVICES_REGEX = re.compile(r'^([\r\t ]*?service (\w+)[^}]+})', flags=re.MULTILINE)
+    ENUMS_REGEX = re.compile(r'^[\r\t ]*?enum (\w+)[^}]+}', flags=re.MULTILINE)
+    ENDPOINTS_REGEX = re.compile(r'^[\r\t ]*(oneway)?\s*([^\n]*)\s+(\w+)\(([a-zA-Z0-9: ,.<>]*)\)',
+                                 flags=re.MULTILINE)
+    FIELDS_REGEX = re.compile(
+        r'^[\r\t ]*(?:([\d+]):)?\s*(optional|required)?\s*([^\n=]+)?\s+(\w+)(?:\s*=\s*([^,;\s]+))?[,;\n]',
+        flags=re.MULTILINE)
+    TYPEDEFS_REGEX = re.compile(r'^[\r\t ]*typedef\s+([^\n]*)[\r\t ]+([^,;\n]*)', flags=re.MULTILINE)
+
     class Result(object):
+
         def __init__(self, structs, services, enums, typedefs):
             """ Container for results from parsing a thrift file.
 
@@ -42,6 +54,12 @@ class ThriftParser(object):
                 'typedefs': self.typedefs
             })
 
+        def merge_result(self, other):
+            self.structs.update(other.structs)
+            self.services.update(other.services)
+            self.enums.update(other.enums)
+            self.typedefs.update(other.typedefs)
+
     def __init__(self):
         self._thrift_path = None
         self._thrift_dir_paths = None
@@ -50,38 +68,28 @@ class ThriftParser(object):
         self.result = None
         self._defined_references = None
         self._dependency_parsers = None
-        self._structs_regex = re.compile(r'^([\r\t ]*?struct (\w+)[^}]+})', flags=re.MULTILINE)
-        self._services_regex = re.compile(r'^([\r\t ]*?service (\w+)[^}]+})', flags=re.MULTILINE)
-        self._enums_regex = re.compile(r'^[\r\t ]*?enum (\w+)[^}]+}', flags=re.MULTILINE)
-        self._endpoints_regex = re.compile(r'^[\r\t ]*(oneway)?\s*([^\n]*)\s+(\w+)\(([a-zA-Z0-9: ,.<>]*)\)',
-                                           flags=re.MULTILINE)
-        self._fields_regex = re.compile(
-            r'^[\r\t ]*(?:([\d+]):)?\s*(optional|required)?\s*([^\n=]+)?\s+(\w+)(?:\s*=\s*([^,;\s]+))?[,;\n]',
-            flags=re.MULTILINE)
-        self._typedefs_regex = re.compile(r'^[\r\t ]*typedef\s+([^\n]*)[\r\t ]+([^,;\n]*)', flags=re.MULTILINE)
-        self._includes_regex = re.compile(r'^include\s+\"(\w+.thrift)\"', flags=re.MULTILINE)
 
     def parse(self, thrift_path, thrift_dir_paths=[]):
         """ Parses a thrift file into its structs, services, enums, and typedefs.
 
         :param thrift_path: The path to the thrift file being parsed.
         :type thrift_path: str
+        :param thrift_dir_paths: Additional directories to search for when including thrift files.
+        :type thrift_dir_paths: list of str
         :returns: Parse result object containing definitions of structs, services, enums, and typedefs.
         :rtype: ThriftParser.Result
 
         """
         self._thrift_path = thrift_path
-        self._thrift_dir_paths = [self._get_containing_directory(thrift_path)] + thrift_dir_paths
+        self._thrift_dir_paths = [os.path.dirname(thrift_path)] + thrift_dir_paths
         self._namespace = thrift_cli.ThriftCLI.get_package_name(thrift_path)
         self._thrift_content = self._load_file(thrift_path)
         self._dependency_parsers = self._parse_dependencies()
         self._defined_references = self.get_defined_references()
-        self.result = ThriftParser.Result({}, {}, set([]), {})
-        self._merge_dependencies_into_result()
-        self.result.typedefs.update(self._parse_typedefs())
-        self.result.enums.update(self._parse_enums())
-        self.result.structs.update(self._parse_structs())
-        self.result.services.update(self._parse_services())
+        self.result = ThriftParser.Result(
+            self._parse_structs(), self._parse_services(), self._parse_enums(), self._parse_typedefs())
+        for parser in self._dependency_parsers:
+            self.result.merge_result(parser.result)
         return self.result
 
     @staticmethod
@@ -94,13 +102,13 @@ class ThriftParser(object):
         return path[:path.rindex('/')+1]
 
     def _parse_dependencies(self):
-        names_to_include = set(self._includes_regex.findall(self._thrift_content))
+        names_to_include = set(ThriftParser.INCLUDES_REGEX.findall(self._thrift_content))
         names_found = set([])
         include_paths = []
         for thrift_dir_path, name in itertools.product(self._thrift_dir_paths, names_to_include):
             if name in names_found:
                 continue
-            path = thrift_dir_path + name
+            path = os.path.join(thrift_dir_path, name)
             if os.path.isfile(path):
                 include_paths.append(path)
                 names_found.add(name)
@@ -110,23 +118,16 @@ class ThriftParser(object):
         return dependency_parsers
 
     def get_defined_references(self):
-        struct_names = {name for _, name in self._structs_regex.findall(self._thrift_content)}
-        service_names = {name for _, name in self._services_regex.findall(self._thrift_content)}
-        enum_names = {name for name in self._enums_regex.findall(self._thrift_content)}
-        typedef_names = {name for _, name in self._typedefs_regex.findall(self._thrift_content)}
+        struct_names = {name for _, name in ThriftParser.STRUCTS_REGEX.findall(self._thrift_content)}
+        service_names = {name for _, name in ThriftParser.SERVICES_REGEX.findall(self._thrift_content)}
+        enum_names = {name for name in ThriftParser.ENUMS_REGEX.findall(self._thrift_content)}
+        typedef_names = {name for _, name in ThriftParser.TYPEDEFS_REGEX.findall(self._thrift_content)}
         names = struct_names | service_names | enum_names | typedef_names
         dependency_references = set([])
         for parser in self._dependency_parsers:
             dependency_references = dependency_references | parser.get_defined_references()
         references = {'%s.%s' % (self._namespace, name) for name in names} | dependency_references
         return references
-
-    def _merge_dependencies_into_result(self):
-        for parser in self._dependency_parsers:
-            self.result.typedefs.update(parser.result.typedefs)
-            self.result.enums.update(parser.result.enums)
-            self.result.structs.update(parser.result.structs)
-            self.result.services.update(parser.result.services)
 
     def _parse_structs(self):
         definitions_by_reference = self._parse_struct_definitions()
@@ -136,12 +137,12 @@ class ThriftParser(object):
         return structs
 
     def _parse_struct_definitions(self):
-        structs_list = self._structs_regex.findall(self._thrift_content)
+        structs_list = ThriftParser.STRUCTS_REGEX.findall(self._thrift_content)
         structs = {'%s.%s' % (self._namespace, name): definition for definition, name in structs_list}
         return structs
 
     def _parse_fields_from_struct_definition(self, definition):
-        field_matches = self._fields_regex.findall(definition)
+        field_matches = ThriftParser.FIELDS_REGEX.findall(definition)
         fields = [self._construct_field_from_field_match(field_match) for field_match in field_matches]
         self._assign_field_indices(fields)
         fields = {field.name: field for field in fields}
@@ -156,12 +157,12 @@ class ThriftParser(object):
         return services
 
     def _parse_service_definitions(self):
-        services_list = self._services_regex.findall(self._thrift_content)
+        services_list = ThriftParser.SERVICES_REGEX.findall(self._thrift_content)
         services = {'%s.%s' % (self._namespace, name): definition for definition, name in services_list}
         return services
 
     def _parse_endpoints_from_service_definition(self, definition):
-        endpoint_matches = self._endpoints_regex.findall(definition)
+        endpoint_matches = ThriftParser.ENDPOINTS_REGEX.findall(definition)
         (oneways, return_types, names, fields_strings) = zip(*endpoint_matches)
         (oneways, return_types, names, fields_strings) = \
             (list(oneways), list(return_types), list(names), list(fields_strings))
@@ -175,7 +176,7 @@ class ThriftParser(object):
 
     def _parse_fields_from_fields_string(self, fields_string):
         field_strings = self._split_fields_string(fields_string)
-        field_matches = [self._fields_regex.findall(field_string + '\n') for field_string in field_strings]
+        field_matches = [ThriftParser.FIELDS_REGEX.findall(field_string + '\n') for field_string in field_strings]
         field_matches = [field_match[0] for field_match in field_matches if len(field_match)]
         fields = [self._construct_field_from_field_match(field_match) for field_match in field_matches]
         self._assign_field_indices(fields)
@@ -208,12 +209,12 @@ class ThriftParser(object):
         return field_strings
 
     def _parse_enums(self):
-        enums_list = self._enums_regex.findall(self._thrift_content)
+        enums_list = ThriftParser.ENUMS_REGEX.findall(self._thrift_content)
         enums = {'%s.%s' % (self._namespace, enum) for enum in enums_list}
         return enums
 
     def _parse_typedefs(self):
-        typedef_matches = self._typedefs_regex.findall(self._thrift_content)
+        typedef_matches = ThriftParser.TYPEDEFS_REGEX.findall(self._thrift_content)
         typedefs = {'%s.%s' % (self._namespace, alias): self._apply_namespace(field_type)
                     for (field_type, alias) in typedef_matches}
         return typedefs
@@ -252,8 +253,8 @@ class ThriftParser(object):
     def get_fields_for_endpoint(self, service_reference, method_name):
         """ Returns all argument fields declared for a given endpoint.
 
-        :param service_name: The reference ('package.Service') of the service declaring the endpoint.
-        :type service_name: str
+        :param service_reference: The reference ('package.Service') of the service declaring the endpoint.
+        :type service_reference: str
         :param method_name: The name of the method representing the endpoint.
         :type method_name: str
         :returns: Fields that are declared as arguments for the provided endpoint.

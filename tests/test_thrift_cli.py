@@ -101,9 +101,3 @@ class TestThriftCLI(unittest.TestCase):
         expected_split_index = len('map<string, list<i32>>')
         split_index = ThriftCLI.calc_map_types_split_index(test_map_type)
         self.assertEqual(split_index, expected_split_index)
-
-    def test_clean_thrift_dir_paths(self):
-        thrift_dir_paths = ['somefolder', '', 'some/other/folder', '/some/last/folder/']
-        expected_clean_thrift_dir_paths = ['somefolder/', '', 'some/other/folder/', '/some/last/folder/']
-        clean_thrift_dir_paths = ThriftCLI._clean_thrift_dir_paths(thrift_dir_paths)
-        self.assertEqual(clean_thrift_dir_paths, expected_clean_thrift_dir_paths)

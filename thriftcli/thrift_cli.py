@@ -44,7 +44,7 @@ class ThriftCLI(object):
         """
         self._thrift_path = thrift_path
         self._server_address = server_address
-        self._thrift_dir_paths = self._clean_thrift_dir_paths(thrift_dir_paths)
+        self._thrift_dir_paths = thrift_dir_paths
         self._thrift_parser.parse(self._thrift_path, self._thrift_dir_paths)
         self._generate_and_import_packages()
         self._open_connection(self._server_address)
@@ -77,17 +77,6 @@ class ThriftCLI(object):
         self._remove_dir('gen-py')
         if self._transport:
             self._transport.close()
-
-    @staticmethod
-    def _clean_thrift_dir_paths(thrift_dir_paths=[]):
-        return [ThriftCLI._clean_thrift_dir_path(thrift_dir_path) for thrift_dir_path in thrift_dir_paths]
-
-    @staticmethod
-    def _clean_thrift_dir_path(thrift_dir_path=''):
-        if thrift_dir_path:
-            return thrift_dir_path if thrift_dir_path[-1] == '/' else thrift_dir_path + '/'
-        else:
-            return ''
 
     @staticmethod
     def _remove_dir(path):
