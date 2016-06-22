@@ -27,7 +27,7 @@ class ThriftParser(object):
 
     class Result(object):
 
-        def __init__(self, structs, services, enums, typedefs):
+        def __init__(self, structs=None, services=None, enums=None, typedefs=None):
             """ Container for results from parsing a thrift file.
 
             :param structs: Dictionary from struct reference to ThriftStruct object.
@@ -35,10 +35,10 @@ class ThriftParser(object):
             :param enums: Set of enum references.
             :param typedefs: Dictionary from typedef alias reference to unaliased field type.
             """
-            self.structs = structs
-            self.services = services
-            self.enums = enums
-            self.typedefs = typedefs
+            self.structs = structs if structs is not None else {}
+            self.services = services if services is not None else {}
+            self.enums = enums if enums is not None else set([])
+            self.typedefs = typedefs if typedefs is not None else {}
 
         def __eq__(self, other):
             return type(other) is type(self) and self.__dict__ == other.__dict__
@@ -55,10 +55,22 @@ class ThriftParser(object):
             })
 
         def merge_result(self, other):
-            self.structs.update(other.structs)
-            self.services.update(other.services)
-            self.enums.update(other.enums)
-            self.typedefs.update(other.typedefs)
+            self.merge_structs(other.structs)
+            self.merge_services(other.services)
+            self.merge_enums(other.enums)
+            self.merge_typedefs(other.typedefs)
+
+        def merge_structs(self, structs):
+            self.structs.update(structs)
+
+        def merge_services(self, services):
+            self.services.update(services)
+
+        def merge_enums(self, enums):
+            self.enums.update(enums)
+
+        def merge_typedefs(self, typedefs):
+            self.typedefs.update(typedefs)
 
     def __init__(self):
         self._thrift_path = None
