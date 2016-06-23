@@ -1,78 +1,52 @@
+import sys
 import unittest
+
 import mock
+
 import data
-from thriftcli import ThriftCLI
+from thriftcli import thrift_cli, ThriftCLI, ThriftCLIError
 
 
 class TestThriftCLI(unittest.TestCase):
-    @mock.patch('thriftcli.TTransport.TFramedTransport.open')
-    @mock.patch('thriftcli.TSocket.TSocket')
-    @mock.patch('thriftcli.ThriftCLI._import_package')
-    @mock.patch('subprocess.call')
-    @mock.patch('thriftcli.ThriftParser._load_file')
-    def test_init(self, mock_load_file, mock_call, mock_import_package, mock_tsocket, mock_transport_open):
-        mock_load_file.return_value = data.TEST_THRIFT_CONTENT
-        mock_call.return_value = 0
-        ThriftCLI(data.TEST_THRIFT_PATH, data.TEST_SERVER_ADDRESS)
-        command = 'thrift -r --gen py %s' % data.TEST_THRIFT_PATH
-        mock_call.assert_called_with(command, shell=True)
-        mock_import_package.assert_called_with(data.TEST_THRIFT_MODULE_NAME)
-        mock_tsocket.assert_called_with(data.TEST_SERVER_HOSTNAME, data.TEST_SERVER_PORT)
-        self.assertTrue(mock_transport_open.called)
+    @mock.patch('thriftcli.thrift_cli._load_file')
+    @mock.patch('os.path.isfile')
+    def test_parse_args(self, mock_isfile, mock_load_file):
+        with mock.patch.object(sys, 'argv', data.TEST_CLI_ARGS):
+            args = thrift_cli._parse_args()
+            expected_args = data.TEST_PARSED_ARGS
+            self.assertEqual(args, expected_args)
+        with self.assertRaises(ThriftCLIError), mock.patch.object(sys, 'argv', data.TEST_CLI_ARGS2):
+            mock_isfile.return_value = False
+            thrift_cli._parse_args()
+        with mock.patch.object(sys, 'argv', data.TEST_CLI_ARGS2):
+            mock_isfile.return_value = True
+            mock_load_file.return_value = data.TEST_JSON_STRING
+            args = thrift_cli._parse_args()
+            expected_args = data.TEST_PARSED_ARGS2
+            self.assertEqual(args, expected_args)
+        with mock.patch.object(sys, 'argv', data.TEST_CLI_ARGS3):
+            args = thrift_cli._parse_args()
+            expected_args = data.TEST_PARSED_ARGS3
+            self.assertEqual(args, expected_args)
+        with mock.patch.object(sys, 'argv', data.TEST_CLI_ARGS4):
+            args = thrift_cli._parse_args()
+            expected_args = data.TEST_PARSED_ARGS4
+            self.assertEqual(args, expected_args)
+        with self.assertRaises(ThriftCLIError), mock.patch.object(sys, 'argv', data.TEST_CLI_ARGS2):
+            mock_isfile.return_value = True
+            mock_load_file.return_value = data.TEST_INVALID_JSON_STRING
+            thrift_cli._parse_args()
+        with self.assertRaises(ThriftCLIError), mock.patch.object(sys, 'argv', data.TEST_CLI_ARGS5):
+            thrift_cli._parse_args()
 
-    @mock.patch('thriftcli.TSocket.TSocket')
-    @mock.patch('thriftcli.ThriftCLI._import_package')
-    @mock.patch('subprocess.call')
-    @mock.patch('thriftcli.ThriftParser._load_file')
-    @mock.patch('thriftcli.ThriftCLI._remove_dir')
-    def test_cleanup(self, mock_remove_dir, mock_load_file, mock_call, mock_import_package, mock_tsocket):
-        mock_load_file.return_value = data.TEST_THRIFT_CONTENT
-        mock_call.return_value = 0
-        mock_import_package.side_effect = None
-        mock_remove_dir.side_effect = None
-        mock_tsocket.side_effect = None
-        cli = ThriftCLI(data.TEST_THRIFT_PATH, data.TEST_SERVER_ADDRESS)
-        cli.cleanup()
-        expected_rm_path = 'gen-py'
-        command = 'thrift -r --gen py %s' % data.TEST_THRIFT_PATH
-        mock_call.assert_called_with(command, shell=True)
-        self.assertTrue(mock_remove_dir.called)
-        mock_remove_dir.assert_called_with(expected_rm_path)
-
-    def test_split_reference(self):
+    def test_split_endpoint(self):
         endpoint = '%s.%s' % (data.TEST_THRIFT_SERVICE_NAME, data.TEST_THRIFT_METHOD_NAME)
         expected_service_name, expected_method_name = data.TEST_THRIFT_SERVICE_NAME, data.TEST_THRIFT_METHOD_NAME
-        service_name, method_name = ThriftCLI._split_reference(endpoint)
+        service_name, method_name = ThriftCLI._split_endpoint(endpoint)
         self.assertEqual((service_name, method_name), (expected_service_name, expected_method_name))
         endpoint = '%s%s' % (data.TEST_THRIFT_SERVICE_NAME, data.TEST_THRIFT_METHOD_NAME)
-        with self.assertRaises(ValueError):
-            ThriftCLI._split_reference(endpoint)
+        with self.assertRaises(ThriftCLIError):
+            ThriftCLI._split_endpoint(endpoint)
         endpoint = '%s.%s.abc' % (data.TEST_THRIFT_SERVICE_NAME, data.TEST_THRIFT_METHOD_NAME)
-        with self.assertRaises(ValueError):
-            ThriftCLI._split_reference(endpoint)
-
-    def test_parse_address_for_hostname_and_url(self):
-        hostname, port = ThriftCLI._parse_address_for_hostname_and_port(data.TEST_SERVER_ADDRESS)
-        hostname2, port2 = ThriftCLI._parse_address_for_hostname_and_port(data.TEST_SERVER_ADDRESS2)
-        hostname3, port3 = ThriftCLI._parse_address_for_hostname_and_port(data.TEST_SERVER_ADDRESS3)
-        expected_hostname, expected_port = data.TEST_SERVER_HOSTNAME, data.TEST_SERVER_PORT
-        expected_hostname2, expected_port2 = data.TEST_SERVER_HOSTNAME2, data.TEST_SERVER_PORT2
-        expected_hostname3, expected_port3 = data.TEST_SERVER_HOSTNAME3, data.TEST_SERVER_PORT3
-        self.assertEqual((hostname, port), (expected_hostname, expected_port))
-        self.assertEqual((hostname2, port2), (expected_hostname2, expected_port2))
-        self.assertEqual((hostname3, port3), (expected_hostname3, expected_port3))
-
-    # @mock.patch('thriftcli.TSocket.TSocket')
-    # @mock.patch('thriftcli.ThriftParser._load_file')
-    # def test_convert_json_to_args(self, mock_load_file, mock_tsocket):
-    #     mock_load_file.return_value = data.TEST_THRIFT_CONTENT
-    #     mock_tsocket.side_effect = None
-    #     cli = ThriftCLI(data.TEST_THRIFT_PATH, data.TEST_SERVER_ADDRESS)
-    #     try:
-    #         cli._endpoint = data.TEST_THRIFT_ENDPOINT_NAME
-    #         request_args = cli._convert_json_to_args(
-    #             data.TEST_THRIFT_SERVICE_NAME, data.TEST_THRIFT_METHOD_NAME, data.TEST_REQUEST_JSON)
-    #         expected_request_args = data.TEST_REQUEST_ARGS
-    #         self.assertEqual(request_args, expected_request_args)
-    #     finally:
-    #         cli.cleanup()
+        with self.assertRaises(ThriftCLIError):
+            ThriftCLI._split_endpoint(endpoint)

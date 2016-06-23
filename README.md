@@ -1,6 +1,6 @@
-## Usage
+## Installation
 
-First, navigate to the project directory (contains setup.py): 
+First, navigate to the project directory (contains setup.py):
 
 Next, install the thriftcli Python module and thrift:
 ```
@@ -9,7 +9,6 @@ brew install thrift
 ```
 
 Now you have a command line application called thriftcli in your path:
-
 ```
 thriftcli server_address endpoint_name thrift_file_path [-I [thrift_dir_path [thrift_dir_path...]]] [--body request_body]
 ```
@@ -24,7 +23,14 @@ Arguments:
                            For a struct argument, its value should be a JSON object of field names to values.
                            This parameter can be omitted for endpoints that take no arguments.
 
-For example:
+## Local Development
+
+You can also execute thriftcli from its source, without running the install script. To do this, navigate to the project directory and run:
+```
+python -m thriftcli
+```
+
+## Examples
 
 ```
 thriftcli localhost:9090 Calculator.ping ./Calculator.thrift
@@ -33,7 +39,7 @@ thriftcli localhost:9090 Calculator.doWork ./Calculator.thrift --body "{\\"work\
 thriftcli localhost:12201 Animals.get ~/Animals.thrift -I ~/thrifts/ --body ~/animals_get.json
 ```
 
-These example assumes that:
+These examples assume that:
 
 - './Calculator.thrift' declares a service called 'Calculator'
 - 'Calculator' declares functions called 'ping', 'add', and 'doWork'
@@ -58,7 +64,7 @@ nosetests
 To run specific tests:
 
 ```
-nosetests <path_to_test_file>
+nosetests path_to_test_file
 ```
 
 For example:

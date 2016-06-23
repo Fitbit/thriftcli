@@ -1,16 +1,10 @@
-import json
-import shutil
-import subprocess
-import sys
-import urlparse
-import textwrap
 import argparse
+import json
+import os
 
-from thrift.protocol import TBinaryProtocol
-from thrift.transport import TSocket
-from thrift.transport import TTransport
-
+from .thrift_argument_converter import ThriftArgumentConverter
 from .thrift_cli_error import ThriftCLIError
+from .thrift_executor import ThriftExecutor
 from .thrift_parser import ThriftParser
 
 __version__ = '0.0.1'
@@ -34,15 +28,9 @@ class ThriftCLI(object):
         :type server_address: str
 
         """
-        if thrift_dir_paths is None:
-            thrift_dir_paths = []
         self._thrift_path = thrift_path
-        self._server_address = server_address
-        self._thrift_dir_paths = thrift_dir_paths
-        self._thrift_parser = ThriftParser()
-        self._thrift_parser.parse(self._thrift_path, self._thrift_dir_paths)
-        self._generate_and_import_packages()
-        self._open_connection(self._server_address)
+        self._thrift_argument_converter = ThriftArgumentConverter(thrift_path, thrift_dir_paths)
+        self._thrift_executor = ThriftExecutor(thrift_path, server_address, thrift_dir_paths)
 
     def run(self, endpoint, request_body):
         """ Runs the endpoint on the connected server as defined by the thrift file.
@@ -54,195 +42,54 @@ class ThriftCLI(object):
         :returns: endpoint result
 
         """
-        method = self._get_method_from_endpoint(endpoint)
-        try:
-            [service_name, method_name] = self._split_reference(endpoint)
-        except ValueError:
-            raise ThriftCLIError('Endpoint should be in the format \'Service.method\'')
+        (service_name, method_name) = ThriftCLI._split_endpoint(endpoint)
         service_reference = '%s.%s' % (ThriftParser.get_package_name(self._thrift_path), service_name)
-        request_args = self._convert_json_to_args(service_reference, method_name, request_body)
-        return method(**request_args)
+        request_args = self._thrift_argument_converter.convert_args(service_reference, method_name, request_body)
+        return self._thrift_executor.run(service_reference, method_name, request_args)
 
-    def cleanup(self):
+    def cleanup(self, remove_generated_src=False):
         """ Deletes the gen-py code and closes the transport with the server. """
-        self._remove_dir('gen-py')
-        if self._transport:
-            self._transport.close()
+        self._thrift_executor.cleanup(remove_generated_src)
 
     @staticmethod
-    def _remove_dir(path):
-        try:
-            shutil.rmtree(path)
-        except OSError:
-            pass
-
-    def _get_method_from_endpoint(self, endpoint):
-        class_name = 'Client'
-        [service_name, method_name] = self._split_reference(endpoint)
-        service_module_name = '%s.%s' % (ThriftParser.get_package_name(self._thrift_path), service_name)
-        client_constructor = getattr(self._get_module(service_module_name), class_name)
-        client = client_constructor(self._protocol)
-        try:
-            method = getattr(client, method_name)
-        except AttributeError:
-            raise ThriftCLIError('\'%s\' service has no method \'%s\'' % (service_name, method_name))
-        return method
-
-    @staticmethod
-    def _split_reference(reference):
-        split = reference.split('.')
+    def _split_endpoint(endpoint):
+        """ Extracts the service name and method name from an endpoint. """
+        split = endpoint.split('.')
         if not split or len(split) != 2:
-            raise ValueError()
+            raise ThriftCLIError('Endpoint should be in format \'Service.function\', given: \'%s\'' % endpoint)
         return split
 
-    @staticmethod
-    def _get_module(module_name):
-        try:
-            return sys.modules[module_name]
-        except KeyError:
-            raise ThriftCLIError('Invalid module \'%s\' provided' % module_name)
 
-    def _generate_and_import_packages(self):
-        thrift_dir_options = ''.join([' -I %s' % thrift_dir_path for thrift_dir_path in self._thrift_dir_paths])
-        command = 'thrift -r%s --gen py %s' % (thrift_dir_options, self._thrift_path)
-        if subprocess.call(command, shell=True):
-            raise ThriftCLIError('Thrift generation command failed: \'%s\'' % command)
-        sys.path.append('gen-py')
-        self._import_package(ThriftParser.get_package_name(self._thrift_path))
-
-    @staticmethod
-    def _import_package(package_name):
-        package = __import__(package_name, globals())
-        modules = package.__all__
-        for module in modules:
-            module_name = '.'.join([package_name, module])
-            __import__(module_name, globals())
-
-    def _open_connection(self, address):
-        (url, port) = self._parse_address_for_hostname_and_port(address)
-        self._transport = TSocket.TSocket(url, port)
-        self._transport = TTransport.TFramedTransport(self._transport)
-        self._protocol = TBinaryProtocol.TBinaryProtocol(self._transport)
-        self._transport.open()
-
-    @staticmethod
-    def _parse_address_for_hostname_and_port(address):
-        if '//' not in address:
-            address = '//' + address
-        url_obj = urlparse.urlparse(address)
-        return url_obj.hostname, url_obj.port
-
-    def _convert_json_to_args(self, service_name, method_name, data):
-        fields = self._thrift_parser.get_fields_for_endpoint(service_name, method_name)
-        return self._convert_json_to_args_given_fields(fields, data)
-
-    def _convert_json_to_args_given_fields(self, fields, data):
-        args = {field_name: self._convert_json_entry_to_arg(fields[field_name].field_type, value)
-                for field_name, value in data.items()}
-        return args
-
-    def _convert_json_entry_to_arg(self, field_type, value):
-        field_type = self._thrift_parser.unalias_type(field_type)
-        if self._thrift_parser.has_struct(field_type):
-            fields = self._thrift_parser.get_fields_for_struct_name(field_type)
-            value = self._convert_json_to_args_given_fields(fields, value)
-        arg = self._construct_arg(field_type, value)
-        return arg
-
-    def _construct_arg(self, field_type, value):
-        if self._thrift_parser.has_struct(field_type):
-            return self._construct_struct_arg(field_type, value)
-        elif self._thrift_parser.has_enum(field_type):
-            return self._construct_enum_arg(field_type, value)
-        elif field_type.startswith('list<'):
-            return self._construct_list_arg(field_type, value)
-        elif field_type.startswith('set<'):
-            return self._construct_set_arg(field_type, value)
-        elif field_type.startswith('map<'):
-            return self._construct_map_arg(field_type, value)
-        return value
-
-    def _construct_struct_arg(self, field_type, value):
-        try:
-            package, struct = self._split_reference(field_type)
-        except ValueError:
-            raise ThriftCLIError('Invalid formatting for type %s, expected format \'package.name\'' % field_type)
-        return getattr(self._get_module('%s.ttypes' % package), struct)(**value)
-
-    def _construct_enum_arg(self, field_type, value):
-        try:
-            package, struct = self._split_reference(field_type)
-        except ValueError:
-            raise ThriftCLIError('Invalid formatting for type %s, expected format \'package.name\'' % field_type)
-        enum_class = getattr(self._get_module('%s.ttypes' % package), struct)
-        if isinstance(value, (int, long)):
-            return value
-        elif isinstance(value, basestring):
-            return enum_class._NAMES_TO_VALUES[value]
-        raise ThriftCLIError('Invalid value provided for enum %s: %s' % (field_type.str(value)))
-
-    def _construct_list_arg(self, field_type, value):
-        elem_type = field_type[field_type.index('<') + 1:field_type.rindex('>')]
-        return tuple([self._convert_json_entry_to_arg(elem_type, elem) for elem in value])
-
-    def _construct_set_arg(self, field_type, value):
-        elem_type = field_type[field_type.index('<') + 1:field_type.rindex('>')]
-        return frozenset([self._convert_json_entry_to_arg(elem_type, elem) for elem in value])
-
-    def _construct_map_arg(self, field_type, value):
-        types_string = field_type[field_type.index('<') + 1:field_type.rindex('>')]
-        split_index = ThriftParser.calc_map_types_split_index(types_string)
-        if split_index == -1:
-            raise ThriftCLIError('Invalid type formatting for map - \'%s\'' % types_string)
-        key_type = types_string[:split_index].strip()
-        elem_type = types_string[split_index + 1:].strip()
-        prep = lambda x: json.loads(x) if self._thrift_parser.has_struct(key_type) else x
-        return {self._convert_json_entry_to_arg(key_type, prep(key)): self._convert_json_entry_to_arg(elem_type, elem)
-                for key, elem in value.items()}
+def _load_file(path):
+    """ Returns the contents of a file. """
+    with open(path, 'r') as file_to_read:
+        return file_to_read.read()
 
 
-def _print_help():
-    help_text = textwrap.dedent("""\
-        Usage:
-          thriftcli server_address endpoint_name thrift_file_path [-I thrift_dir_path]... [json_request_body]
-        Examples:
-          thriftcli localhost:9090 Calculator.ping ./Calculator.thrift
-          thriftcli localhost:9090 Calculator.add ./Calculator.thrift add_request_body.json
-          thriftcli localhost:9090 Calculator.doWork ./Calculator.thrift \
-{\\"work\\": {\\"num1\\": 1, \\"num2\\": 3, \\"op\\": \\"ADD\\"}}
-        Arguments:
-          server_address       URL to send the request to.
-                               This server should listen for and implement the requested endpoint.
-          endpoint_name        Service name and function name representing the request to send to the server.
-          thrift_file_path     Path to the thrift file containing the endpoint\'s declaration.
-          thrift_dir_path      Path to additional directory to search in when locating thrift file dependencies.
-          body_file_path       Either a JSON string containing the request body to send for the endpoint or a path to \
-such a JSON file.
-                               For each argument, the JSON should map the argument name to its value.
-                               For a struct argument, its value should be a JSON object of field names to values.
-                               This parameter can be omitted for endpoints that take no arguments.
-                               Remember to wrap double quotes around this parameter if choosing the JSON string route.
-    """)
-    print help_text
+def _load_request_body_from_path(request_body_path):
+    """ Parses file content into JSON. """
+    try:
+        content = _load_file(request_body_path)
+        return json.loads(content)
+    except ValueError as e:
+        raise ThriftCLIError('Request body file contains invalid JSON.', e.message)
 
 
 def _load_request_body(request_body_arg):
+    """ Parses the request body argument as either a JSON string or as a path to a JSON file. """
     if not request_body_arg:
         return {}
+    elif os.path.isfile(request_body_arg):
+        return _load_request_body_from_path(request_body_arg)
     try:
         return json.loads(request_body_arg)
     except ValueError:
-        try:
-            with open(request_body_arg, 'r') as request_body_file:
-                return json.load(request_body_file)
-        except IOError:
-            raise ThriftCLIError('Invalid JSON arg - not a path to JSON file and not a valid JSON string.\n' +
-                                 'Note that double quotes need to be escaped in bash.')
-        except ValueError as e:
-            raise ThriftCLIError('Request body file contains invalid JSON.', e.message)
+        raise ThriftCLIError('Invalid JSON arg - not a path to JSON file and not a valid JSON string.\n' +
+                             'Note that double quotes need to be escaped in bash.')
 
 
 def _parse_namespace(args):
+    """ Converts the namespace object returned by argparse into the desired variables. """
     server_address = args.server_address
     endpoint = args.endpoint
     thrift_path = args.thrift_path
@@ -252,6 +99,7 @@ def _parse_namespace(args):
 
 
 def _make_parser():
+    """ Initializes the ArgumentParser with all desired arguments. """
     parser = argparse.ArgumentParser(description='Execute thrift endpoints on a running server.')
     parser.add_argument('server_address', type=str,
                         help='address of running server that implements the endpoint')
@@ -266,20 +114,25 @@ def _make_parser():
     return parser
 
 
-def _run_cli(server_address, endpoint_name, thrift_path, thrift_dir_paths, request_body, cleanup=False):
-    cli = None
+def _run_cli(server_address, endpoint_name, thrift_path, thrift_dir_paths, request_body, remove_generated_src=False):
+    """ Runs a remote request and prints the result if it is not None. """
+    cli = ThriftCLI(thrift_path, server_address, thrift_dir_paths)
     try:
-        cli = ThriftCLI(thrift_path, server_address, thrift_dir_paths)
         result = cli.run(endpoint_name, request_body)
         if result is not None:
             print result
     finally:
-        if cli and cleanup:
-            cli.cleanup()
+        cli.cleanup(remove_generated_src)
+
+
+def _parse_args():
+    """ Creates an ArgumentParser, parses sys.argv, and returns the desired arguments. """
+    parser = _make_parser()
+    namespace = parser.parse_args()
+    return _parse_namespace(namespace)
 
 
 def main():
-    parser = _make_parser()
-    namespace = parser.parse_args()
-    server_address, endpoint_name, thrift_path, thrift_dir_paths, request_body = _parse_namespace(namespace)
-    _run_cli(server_address, endpoint_name, thrift_path, thrift_dir_paths, request_body)
+    """ Runs a remote request and prints the result if it is not None. """
+    args = _parse_args()
+    _run_cli(*args)
