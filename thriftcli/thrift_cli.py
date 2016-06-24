@@ -18,19 +18,21 @@ class ThriftCLI(object):
     Call cleanup to close the connection and delete the generated python code.
     """
 
-    def __init__(self, thrift_path, server_address, thrift_dir_paths=None):
+    def __init__(self, thrift_path, server_address, thrift_dir_paths=None, zookeeper=False):
         """
         :param thrift_path: The path to the thrift file being used.
         :type thrift_path: str
-        :param thrift_dir_paths: Additional directories to search for included thrift files in.
-        :type thrift_dir_paths: list of str
         :param server_address: The address of the server to make requests to.
         :type server_address: str
+        :param thrift_dir_paths: Additional directories to search for included thrift files in.
+        :type thrift_dir_paths: list of str
+        :param zookeeper: Whether or not to treat the server address as a zookeeper host with a path.
+        :type zookeeper: bool
 
         """
         self._thrift_path = thrift_path
         self._thrift_argument_converter = ThriftArgumentConverter(thrift_path, thrift_dir_paths)
-        self._thrift_executor = ThriftExecutor(thrift_path, server_address, thrift_dir_paths)
+        self._thrift_executor = ThriftExecutor(thrift_path, server_address, thrift_dir_paths, zookeeper)
 
     def run(self, endpoint, request_body):
         """ Runs the endpoint on the connected server as defined by the thrift file.
@@ -95,7 +97,8 @@ def _parse_namespace(args):
     thrift_path = args.thrift_path
     thrift_dir_paths = args.include
     request_body = _load_request_body(args.body)
-    return server_address, endpoint, thrift_path, thrift_dir_paths, request_body
+    zookeeper = args.zookeeper
+    return server_address, endpoint, thrift_path, thrift_dir_paths, request_body, zookeeper
 
 
 def _make_parser():
@@ -111,12 +114,15 @@ def _make_parser():
                         help='path to directory containing included thrift files')
     parser.add_argument('-b', '--body', type=str, nargs='?',
                         help='json string or path to json file encoding the request body')
+    parser.add_argument('-z', '--zookeeper', action='store_true',
+                        help='treat server address as a zookeeper host with a path')
     return parser
 
 
-def _run_cli(server_address, endpoint_name, thrift_path, thrift_dir_paths, request_body, remove_generated_src=False):
+def _run_cli(server_address, endpoint_name, thrift_path, thrift_dir_paths, request_body, zookeeper,
+             remove_generated_src=False):
     """ Runs a remote request and prints the result if it is not None. """
-    cli = ThriftCLI(thrift_path, server_address, thrift_dir_paths)
+    cli = ThriftCLI(thrift_path, server_address, thrift_dir_paths, zookeeper)
     try:
         result = cli.run(endpoint_name, request_body)
         if result is not None:
