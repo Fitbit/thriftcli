@@ -3,7 +3,7 @@ import unittest
 import mock
 
 import data
-from thriftcli import ThriftExecutor
+from thriftcli import ThriftExecutor, ThriftCLIError
 
 
 class TestThriftExecutor(unittest.TestCase):
@@ -15,7 +15,7 @@ class TestThriftExecutor(unittest.TestCase):
     def test_init(self, mock_load_file, mock_call, mock_import_package, mock_tsocket, mock_transport_open):
         mock_load_file.return_value = data.TEST_THRIFT_CONTENT
         mock_call.return_value = 0
-        ThriftExecutor(data.TEST_THRIFT_PATH, data.TEST_SERVER_ADDRESS)
+        ThriftExecutor(data.TEST_THRIFT_PATH, data.TEST_SERVER_ADDRESS, data.TEST_THRIFT_SERVICE_REFERENCE)
         command = 'thrift -r --gen py %s' % data.TEST_THRIFT_PATH
         mock_call.assert_called_with(command, shell=True)
         mock_import_package.assert_called_with(data.TEST_THRIFT_MODULE_NAME)
@@ -38,7 +38,8 @@ class TestThriftExecutor(unittest.TestCase):
         mock_get_znode.return_value = data.TEST_ZNODE
         hostname, port = ThriftExecutor._parse_address_for_hostname_and_port(
             data.TEST_ZOOKEEPER_SERVER_ADDRESS,
-            zookeeper=True)
+            zookeeper=True,
+            service_name=data.TEST_THRIFT_SERVICE_NAME)
         expected_hostname, expected_port = data.TEST_SERVER_HOSTNAME2, data.TEST_SERVER_PORT2
         self.assertEqual((hostname, port), (expected_hostname, expected_port))
 
@@ -56,3 +57,15 @@ class TestThriftExecutor(unittest.TestCase):
         mock_get_children.assert_called_with(data.TEST_ZOOKEEPER_PATH)
         mock_get.assert_called_with(data.TEST_ZOOKEEPER_CHILD_PATH)
         self.assertTrue(mock_stop.called)
+
+    def test_split_service_reference(self):
+        reference = '%s.%s' % (data.TEST_THRIFT_SERVICE_NAME, data.TEST_THRIFT_METHOD_NAME)
+        expected_service_name, expected_method_name = data.TEST_THRIFT_SERVICE_NAME, data.TEST_THRIFT_METHOD_NAME
+        service_name, method_name = ThriftExecutor._split_service_reference(reference)
+        self.assertEqual((service_name, method_name), (expected_service_name, expected_method_name))
+        reference = '%s%s' % (data.TEST_THRIFT_SERVICE_NAME, data.TEST_THRIFT_METHOD_NAME)
+        with self.assertRaises(ThriftCLIError):
+            ThriftExecutor._split_service_reference(reference)
+        reference = '%s.%s.abc' % (data.TEST_THRIFT_SERVICE_NAME, data.TEST_THRIFT_METHOD_NAME)
+        with self.assertRaises(ThriftCLIError):
+            ThriftExecutor._split_service_reference(reference)

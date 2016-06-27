@@ -18,7 +18,7 @@ class ThriftCLI(object):
     Call cleanup to close the connection and delete the generated python code.
     """
 
-    def __init__(self, thrift_path, server_address, thrift_dir_paths=None, zookeeper=False):
+    def __init__(self, thrift_path, server_address, service_name, thrift_dir_paths=None, zookeeper=False):
         """
         :param thrift_path: The path to the thrift file being used.
         :type thrift_path: str
@@ -32,34 +32,34 @@ class ThriftCLI(object):
         """
         self._thrift_path = thrift_path
         self._thrift_argument_converter = ThriftArgumentConverter(thrift_path, thrift_dir_paths)
-        self._thrift_executor = ThriftExecutor(thrift_path, server_address, thrift_dir_paths, zookeeper)
+        self._service_reference = '%s.%s' % (ThriftParser.get_package_name(self._thrift_path), service_name)
+        self._thrift_executor = ThriftExecutor(
+            thrift_path, server_address, self._service_reference, thrift_dir_paths, zookeeper)
 
-    def run(self, endpoint, request_body):
+    def run(self, method_name, request_body):
         """ Runs the endpoint on the connected server as defined by the thrift file.
 
-        :param endpoint: The name of the endpoint to ask the server to run.
-        :type endpoint: str
+        :param method_name: The name of the method to ask the server to run.
+        :type method_name: str
         :param request_body: The arguments to provide as arguments to the endpoint.
         :type request_body: dict
         :returns: endpoint result
 
         """
-        (service_name, method_name) = ThriftCLI._split_endpoint(endpoint)
-        service_reference = '%s.%s' % (ThriftParser.get_package_name(self._thrift_path), service_name)
-        request_args = self._thrift_argument_converter.convert_args(service_reference, method_name, request_body)
-        return self._thrift_executor.run(service_reference, method_name, request_args)
+        request_args = self._thrift_argument_converter.convert_args(self._service_reference, method_name, request_body)
+        return self._thrift_executor.run(method_name, request_args)
 
     def cleanup(self, remove_generated_src=False):
         """ Deletes the gen-py code and closes the transport with the server. """
         self._thrift_executor.cleanup(remove_generated_src)
 
-    @staticmethod
-    def _split_endpoint(endpoint):
-        """ Extracts the service name and method name from an endpoint. """
-        split = endpoint.split('.')
-        if not split or len(split) != 2:
-            raise ThriftCLIError('Endpoint should be in format \'Service.function\', given: \'%s\'' % endpoint)
-        return split
+
+def _split_endpoint(endpoint):
+    """ Extracts the service name and method name from an endpoint. """
+    split = endpoint.split('.')
+    if not split or len(split) != 2:
+        raise ThriftCLIError('Endpoint should be in format \'Service.function\', given: \'%s\'' % endpoint)
+    return split
 
 
 def _load_file(path):
@@ -122,9 +122,10 @@ def _make_parser():
 def _run_cli(server_address, endpoint_name, thrift_path, thrift_dir_paths, request_body, zookeeper,
              remove_generated_src=False):
     """ Runs a remote request and prints the result if it is not None. """
-    cli = ThriftCLI(thrift_path, server_address, thrift_dir_paths, zookeeper)
+    [service_name, method_name] = _split_endpoint(endpoint_name)
+    cli = ThriftCLI(thrift_path, server_address, service_name, thrift_dir_paths, zookeeper)
     try:
-        result = cli.run(endpoint_name, request_body)
+        result = cli.run(method_name, request_body)
         if result is not None:
             print result
     finally:
