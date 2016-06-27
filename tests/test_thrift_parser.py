@@ -42,8 +42,7 @@ class TestThriftParser(unittest.TestCase):
         mock_load_file.return_value = data.TEST_THRIFT_CONTENT
         parser = ThriftParser(data.TEST_THRIFT_PATH)
         parser._references = data.TEST_THRIFT_REFERENCES
-        parser.result = ThriftParseResult(
-            data.TEST_THRIFT_STRUCTS, {}, data.TEST_THRIFT_ENUMS, data.TEST_THRIFT_TYPEDEFS)
+        parser._result = ThriftParseResult()
         expected_services = data.TEST_THRIFT_SERVICES
         services = parser._parse_services()
         self.assertDictEqual(services, expected_services)
@@ -101,11 +100,12 @@ class TestThriftParser(unittest.TestCase):
         mock_load_file.return_value = data.TEST_THRIFT_CONTENT
         parser = ThriftParser(data.TEST_THRIFT_PATH)
         parser._references = data.TEST_THRIFT_REFERENCES
-        expected_service_definitions = {
-            data.TEST_THRIFT_SERVICE_REFERENCE: data.TEST_THRIFT_SERVICE_DEFINITION,
-            data.TEST_THRIFT_SERVICE_REFERENCE2: data.TEST_THRIFT_SERVICE_DEFINITION2,
-            data.TEST_THRIFT_SERVICE_REFERENCE3: data.TEST_THRIFT_SERVICE_DEFINITION3
-        }
+        expected_service_definitions = [
+            (data.TEST_THRIFT_SERVICE_REFERENCE, (data.TEST_THRIFT_SERVICE_DEFINITION, None)),
+            (data.TEST_THRIFT_SERVICE_REFERENCE2, (data.TEST_THRIFT_SERVICE_DEFINITION2, None)),
+            (data.TEST_THRIFT_SERVICE_REFERENCE3, (data.TEST_THRIFT_SERVICE_DEFINITION3,
+                                                   data.TEST_THRIFT_SERVICE_REFERENCE))
+        ]
         service_definitions = parser._parse_service_definitions()
         self.assertEqual(service_definitions, expected_service_definitions)
 
