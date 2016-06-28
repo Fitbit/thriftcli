@@ -101,7 +101,7 @@ class ThriftExecutor(object):
         url_obj = urlparse.urlparse(address)
         host = '%s:%s' % (url_obj.hostname, url_obj.port)
         znode = ThriftExecutor._get_znode_from_zookeeper_host(host, url_obj.path)
-        return ThriftExecutor._parse_znode_for_hostname_and_port(znode, service_name)
+        return ThriftExecutor._parse_znode_for_hostname_and_port(znode, service_name, url_obj.path)
 
     @staticmethod
     def _get_znode_from_zookeeper_host(host, path):
@@ -109,16 +109,22 @@ class ThriftExecutor(object):
         zk = KazooClient(hosts=host)
         zk.start()
         children = zk.get_children(path)
-        child = random.choice(children)
+        try:
+            child = random.choice(children)
+        except IndexError:
+            raise ThriftCLIError('Path not found on Zookeeper: \'%s\'' % path)
         znode = zk.get(os.path.join(path, child))
         zk.stop()
         return znode
 
     @staticmethod
-    def _parse_znode_for_hostname_and_port(znode, service_name):
-        """ Extracts the hostname and port from the znode. """
+    def _parse_znode_for_hostname_and_port(znode, service_name, path):
+        """ Extracts the hostname and port for the providing server from the znode. """
         data = json.loads(znode[0])
-        address = data['additionalEndpoints'][service_name]
+        try:
+            address = data['additionalEndpoints'][service_name]
+        except KeyError:
+            raise ThriftCLIError('\'%s\' service not provided by \'%s\'' % (service_name, path))
         hostname, port = address['host'], address['port']
         return hostname, port
 
