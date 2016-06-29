@@ -35,7 +35,7 @@ python -m thriftcli
 ```
 thriftcli localhost:9090 Calculator.ping ./Calculator.thrift
 thriftcli localhost:9090 Calculator.add ./Calculator.thrift --body add_request_body.json
-thriftcli localhost:9090 Calculator.doWork ./Calculator.thrift --body "{\\"work\\": {\\"num1\\": 1, \\"num2\\": 3, \\"op\\": \\"ADD\\"}}"
+thriftcli localhost:9090 Calculator.doWork ./Calculator.thrift --body '{"work": {"num1": 1, "num2": 3, "op": "ADD"}}'
 thriftcli localhost:12201 Animals.get ~/Animals.thrift -I ~/thrifts/ --body ~/animals_get.json
 ```
 
