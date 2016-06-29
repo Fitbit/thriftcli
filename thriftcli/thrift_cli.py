@@ -39,18 +39,23 @@ class ThriftCLI(object):
         self._thrift_executor = ThriftExecutor(
             thrift_path, server_address, self._service_reference, thrift_dir_paths)
 
-    def run(self, method_name, request_body):
+    def run(self, method_name, request_body, return_json=False):
         """ Runs the endpoint on the connected server as defined by the thrift file.
 
         :param method_name: The name of the method to ask the server to run.
         :type method_name: str
         :param request_body: The arguments to provide as arguments to the endpoint.
         :type request_body: dict
+        :param return_json: Returns result in JSON format if True, python object if False.
+        :type return_json: bool
         :returns: endpoint result
 
         """
         request_args = self._thrift_argument_converter.convert_args(self._service_reference, method_name, request_body)
-        return self._thrift_executor.run(method_name, request_args)
+        result = self._thrift_executor.run(method_name, request_args)
+        if return_json:
+            result = json.dumps(result, default=lambda o: o.__dict__)
+        return result
 
     def cleanup(self, remove_generated_src=False):
         """ Deletes the gen-py code and closes the transport with the server. """
@@ -101,7 +106,9 @@ def _parse_namespace(args):
     thrift_dir_paths = args.include
     request_body = _load_request_body(args.body)
     zookeeper = args.zookeeper
-    return server_address, endpoint, thrift_path, thrift_dir_paths, request_body, zookeeper
+    return_json = args.json
+    cleanup = args.cleanup
+    return server_address, endpoint, thrift_path, thrift_dir_paths, request_body, zookeeper, return_json, cleanup
 
 
 def _make_parser():
@@ -119,16 +126,20 @@ def _make_parser():
                         help='json string or path to json file encoding the request body')
     parser.add_argument('-z', '--zookeeper', action='store_true',
                         help='treat server address as a zookeeper host with a path')
+    parser.add_argument('-c', '--cleanup', action='store_true',
+                        help='remove generated code after execution')
+    parser.add_argument('-j', '--json', action='store_true',
+                        help='print result in JSON format')
     return parser
 
 
-def _run_cli(server_address, endpoint_name, thrift_path, thrift_dir_paths, request_body, zookeeper,
-             remove_generated_src=False):
+def _run_cli(server_address, endpoint_name, thrift_path, thrift_dir_paths, request_body, zookeeper, return_json,
+             remove_generated_src):
     """ Runs a remote request and prints the result if it is not None. """
     [service_name, method_name] = _split_endpoint(endpoint_name)
     cli = ThriftCLI(thrift_path, server_address, service_name, thrift_dir_paths, zookeeper)
     try:
-        result = cli.run(method_name, request_body)
+        result = cli.run(method_name, request_body, return_json)
         if result is not None:
             print result
     finally:
