@@ -17,14 +17,13 @@ from .thrift_parser import ThriftParser
 
 
 class ThriftExecutor(object):
-    def __init__(self, thrift_path, server_address, service_reference, thrift_dir_paths=None, zookeeper=False):
+    def __init__(self, thrift_path, server_address, service_reference, thrift_dir_paths=None):
         """ Opens a connection with the server and generates then imports the thrift-defined python code. """
         self._thrift_path = thrift_path
         self._server_address = server_address
         self._thrift_dir_paths = thrift_dir_paths if thrift_dir_paths is not None else []
         self._service_reference = service_reference
-        service_name = ThriftExecutor._split_service_reference(service_reference)[1]
-        self._open_connection(server_address, zookeeper, service_name)
+        self._open_connection(server_address)
         self._generate_and_import_packages()
 
     def run(self, method_name, request_args):
@@ -75,58 +74,21 @@ class ThriftExecutor(object):
             raise ThriftCLIError('\'%s\' service has no method \'%s\'' % (self._service_reference, method_name))
         return method
 
-    def _open_connection(self, address, zookeeper=False, service_name=None):
+    def _open_connection(self, address):
         """ Opens a connection with a server address. """
-        (url, port) = self._parse_address_for_hostname_and_port(address, zookeeper, service_name)
+        (url, port) = self._parse_address_for_hostname_and_port(address)
         self._transport = TSocket.TSocket(url, port)
         self._transport = TTransport.TFramedTransport(self._transport)
         self._protocol = TBinaryProtocol.TBinaryProtocol(self._transport)
         self._transport.open()
 
     @staticmethod
-    def _parse_address_for_hostname_and_port(address, zookeeper=False, service_name=None):
+    def _parse_address_for_hostname_and_port(address):
         """ Extracts the hostname and port from a url address. """
-        if zookeeper:
-            return ThriftExecutor._parse_zookeeper_address_for_hostname_and_port(address, service_name)
         if '//' not in address:
             address = '//' + address
         url_obj = urlparse.urlparse(address)
         return url_obj.hostname, url_obj.port
-
-    @staticmethod
-    def _parse_zookeeper_address_for_hostname_and_port(address, service_name):
-        """ Extracts the hostname and port from a zookeeper address. """
-        if '//' not in address:
-            address = '//' + address
-        url_obj = urlparse.urlparse(address)
-        host = '%s:%s' % (url_obj.hostname, url_obj.port)
-        znode = ThriftExecutor._get_znode_from_zookeeper_host(host, url_obj.path)
-        return ThriftExecutor._parse_znode_for_hostname_and_port(znode, service_name, url_obj.path)
-
-    @staticmethod
-    def _get_znode_from_zookeeper_host(host, path):
-        """ Picks a znode assigned to a path. """
-        zk = KazooClient(hosts=host)
-        zk.start()
-        children = zk.get_children(path)
-        try:
-            child = random.choice(children)
-        except IndexError:
-            raise ThriftCLIError('Path not found on Zookeeper: \'%s\'' % path)
-        znode = zk.get(os.path.join(path, child))
-        zk.stop()
-        return znode
-
-    @staticmethod
-    def _parse_znode_for_hostname_and_port(znode, service_name, path):
-        """ Extracts the hostname and port for the providing server from the znode. """
-        data = json.loads(znode[0])
-        try:
-            address = data['additionalEndpoints'][service_name]
-        except KeyError:
-            raise ThriftCLIError('\'%s\' service not provided by \'%s\'' % (service_name, path))
-        hostname, port = address['host'], address['port']
-        return hostname, port
 
     @staticmethod
     def _import_package(package_name):
@@ -137,10 +99,3 @@ class ThriftExecutor(object):
             module_name = '.'.join([package_name, module])
             __import__(module_name, globals())
 
-    @staticmethod
-    def _split_service_reference(reference):
-        """ Extracts the package name and service name from a service reference. """
-        split = reference.split('.')
-        if not split or len(split) != 2:
-            raise ThriftCLIError('Service reference should be in format \'package.Service\', given: \'%s\'' % reference)
-        return split
