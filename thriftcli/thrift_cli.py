@@ -2,11 +2,11 @@ import argparse
 import json
 import os
 
+from thrift_zookeeper_resolver import get_server_address
 from .thrift_argument_converter import ThriftArgumentConverter
 from .thrift_cli_error import ThriftCLIError
 from .thrift_executor import ThriftExecutor
 from .thrift_parser import ThriftParser
-from thrift_zookeeper_resolver import get_server_address
 
 __version__ = '0.0.1'
 

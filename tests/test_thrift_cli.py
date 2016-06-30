@@ -4,7 +4,7 @@ import unittest
 import mock
 
 import data
-from thriftcli import thrift_cli, ThriftCLI, ThriftCLIError
+from thriftcli import thrift_cli, ThriftCLIError
 
 
 class TestThriftCLI(unittest.TestCase):

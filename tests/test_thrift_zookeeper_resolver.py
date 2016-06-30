@@ -1,13 +1,13 @@
-import mock
 import unittest
-import data
 
+import mock
+
+import data
 from thriftcli import ThriftCLIError
 from thriftcli.thrift_zookeeper_resolver import get_server_address, _get_znode_from_zookeeper_host
 
 
 class TestThriftZookeeperResolver(unittest.TestCase):
-
     @mock.patch('thriftcli.thrift_zookeeper_resolver._get_znode_from_zookeeper_host')
     def test_get_server_address(self, mock_get_znode):
         mock_get_znode.return_value = data.TEST_ZNODE

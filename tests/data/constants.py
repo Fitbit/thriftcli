@@ -1,5 +1,5 @@
-import textwrap
 import os
+import textwrap
 
 from thriftcli import ThriftService, ThriftStruct, ThriftParseResult
 

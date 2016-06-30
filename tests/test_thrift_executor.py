@@ -3,7 +3,7 @@ import unittest
 import mock
 
 import data
-from thriftcli import ThriftExecutor, ThriftCLIError
+from thriftcli import ThriftExecutor
 
 
 class TestThriftExecutor(unittest.TestCase):

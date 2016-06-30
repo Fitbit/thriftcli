@@ -1,8 +1,10 @@
-import urlparse
-import random
 import json
 import os
+import random
+import urlparse
+
 from kazoo.client import KazooClient
+
 from .thrift_cli_error import ThriftCLIError
 
 

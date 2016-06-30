@@ -2,11 +2,6 @@ import shutil
 import subprocess
 import sys
 import urlparse
-import random
-import os
-import json
-
-from kazoo.client import KazooClient
 
 from thrift.protocol import TBinaryProtocol
 from thrift.transport import TSocket
@@ -98,4 +93,3 @@ class ThriftExecutor(object):
         for module in modules:
             module_name = '.'.join([package_name, module])
             __import__(module_name, globals())
-

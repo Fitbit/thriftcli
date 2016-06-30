@@ -1,5 +1,6 @@
-import mock
 import unittest
+
+import mock
 
 import data
 from thriftcli import ThriftArgumentConverter, ThriftCLIError
