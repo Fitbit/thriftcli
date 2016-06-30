@@ -6,7 +6,7 @@ from .thrift_argument_converter import ThriftArgumentConverter
 from .thrift_cli_error import ThriftCLIError
 from .thrift_executor import ThriftExecutor
 from .thrift_parser import ThriftParser
-from .thrift_zookeeper_resolver import ThriftZookeeperResolver
+from thrift_zookeeper_resolver import get_server_address
 
 __version__ = '0.0.1'
 
@@ -35,7 +35,7 @@ class ThriftCLI(object):
         self._thrift_argument_converter = ThriftArgumentConverter(thrift_path, thrift_dir_paths)
         self._service_reference = '%s.%s' % (ThriftParser.get_package_name(self._thrift_path), service_name)
         if zookeeper:
-            server_address = ThriftZookeeperResolver.get_server_address(server_address, service_name)
+            server_address = get_server_address(server_address, service_name)
         self._thrift_executor = ThriftExecutor(
             thrift_path, server_address, self._service_reference, thrift_dir_paths)
 
