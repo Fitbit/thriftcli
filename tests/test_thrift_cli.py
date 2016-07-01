@@ -4,7 +4,7 @@ import unittest
 import mock
 
 import data
-from thriftcli import thrift_cli, ThriftCLI, ThriftCLIError
+from thriftcli import thrift_cli, ThriftCLIError
 
 
 class TestThriftCLI(unittest.TestCase):
@@ -42,11 +42,11 @@ class TestThriftCLI(unittest.TestCase):
     def test_split_endpoint(self):
         endpoint = '%s.%s' % (data.TEST_THRIFT_SERVICE_NAME, data.TEST_THRIFT_METHOD_NAME)
         expected_service_name, expected_method_name = data.TEST_THRIFT_SERVICE_NAME, data.TEST_THRIFT_METHOD_NAME
-        service_name, method_name = ThriftCLI._split_endpoint(endpoint)
+        service_name, method_name = thrift_cli._split_endpoint(endpoint)
         self.assertEqual((service_name, method_name), (expected_service_name, expected_method_name))
         endpoint = '%s%s' % (data.TEST_THRIFT_SERVICE_NAME, data.TEST_THRIFT_METHOD_NAME)
         with self.assertRaises(ThriftCLIError):
-            ThriftCLI._split_endpoint(endpoint)
+            thrift_cli._split_endpoint(endpoint)
         endpoint = '%s.%s.abc' % (data.TEST_THRIFT_SERVICE_NAME, data.TEST_THRIFT_METHOD_NAME)
         with self.assertRaises(ThriftCLIError):
-            ThriftCLI._split_endpoint(endpoint)
+            thrift_cli._split_endpoint(endpoint)

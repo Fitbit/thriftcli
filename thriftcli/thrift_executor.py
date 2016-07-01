@@ -12,19 +12,18 @@ from .thrift_parser import ThriftParser
 
 
 class ThriftExecutor(object):
-    def __init__(self, thrift_path, server_address, thrift_dir_paths=None):
+    def __init__(self, thrift_path, server_address, service_reference, thrift_dir_paths=None):
         """ Opens a connection with the server and generates then imports the thrift-defined python code. """
         self._thrift_path = thrift_path
         self._server_address = server_address
         self._thrift_dir_paths = thrift_dir_paths if thrift_dir_paths is not None else []
-        self._open_connection(self._server_address)
+        self._service_reference = service_reference
+        self._open_connection(server_address)
         self._generate_and_import_packages()
 
-    def run(self, service_reference, method_name, request_args):
+    def run(self, method_name, request_args):
         """ Executes a method on the connected server and returns its result.
 
-        :param service_reference: Reference to the service implementing the desired method to call.
-        :type service_reference: str
         :param method_name: Name of the method to call.
         :type method_name: str
         :param request_args: Keyword arguments to pass into method call, acting as a request body.
@@ -32,7 +31,7 @@ class ThriftExecutor(object):
         :return: Result of method call.
 
         """
-        method = self._get_method_from_endpoint(service_reference, method_name)
+        method = self._get_method(method_name)
         return method(**request_args)
 
     def cleanup(self, remove_generated_src=False):
@@ -59,15 +58,15 @@ class ThriftExecutor(object):
         sys.path.append('gen-py')
         self._import_package(ThriftParser.get_package_name(self._thrift_path))
 
-    def _get_method_from_endpoint(self, service_reference, method_name):
+    def _get_method(self, method_name):
         """ Returns the python method generated for the given endpoint. """
         class_name = 'Client'
-        client_constructor = getattr(sys.modules[service_reference], class_name)
+        client_constructor = getattr(sys.modules[self._service_reference], class_name)
         client = client_constructor(self._protocol)
         try:
             method = getattr(client, method_name)
         except AttributeError:
-            raise ThriftCLIError('\'%s\' service has no method \'%s\'' % (service_reference, method_name))
+            raise ThriftCLIError('\'%s\' service has no method \'%s\'' % (self._service_reference, method_name))
         return method
 
     def _open_connection(self, address):
