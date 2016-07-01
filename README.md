@@ -10,7 +10,7 @@ brew install thrift
 
 Now you have a command line application called thriftcli in your path:
 ```
-thriftcli server_address endpoint_name thrift_file_path [-I [thrift_dir_path [thrift_dir_path...]]] [--body request_body] [-z --zookeeper]
+thriftcli server_address endpoint_name thrift_file_path [options]
 ```
 
 Arguments:
@@ -28,6 +28,8 @@ Options:
                            For a struct argument, its value should be a JSON object of field names to values.
                            This parameter can be omitted for endpoints that take no arguments.
 - **-z --zookeeper**       Treat the server address as a Zookeeper instance, and make the request to the service being provided at the given path.
+- **-c --cleanup**         Delete generated code from filesystem after execution
+- **-j --json**            Print result in JSON format
 
 ## Local Development
 
