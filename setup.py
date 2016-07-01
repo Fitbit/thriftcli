@@ -17,8 +17,8 @@ config = {
     'entry_points': {
         'console_scripts': ['thriftcli = thriftcli.thrift_cli:main']
     },
-    'install_requires': ['thrift', 'mock'],
-    'requires': ['thrift', 'mock']
+    'install_requires': ['thrift', 'kazoo', 'mock'],
+    'requires': ['thrift', 'kazoo', 'mock']
 }
 
 setup(**config)

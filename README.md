@@ -10,18 +10,24 @@ brew install thrift
 
 Now you have a command line application called thriftcli in your path:
 ```
-thriftcli server_address endpoint_name thrift_file_path [-I [thrift_dir_path [thrift_dir_path...]]] [--body request_body]
+thriftcli server_address endpoint_name thrift_file_path [-I [thrift_dir_path [thrift_dir_path...]]] [--body request_body] [-z --zookeeper]
 ```
 
 Arguments:
 - **server_address**       URL to send the request to. This server should listen for and implement the requested endpoint.
 - **endpoint_name**        Service name and function name representing the request to send to the server.
 - **thrift_file_path**     Path to the thrift file containing the endpoint\'s declaration.
-- **thrift_dir_path**      Path to additional directory to search in when locating thrift file dependencies.
-- **request_body**         Either a JSON string containing the request body to send for the endpoint or a path to such a JSON file.
+
+Options:
+- **-h --help**            Display a help message
+- **-I --includes [thrift_dir_path...]**
+                           Path to additional directory to search in when locating thrift file dependencies.
+- **-b --body [request_body]**
+                           Either a JSON string containing the request body to send for the endpoint or a path to such a JSON file.
                            For each argument, the JSON should map the argument name to its value.
                            For a struct argument, its value should be a JSON object of field names to values.
                            This parameter can be omitted for endpoints that take no arguments.
+- **-z --zookeeper**       Treat the server address as a Zookeeper instance, and make the request to the service being provided at the given path.
 
 ## Local Development
 
@@ -35,8 +41,9 @@ python -m thriftcli
 ```
 thriftcli localhost:9090 Calculator.ping ./Calculator.thrift
 thriftcli localhost:9090 Calculator.add ./Calculator.thrift --body add_request_body.json
-thriftcli localhost:9090 Calculator.doWork ./Calculator.thrift --body "{\\"work\\": {\\"num1\\": 1, \\"num2\\": 3, \\"op\\": \\"ADD\\"}}"
+thriftcli localhost:9090 Calculator.doWork ./Calculator.thrift --body '{"work": {"num1": 1, "num2": 3, "op": "ADD"}}'
 thriftcli localhost:12201 Animals.get ~/Animals.thrift -I ~/thrifts/ --body ~/animals_get.json
+thriftcli localhost:2181/animals -z Animals.get ~/Animals.thrift --body ~/animals_get.json
 ```
 
 These examples assume that:
@@ -52,6 +59,7 @@ These examples assume that:
 - 'Animals' declares a function called 'get'
 - The 'Animals.get' endpoint takes arguments that agree with the contents of '~/animals_get.json'
 - The 'Animals' service is being provided by localhost:12201
+- localhost:2181 is a running Zookeeper instance providing the 'Animals' service on the '/animals' path
 
 ## Testing
 
