@@ -7,6 +7,7 @@ from .thrift_argument_converter import ThriftArgumentConverter
 from .thrift_cli_error import ThriftCLIError
 from .thrift_executor import ThriftExecutor
 from .thrift_parser import ThriftParser
+from .request_body_converter import convert
 
 __version__ = '0.0.1'
 
@@ -76,26 +77,16 @@ def _load_file(path):
         return file_to_read.read()
 
 
-def _load_request_body_from_path(request_body_path):
-    """ Parses file content into JSON. """
-    try:
-        content = _load_file(request_body_path)
-        return json.loads(content)
-    except ValueError as e:
-        raise ThriftCLIError('Request body file contains invalid JSON.', e.message)
-
-
 def _load_request_body(request_body_arg):
-    """ Parses the request body argument as either a JSON string or as a path to a JSON file. """
+    """ Parses the request body argument into an argument dictionary. """
     if not request_body_arg:
         return {}
-    elif os.path.isfile(request_body_arg):
-        return _load_request_body_from_path(request_body_arg)
+    if os.path.isfile(request_body_arg):
+        request_body_arg = _load_file(request_body_arg)
     try:
-        return json.loads(request_body_arg)
-    except ValueError:
-        raise ThriftCLIError('Invalid JSON arg - not a path to JSON file and not a valid JSON string.\n' +
-                             'Note that double quotes need to be escaped in bash.')
+        return convert(request_body_arg)
+    except ValueError, e:
+        raise ThriftCLIError(e)
 
 
 def _parse_namespace(args):
