@@ -17,7 +17,7 @@ class ThriftParser(object):
 
     INCLUDES_REGEX = re.compile(r'^include\s+\"(\w+.thrift)\"', flags=re.MULTILINE)
     STRUCTS_REGEX = re.compile(r'^([\r\t ]*?struct (\w+)[^}]+})', flags=re.MULTILINE)
-    SERVICES_REGEX = re.compile(r'^([\r\t ]*?service (\w+)[^}]+})', flags=re.MULTILINE)
+    SERVICES_REGEX = re.compile(r'^([\r\t ]*?service\s+(\w+)(?:\s+extends\s+([\w.]+))?[^}]+})', flags=re.MULTILINE)
     ENUMS_REGEX = re.compile(r'^[\r\t ]*?enum (\w+)[^}]+}', flags=re.MULTILINE)
     ENDPOINTS_REGEX = re.compile(r'^[\r\t ]*(oneway)?\s*([^\n]*)\s+(\w+)\(([a-zA-Z0-9: ,.<>]*)\)',
                                  flags=re.MULTILINE)
@@ -42,6 +42,7 @@ class ThriftParser(object):
         self._namespace = ThriftParser.get_package_name(thrift_path)
         self._thrift_content = self._load_file(self._thrift_path)
         self._references = set([])
+        self._result = None
 
     def parse(self):
         """ Parses a thrift file into its structs, services, enums, and typedefs.
@@ -50,16 +51,16 @@ class ThriftParser(object):
         :rtype: ThriftParseResult
 
         """
-        result = ThriftParseResult()
+        self._result = ThriftParseResult()
         for path in self._get_dependency_paths():
             parser = ThriftParser(path, self._thrift_dir_paths)
             self._references.update(parser._parse_references())
-            result.merge_result(parser.parse())
+            self._result.merge_result(parser.parse())
         self._references.update(self._parse_references())
         parse_result = ThriftParseResult(
             self._parse_structs(), self._parse_services(), self._parse_enums(), self._parse_typedefs())
-        result.merge_result(parse_result)
-        return result
+        self._result.merge_result(parse_result)
+        return self._result
 
     @staticmethod
     def get_package_name(thrift_path):
@@ -89,7 +90,7 @@ class ThriftParser(object):
     def _parse_references(self):
         """ Returns the set of references defined by the parsed thrift file. """
         struct_names = {name for _, name in ThriftParser.STRUCTS_REGEX.findall(self._thrift_content)}
-        service_names = {name for _, name in ThriftParser.SERVICES_REGEX.findall(self._thrift_content)}
+        service_names = {name for _, name, _ in ThriftParser.SERVICES_REGEX.findall(self._thrift_content)}
         enum_names = {name for name in ThriftParser.ENUMS_REGEX.findall(self._thrift_content)}
         typedef_names = {name for _, name in ThriftParser.TYPEDEFS_REGEX.findall(self._thrift_content)}
         names = struct_names | service_names | enum_names | typedef_names
@@ -121,17 +122,26 @@ class ThriftParser(object):
     def _parse_services(self):
         """ Returns the services defined by the parsed thrift file, keyed by reference. """
         definitions_by_reference = self._parse_service_definitions()
-        endpoints_by_reference = {reference: self._parse_endpoints_from_service_definition(definition)
-                                  for reference, definition in definitions_by_reference.items()}
-        services = {reference: ThriftService(reference, endpoints)
-                    for reference, endpoints in endpoints_by_reference.items()}
+        known_services = self._result.services
+        services = known_services.copy()
+        for reference, (definition, extends) in definitions_by_reference:
+            endpoints = self._build_service_endpoints(services, definition, extends)
+            service = ThriftService(reference, endpoints, extends)
+            services[reference] = service
         return services
 
     def _parse_service_definitions(self):
         """ Returns the service definitions found in the parsed thrift file, keyed by reference. """
         services_list = ThriftParser.SERVICES_REGEX.findall(self._thrift_content)
-        services = {'%s.%s' % (self._namespace, name): definition for definition, name in services_list}
+        services = [(self._apply_namespace(name), (definition, self._apply_namespace(extends) if extends else None))
+                    for definition, name, extends in services_list]
         return services
+
+    def _build_service_endpoints(self, services, definition, extends=None):
+        endpoints = services[extends].endpoints.copy() if extends is not None else {}
+        parsed_endpoints = self._parse_endpoints_from_service_definition(definition)
+        endpoints.update(parsed_endpoints)
+        return endpoints
 
     def _parse_endpoints_from_service_definition(self, definition):
         """ Returns the endpoints in the service definition, keyed by method name. """
@@ -165,12 +175,14 @@ class ThriftParser(object):
     def _parse_typedefs(self):
         """ Returns the typedefs defined by the parsed thrift file, keyed by alias. """
         typedef_matches = ThriftParser.TYPEDEFS_REGEX.findall(self._thrift_content)
-        typedefs = {'%s.%s' % (self._namespace, alias): self._apply_namespace(field_type)
+        typedefs = {self._apply_namespace(alias): self._apply_namespace(field_type)
                     for (field_type, alias) in typedef_matches}
         return typedefs
 
     def _apply_namespace(self, field_type):
         """ Applies the package namespace to the field type appropriately. """
+        if field_type is None:
+            return None
         ns_field_type = '%s.%s' % (self._namespace, field_type)
         if ns_field_type in self._references:
             return ns_field_type
