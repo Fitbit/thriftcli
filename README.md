@@ -2,7 +2,7 @@
 
 First, navigate to the project directory (contains setup.py):
 
-Next, install the thriftcli Python module and thrift:
+Next, install the CLI tool and thrift:
 ```
 python setup.py install
 brew install thrift
@@ -65,20 +65,8 @@ These examples assume that:
 
 ## Testing
 
-From the thriftcli directory:
+From the project directory:
 
 ```
 nosetests
-```
-
-To run specific tests:
-
-```
-nosetests path_to_test_file
-```
-
-For example:
-
-```
-nosetests tests/test_thrift_parser.py
 ```
