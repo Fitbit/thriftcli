@@ -112,11 +112,11 @@ class TestThriftParser(unittest.TestCase):
     def test_split_fields_string(self):
         fields_string = '1:i32 num1, 2:i32 num2, 3:Operation op'
         expected_field_strings = ['1:i32 num1', '2:i32 num2', '3:Operation op']
-        field_strings = ThriftParser._split_fields_string(fields_string)
+        field_strings = ThriftParser.split_fields_string(fields_string)
         self.assertEqual(field_strings, expected_field_strings)
         fields_string = '1:map<string, string> stringMap, 2:set<list<SomeStruct>> setOfLists'
         expected_field_strings = ['1:map<string, string> stringMap', '2:set<list<SomeStruct>> setOfLists']
-        field_strings = ThriftParser._split_fields_string(fields_string)
+        field_strings = ThriftParser.split_fields_string(fields_string)
         self.assertEqual(field_strings, expected_field_strings)
 
     @mock.patch('thriftcli.ThriftParser._load_file')

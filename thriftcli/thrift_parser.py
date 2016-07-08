@@ -159,7 +159,7 @@ class ThriftParser(object):
 
     def _parse_fields_from_fields_string(self, fields_string):
         """ Returns the fields in the field string, keyed by field name. """
-        field_strings = self._split_fields_string(fields_string)
+        field_strings = self.split_fields_string(fields_string)
         field_matches = [ThriftParser.FIELDS_REGEX.findall(field_string + '\n') for field_string in field_strings]
         field_matches = [field_match[0] for field_match in field_matches if len(field_match)]
         fields = [self._construct_field_from_field_match(field_match) for field_match in field_matches]
@@ -225,7 +225,7 @@ class ThriftParser(object):
             last_index = field.index
 
     @staticmethod
-    def _split_fields_string(fields_string):
+    def split_fields_string(fields_string, open='<', close='>', delim=','):
         """ Split a fields string into a list of field declarations.
 
         :param fields_string: The string containing multiple field declarations.
@@ -237,11 +237,11 @@ class ThriftParser(object):
         bracket_depth = 0
         last_index = 0
         for i, char in enumerate(fields_string):
-            if char == '<':
+            if char in open:
                 bracket_depth += 1
-            elif char == '>':
+            elif char in close:
                 bracket_depth -= 1
-            elif char == ',' and bracket_depth == 0:
+            elif char in delim and bracket_depth == 0:
                 field_string = fields_string[last_index:i].strip()
                 field_strings.append(field_string)
                 last_index = i + 1

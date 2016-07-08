@@ -57,7 +57,16 @@ class ThriftArgumentConverter(object):
             return self._construct_set_arg(field_type, value)
         elif field_type.startswith('map<'):
             return self._construct_map_arg(field_type, value)
-        return value
+        elif field_type == 'string':
+            return str(value)
+        elif field_type == 'double':
+            return float(value)
+        elif field_type == 'bool':
+            return bool(value)
+        try:
+            return long(value)
+        except ValueError:
+            return value
 
     @staticmethod
     def _get_type_class(package, type_name):
