@@ -38,6 +38,16 @@ You can also execute thriftcli from its source, without running the install scri
 python -m thriftcli
 ```
 
+## Warning: Conflicting Method Names
+
+Consider two services, A and B, which are both defined in MyThrift.thrift and declare a method named helloWorld.
+
+Assume you're running a server that implements A.helloWorld.
+
+When using thriftcli, both endpoints A.helloWorld and B.helloWorld will execute the running server's implementation of A.helloWorld.
+
+This is due to the nature of Thrift and cannot be checked for prior to execution. The thriftcli user is responsible for assuring that the correct helloWorld implementation is called.
+
 ## Examples
 
 ```
