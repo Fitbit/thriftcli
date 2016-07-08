@@ -16,7 +16,9 @@ def convert(request_body):
 
     """
     for converter in CONVERTERS:
-        if converter.validate(request_body):
+        try:
             return converter.convert(request_body)
+        except ValueError:
+            pass
     raise ValueError("Request body is in an unknown format.")
 
