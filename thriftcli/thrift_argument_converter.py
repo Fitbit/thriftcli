@@ -19,27 +19,31 @@ class ThriftArgumentConverter(object):
         :type service_reference: str
         :param method_name: Name of the method whose type signature is the basis for the conversion.
         :type method_name: str
-        :param data: The json request body, mapping argument names to their values.
+        :param data: Nested dictionary of primitives and thrift data structures, mapping argument names to their values.
         :type data: dict
-        :returns: Keyword argument dictionary representing the request body.
+        :returns: Python object argument dictionary representing the request body.
         :rtype: dict
 
         """
         fields = self._parse_result.get_fields_for_endpoint(service_reference, method_name)
-        return self._convert_json_to_args_given_fields(fields, data)
+        return self._convert_dict_to_args_given_fields(fields, data)
 
-    def _convert_json_to_args_given_fields(self, fields, data):
+    def _convert_dict_to_args_given_fields(self, fields, data):
         """ Converts a request body into a Python object, given the fields each key value pair should convert into. """
-        args = {field_name: self._convert_json_entry_to_arg(fields[field_name].field_type, value)
+        if len(fields) == 1:
+            field = fields.values()[0]
+            if field.name not in data:
+                data = {field.name: data}
+        args = {field_name: self._convert_dict_entry_to_arg(fields[field_name].field_type, value)
                 for field_name, value in data.items()}
         return args
 
-    def _convert_json_entry_to_arg(self, field_type, value):
+    def _convert_dict_entry_to_arg(self, field_type, value):
         """ Converts a request body item into an argument for the Python object. """
         field_type = self._parse_result.unalias_type(field_type)
         if self._parse_result.get_struct(field_type) is not None:
             fields = self._parse_result.get_fields_for_struct_name(field_type)
-            value = self._convert_json_to_args_given_fields(fields, value)
+            value = self._convert_dict_to_args_given_fields(fields, value)
         arg = self._construct_arg(field_type, value)
         return arg
 
@@ -94,12 +98,12 @@ class ThriftArgumentConverter(object):
     def _construct_list_arg(self, field_type, value):
         """ Returns the Python list corresponding to a JSON array in the request body. """
         elem_type = field_type[field_type.index('<') + 1: field_type.rindex('>')]
-        return tuple([self._convert_json_entry_to_arg(elem_type, elem) for elem in value])
+        return tuple([self._convert_dict_entry_to_arg(elem_type, elem) for elem in value])
 
     def _construct_set_arg(self, field_type, value):
         """ Returns the Python set corresponding to a JSON array in the request body. """
         elem_type = field_type[field_type.index('<') + 1: field_type.rindex('>')]
-        return frozenset([self._convert_json_entry_to_arg(elem_type, elem) for elem in value])
+        return frozenset([self._convert_dict_entry_to_arg(elem_type, elem) for elem in value])
 
     def _construct_map_arg(self, field_type, value):
         """ Returns the Python dict corresponding to a JSON object in the request body. """
@@ -110,7 +114,7 @@ class ThriftArgumentConverter(object):
         key_type = types_string[:split_index].strip()
         elem_type = types_string[split_index + 1:].strip()
         prep = lambda x: x if self._parse_result.get_struct(key_type) is None else json.loads(x)
-        return {self._convert_json_entry_to_arg(key_type, prep(key)): self._convert_json_entry_to_arg(elem_type, elem)
+        return {self._convert_dict_entry_to_arg(key_type, prep(key)): self._convert_dict_entry_to_arg(elem_type, elem)
                 for key, elem in value.items()}
 
     @staticmethod

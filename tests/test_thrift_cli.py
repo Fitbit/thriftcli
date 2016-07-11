@@ -10,7 +10,7 @@ from thriftcli import thrift_cli, ThriftCLIError
 class TestThriftCLI(unittest.TestCase):
     @mock.patch('thriftcli.thrift_cli._load_file')
     @mock.patch('os.path.isfile')
-    def test_parse_args(self, mock_isfile, mockload_file):
+    def test_parse_args(self, mock_isfile, mock_load_file):
         with mock.patch.object(sys, 'argv', data.TEST_CLI_ARGS):
             args = thrift_cli._parse_args()
             expected_args = data.TEST_PARSED_ARGS
@@ -20,7 +20,7 @@ class TestThriftCLI(unittest.TestCase):
             thrift_cli._parse_args()
         with mock.patch.object(sys, 'argv', data.TEST_CLI_ARGS2):
             mock_isfile.return_value = True
-            mockload_file.return_value = data.TEST_JSON_REQUEST_BODY
+            mock_load_file.return_value = data.TEST_JSON_REQUEST_BODY
             args = thrift_cli._parse_args()
             expected_args = data.TEST_PARSED_ARGS2
             self.assertEqual(args, expected_args)
@@ -34,7 +34,7 @@ class TestThriftCLI(unittest.TestCase):
             self.assertEqual(args, expected_args)
         with self.assertRaises(ThriftCLIError), mock.patch.object(sys, 'argv', data.TEST_CLI_ARGS2):
             mock_isfile.return_value = True
-            mockload_file.return_value = data.TEST_INVALID_REQUEST_BODY
+            mock_load_file.return_value = data.TEST_INVALID_REQUEST_BODY
             thrift_cli._parse_args()
         with self.assertRaises(ThriftCLIError), mock.patch.object(sys, 'argv', data.TEST_CLI_ARGS5):
             thrift_cli._parse_args()
