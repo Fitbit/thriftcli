@@ -9,8 +9,6 @@ from .thrift_executor import ThriftExecutor
 from .thrift_parser import ThriftParser
 from .request_body_converter import convert
 
-__version__ = '0.0.1'
-
 
 class ThriftCLI(object):
     """ Provides an interface for setting up a client, making requests, and cleaning up.
