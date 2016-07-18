@@ -23,11 +23,11 @@ Options:
 - **-I --includes [thrift_dir_path...]**
                            Path to additional directory to search in when locating thrift file dependencies.
 - **-b --body [request_body]**
-                           A string containing the request body to send for the endpoint or a path to such a JSON file.
-                           For each argument, the JSON should map the argument name to its value.
-                           For a struct argument, its value should be a JSON object of field names to values.
-                           This parameter can be omitted for endpoints that take no arguments.
-                           This can also be in the format of Thrift's generated Java toString(), rather than JSON.
+                           The request body to send with the endpoint. 
+                           Must be in one of the following formats:
+                            JSON body, such as '{"request": {"person": {name": "joe", "id": 2}}}'.
+                            Java Thrift body, such as 'request:MyRequest(person:Person(name:joe, id:2))'.
+                            Path to a file containing any of the above formats.
 - **-z --zookeeper**       Treat the server address as a Zookeeper instance, and make the request to the service being provided at the given path.
 - **-c --cleanup**         Delete generated code from filesystem after execution
 - **-j --json**            Print result in JSON format

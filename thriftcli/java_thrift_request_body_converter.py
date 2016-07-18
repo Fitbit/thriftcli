@@ -49,41 +49,26 @@ def _convert_from_field_strings(field_strings):
     :rtype: dict
 
     """
-    return {_get_key(field_string): _get_value(field_string) for field_string in field_strings}
+    return dict([_get_key_and_value(field_string) for field_string in field_strings])
 
 
-def _get_key(field_string):
-    """ Extracts the key from a Java Thrift field string.
+def _get_key_and_value(field_string):
+    """ Extracts the key and value from a Java Thrift field string.
 
-    For example: "ids:[1,2,3]" --> "ids"
+    For example: "ids:[1,2,3]" --> "ids", [1,2,3]
 
     :param field_string: The Java Thrift field string
     :type field_string: str
     :returns: The key of the represented field
-    :rtype: str
-
-    """
-    colon_index = field_string.find(':')
-    open_paren_index = field_string.find('(', 0, colon_index)
-    key = field_string[open_paren_index+1:colon_index]
-    return key
-
-
-def _get_value(field_string):
-    """ Extracts the value from a Java Thrift field string.
-
-    For example: "ids:[1,2,3]" --> [1,2,3]
-
-    :param field_string: The Java Thrift field string
-    :type field_string: str
-    :returns: The value of the represented field
-    :rtype: str or Number or JSON
+    :rtype: str, str or Number or JSON
 
     """
     colon_index = field_string.index(':')
+    open_paren_index = field_string.find('(', 0, colon_index)
+    key = field_string[open_paren_index+1:colon_index]
     value_string = field_string[colon_index+1:]
     value = _convert_value_string(value_string)
-    return value
+    return key, value
 
 
 def _convert_value_string(value_string):
