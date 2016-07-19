@@ -1,8 +1,9 @@
 import json_request_body_converter
-
+import java_thrift_request_body_converter
 
 CONVERTERS = [
-    json_request_body_converter
+    json_request_body_converter,
+    java_thrift_request_body_converter
 ]
 
 

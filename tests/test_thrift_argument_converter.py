@@ -23,7 +23,7 @@ class TestThriftArgumentConverter(unittest.TestCase):
     @mock.patch('thriftcli.ThriftParser._load_file')
     def test_convert_args_with_multiple_args(self, mock_load_file, mock_get_type_class):
         op_mock = mock.Mock(_NAMES_TO_VALUES={'A': 0})
-        mock_get_type_class.side_effect = [op_mock]
+        mock_get_type_class.return_value = op_mock
         mock_load_file.return_value = data.TEST_THRIFT_CONTENT
         converter = ThriftArgumentConverter(data.TEST_THRIFT_PATH)
         args = converter.convert_args(data.TEST_THRIFT_SERVICE_REFERENCE, 'doSomething1', data.TEST_JSON_TO_CONVERT)
@@ -34,6 +34,25 @@ class TestThriftArgumentConverter(unittest.TestCase):
         }
         expected_call_args_list = [mock.call('Something', 'SomeEnum')]
         self.assertEqual(mock_get_type_class.call_args_list, expected_call_args_list)
+        self.assertEqual(args, expected_args)
+
+    @mock.patch('thriftcli.ThriftArgumentConverter._get_type_class')
+    @mock.patch('thriftcli.ThriftParser._load_file')
+    def test_convert_args_with_inference(self, mock_load_file, mock_get_type_class):
+        struct_obj_mock = mock.Mock()
+        struct_mock = mock.Mock(return_value=struct_obj_mock)
+        mock_get_type_class.return_value = struct_mock
+        mock_load_file.return_value = data.TEST_THRIFT_CONTENT
+        converter = ThriftArgumentConverter(data.TEST_THRIFT_PATH)
+        struct_args = {"thing_one": "some string", "thing_two": 2.0, "thing_three": True}
+        args = converter.convert_args(
+            data.TEST_THRIFT_SERVICE_REFERENCE,
+            'useSomeStruct',
+            struct_args)
+        expected_args = {
+            "someStruct": struct_obj_mock
+        }
+        struct_mock.assert_called_with(**struct_args)
         self.assertEqual(args, expected_args)
 
     @mock.patch('thriftcli.ThriftParser._load_file')

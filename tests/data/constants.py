@@ -188,19 +188,19 @@ TEST_JSON_TO_CONVERT2 = {
 TEST_JSON_TO_CONVERT3 = {
     "setOfLists": [
         [{
-            "thing_one": 1,
+            "thing_one": '1',
             "thing_two": 2.000,
-            "thing_three": "three",
+            "thing_three": True,
         }, {
-            "thing_one": 2,
+            "thing_one": '2',
             "thing_two": 2.00,
-            "thing_three": "two",
+            "thing_three": False,
         }
         ],
         [{
-            "thing_one": 3,
+            "thing_one": '3',
             "thing_two": 2.0,
-            "thing_three": "one",
+            "thing_three": True,
         }]
     ]
 }
@@ -412,9 +412,20 @@ TEST_THRIFT_INCLUDING_CONTENT = '\n'.join([
 TEST_THRIFT_ENDPOINT_NAME = 'SomeService.useSomeStruct'
 TEST_THRIFT_METHOD_NAME = 'useSomeStruct'
 TEST_JSON_PATH = '/path/to/json.json'
-TEST_JSON_STRING = '{"request": {"num": 1, "text": "some text"}, "id": 0}'
-TEST_INVALID_JSON_STRING = '{request: {"num": 1, "text": "some text", id: 0}'
-TEST_JSON = {"request": {"num": 1, "text": "some text"}, "id": 0}
+TEST_JSON_REQUEST_BODY = '{"request": {"num": 1, "text": "some text", "seq": [1, 2, 3]}, "id": 0}'
+TEST_JSON_REQUEST_BODY2 = '{"num": 1, "text": "some text", "seq": [1, 2, 3]}'
+TEST_JSON_REQUEST_BODY3 = '{"request": {"animal": {"type": "GIRAFFE", "name": "giraffee"}}}'
+TEST_JSON_REQUEST_BODY4 = '{"work": {"num1": 1, "num2": 2, "extra": {"more": 1, "attributes": 2}}}'
+TEST_JAVA_THRIFT_REQUEST_BODY = 'request:MyRequest(num:1,text:some text,seq:[1,2,3]), id:0'
+TEST_JAVA_THRIFT_REQUEST_BODY2 = 'MyRequest(num:1,text:some text,seq:[1,2,3])'
+TEST_JAVA_THRIFT_REQUEST_BODY3 = 'request:AnimalsCreateRequest(animal:Animal(id:null, type:GIRAFFE, name:giraffee))'
+TEST_JAVA_THRIFT_REQUEST_BODY4 = 'work:Work(num1:1, num2:2, extra: Extra(more:1, attributes:2))'
+TEST_INVALID_REQUEST_BODY = 'nonsense'
+TEST_ARGUMENT_DICTIONARY = {"request": {"num": 1, "text": "some text", "seq": [1, 2, 3]}, "id": 0}
+TEST_ARGUMENT_DICTIONARY2 = {"num": 1, "text": "some text", "seq": [1, 2, 3]}
+TEST_ARGUMENT_DICTIONARY3 = {"request": {"animal": {"id": None, "type": "GIRAFFE", "name": "giraffee"}}}
+TEST_ARGUMENT_DICTIONARY3_ALT = {"request": {"animal": {"type": "GIRAFFE", "name": "giraffee"}}}
+TEST_ARGUMENT_DICTIONARY4 = {"work": {"num1": 1, "num2": 2, "extra": {"more": 1, "attributes": 2}}}
 TEST_CLI_NAME = 'thriftcli'
 TEST_ZOOKEEPER_PATH = '/some_path'
 TEST_ZOOKEEPER_CHILD_NAME = 'member_0000000041'
@@ -429,13 +440,13 @@ TEST_CLI_ARGS2 = [TEST_CLI_NAME, TEST_ZOOKEEPER_SERVER_ADDRESS, TEST_THRIFT_ENDP
 TEST_CLI_ARGS3 = [TEST_CLI_NAME, TEST_SERVER_ADDRESS, TEST_THRIFT_ENDPOINT_NAME, TEST_THRIFT_PATH,
                   '-I', TEST_THRIFT_DIR_PATH, TEST_THRIFT_DIR_PATH2]
 TEST_CLI_ARGS4 = [TEST_CLI_NAME, TEST_SERVER_ADDRESS, TEST_THRIFT_ENDPOINT_NAME, TEST_THRIFT_PATH,
-                  '--body', TEST_JSON_STRING, '--include', TEST_THRIFT_DIR_PATH, TEST_THRIFT_DIR_PATH2]
+                  '--body', TEST_JSON_REQUEST_BODY, '--include', TEST_THRIFT_DIR_PATH, TEST_THRIFT_DIR_PATH2]
 TEST_CLI_ARGS5 = [TEST_CLI_NAME, TEST_SERVER_ADDRESS, TEST_THRIFT_ENDPOINT_NAME, TEST_THRIFT_PATH,
-                  '--body', TEST_INVALID_JSON_STRING]
+                  '--body', TEST_INVALID_REQUEST_BODY]
 TEST_PARSED_ARGS = (TEST_SERVER_ADDRESS, TEST_THRIFT_ENDPOINT_NAME, TEST_THRIFT_PATH, [], {}, False, False, False)
-TEST_PARSED_ARGS2 = (TEST_ZOOKEEPER_SERVER_ADDRESS, TEST_THRIFT_ENDPOINT_NAME, TEST_THRIFT_PATH, [], TEST_JSON, True,
-                     True, True)
+TEST_PARSED_ARGS2 = (TEST_ZOOKEEPER_SERVER_ADDRESS, TEST_THRIFT_ENDPOINT_NAME, TEST_THRIFT_PATH, [],
+                     TEST_ARGUMENT_DICTIONARY, True, True, True)
 TEST_PARSED_ARGS3 = (TEST_SERVER_ADDRESS, TEST_THRIFT_ENDPOINT_NAME, TEST_THRIFT_PATH,
                      [TEST_THRIFT_DIR_PATH, TEST_THRIFT_DIR_PATH2], {}, False, False, False)
 TEST_PARSED_ARGS4 = (TEST_SERVER_ADDRESS, TEST_THRIFT_ENDPOINT_NAME, TEST_THRIFT_PATH,
-                     [TEST_THRIFT_DIR_PATH, TEST_THRIFT_DIR_PATH2], TEST_JSON, False, False, False)
+                     [TEST_THRIFT_DIR_PATH, TEST_THRIFT_DIR_PATH2], TEST_ARGUMENT_DICTIONARY, False, False, False)

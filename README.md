@@ -23,10 +23,11 @@ Options:
 - **-I --includes [thrift_dir_path...]**
                            Path to additional directory to search in when locating thrift file dependencies.
 - **-b --body [request_body]**
-                           Either a JSON string containing the request body to send for the endpoint or a path to such a JSON file.
-                           For each argument, the JSON should map the argument name to its value.
-                           For a struct argument, its value should be a JSON object of field names to values.
-                           This parameter can be omitted for endpoints that take no arguments.
+                           The request body to send with the endpoint. 
+                           Must be in one of the following formats:
+                            JSON body, such as '{"request": {"person": {name": "joe", "id": 2}}}'.
+                            Java Thrift body, such as 'request:MyRequest(person:Person(name:joe, id:2))'.
+                            Path to a file containing any of the above formats.
 - **-z --zookeeper**       Treat the server address as a Zookeeper instance, and make the request to the service being provided at the given path.
 - **-c --cleanup**         Delete generated code from filesystem after execution
 - **-j --json**            Print result in JSON format
@@ -54,6 +55,7 @@ This is due to the nature of Thrift and cannot be checked for prior to execution
 thriftcli localhost:9090 Calculator.ping ./Calculator.thrift
 thriftcli localhost:9090 Calculator.add ./Calculator.thrift --body add_request_body.json
 thriftcli localhost:9090 Calculator.doWork ./Calculator.thrift --body '{"work": {"num1": 1, "num2": 3, "op": "ADD"}}'
+thriftcli localhost:9090 Calculator.doWork ./Calculator.thrift --body 'Work(num1:1,num2:3,op:ADD)'
 thriftcli localhost:12201 Animals.get ~/Animals.thrift -I ~/thrifts/ --body ~/animals_get.json
 thriftcli localhost:2181/animals -z Animals.get ~/Animals.thrift --body ~/animals_get.json
 ```
