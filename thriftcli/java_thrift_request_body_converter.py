@@ -59,8 +59,8 @@ def _get_key_and_value(field_string):
 
     :param field_string: The Java Thrift field string
     :type field_string: str
-    :returns: The key of the represented field
-    :rtype: str, str or Number or JSON
+    :returns: A tuple of key and value of the represented field
+    :rtype: (str, str or Number or JSON)
 
     """
     colon_index = field_string.index(':')
