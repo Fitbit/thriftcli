@@ -5,9 +5,9 @@ from .thrift_parser import ThriftParser
 def convert(request_body):
     """ Converts the Java Thrift request body into an argument dictionary.
 
-    :param request_body: The request body
+    :param request_body: the request body
     :type request_body: str
-    :returns: The argument dictionary represented by the request body
+    :returns: the argument dictionary represented by the request body
     :rtype: dict
 
     """
@@ -21,9 +21,9 @@ def _clean(request_body):
 
     For example: AnimalsCollectRequest(ids:[1,2,3]) --> ids:[1,2,3]
 
-    :param request_body: The request body
+    :param request_body: the request body
     :type request_body: str
-    :returns: A cleaned request_body that is more parse-friendly
+    :returns: a cleaned request_body that is simpler to parse
     :rtype: str
 
     """
@@ -43,9 +43,9 @@ def _convert_from_field_strings(field_strings):
 
     For example: ["ids:[1,2,3]", "log:hi"] ---> {"ids": [1,2,3], "log": "hi"}
 
-    :param field_strings: The list of Java Thrift field strings
+    :param field_strings: the list of Java Thrift field strings
     :type field_strings: list of str
-    :returns: The argument dictionary represented by the field strings
+    :returns: the argument dictionary represented by the field strings
     :rtype: dict
 
     """
@@ -57,10 +57,10 @@ def _get_key_and_value(field_string):
 
     For example: "ids:[1,2,3]" --> "ids", [1,2,3]
 
-    :param field_string: The Java Thrift field string
+    :param field_string: the Java Thrift field string
     :type field_string: str
-    :returns: A tuple of key and value of the represented field
-    :rtype: (str, str or Number or JSON)
+    :returns: a tuple of key and value of the represented field
+    :rtype: tuple of (str, str or Number or JSON)
 
     """
     colon_index = field_string.index(':')
@@ -76,9 +76,9 @@ def _convert_value_string(value_string):
 
     For example: "[1,2,3]" --> [1,2,3]
 
-    :param value_string: The portion of the Java Thrift field string representing the value
+    :param value_string: the portion of the Java Thrift field string representing the value
     :type value_string: str
-    :returns: The value represented by the value string
+    :returns: the value represented by the value string
     :rtype: str or Number or JSON
 
     """

@@ -16,17 +16,18 @@ class ThriftCLI(object):
     Call init to open a connection with a server and inform ThriftCLI of the available endpoints.
     Call run to make a request.
     Call cleanup to close the connection and delete the generated python code.
+
     """
 
     def __init__(self, thrift_path, server_address, service_name, thrift_dir_paths=None, zookeeper=False):
         """
-        :param thrift_path: The path to the thrift file being used.
+        :param thrift_path: the path to the thrift file being used.
         :type thrift_path: str
-        :param server_address: The address of the server to make requests to.
+        :param server_address: the address of the server to make requests to.
         :type server_address: str
-        :param thrift_dir_paths: Additional directories to search for included thrift files in.
+        :param thrift_dir_paths: additional directories to search for included thrift files in.
         :type thrift_dir_paths: list of str
-        :param zookeeper: Whether or not to treat the server address as a zookeeper host with a path.
+        :param zookeeper: whether or not to treat the server address as a zookeeper host with a path.
         :type zookeeper: bool
 
         """
@@ -41,11 +42,11 @@ class ThriftCLI(object):
     def run(self, method_name, request_body, return_json=False):
         """ Runs the endpoint on the connected server as defined by the thrift file.
 
-        :param method_name: The name of the method to ask the server to run.
+        :param method_name: the name of the method to ask the server to run.
         :type method_name: str
-        :param request_body: The arguments to provide as arguments to the endpoint.
+        :param request_body: the arguments to provide as arguments to the endpoint.
         :type request_body: dict
-        :param return_json: Returns result in JSON format if True, python object if False.
+        :param return_json: returns result in JSON format if True, python object if False.
         :type return_json: bool
         :returns: endpoint result
 
@@ -62,7 +63,15 @@ class ThriftCLI(object):
 
 
 def _split_endpoint(endpoint):
-    """ Extracts the service name and method name from an endpoint. """
+    """ Extracts the service name and method name from an endpoint.
+
+    For example: "Service.function" -> ("Service", "function")
+
+    :param endpoint: the endpoint reference being split
+    :returns: a tuple of the service name and method name
+    :rtype: tuple of (str, str)
+
+    """
     split = endpoint.split('.')
     if not split or len(split) != 2:
         raise ThriftCLIError('Endpoint should be in format \'Service.function\', given: \'%s\'' % endpoint)
@@ -70,13 +79,25 @@ def _split_endpoint(endpoint):
 
 
 def _load_file(path):
-    """ Returns the contents of a file. """
+    """ Returns the contents of a file.
+
+    :param path: the file to open
+    :returns: the file contents
+    :rtype: str
+
+    """
     with open(path, 'r') as file_to_read:
         return file_to_read.read()
 
 
 def _load_request_body(request_body_arg):
-    """ Parses the request body argument into an argument dictionary. """
+    """ Parses the request body argument into an argument dictionary.
+
+    :param request_body_arg: either a file or a string containing the request body in some format
+    :returns: the argument dictionary represented by the request body
+    :rtype: dict
+
+    """
     if not request_body_arg:
         return {}
     if os.path.isfile(request_body_arg):
@@ -88,7 +109,13 @@ def _load_request_body(request_body_arg):
 
 
 def _parse_namespace(args):
-    """ Converts the namespace object returned by argparse into the desired variables. """
+    """ Converts the namespace object returned by argparse into the desired variables.
+
+    :param args: the namespace object given by the argparse library
+    :returns: a tuple of all of the command line arguments
+    :rtype: tuple
+
+    """
     server_address = args.server_address
     endpoint = args.endpoint
     thrift_path = args.thrift_path
@@ -101,7 +128,12 @@ def _parse_namespace(args):
 
 
 def _make_parser():
-    """ Initializes the ArgumentParser with all desired arguments. """
+    """ Initializes the ArgumentParser with all desired arguments.
+
+    :returns: an ArgumentParser object configured for thriftcli
+    :rtype: ArgumentParser
+
+    """
     parser = argparse.ArgumentParser(description='Execute thrift endpoints on a running server.')
     parser.add_argument('server_address', type=str,
                         help='address of running server that implements the endpoint')

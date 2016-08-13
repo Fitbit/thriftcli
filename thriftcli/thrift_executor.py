@@ -12,8 +12,17 @@ from .thrift_parser import ThriftParser
 
 
 class ThriftExecutor(object):
+    """ This class handles connecting to and communicating with the Thrift server. """
+
     def __init__(self, thrift_path, server_address, service_reference, thrift_dir_paths=None):
-        """ Opens a connection with the server and generates then imports the thrift-defined python code. """
+        """ Opens a connection with the server and generates then imports the thrift-defined python code.
+
+        :param thrift_path: the path to the Thrift file defining the service being requested
+        :param server_address: the address to the server implementing the service
+        :param service_reference: the namespaced service name in the format <file-name>.<service-name>
+        :param thrift_dir_paths: a list of paths to directories containing Thrift file dependencies
+
+        """
         self._thrift_path = thrift_path
         self._server_address = server_address
         self._thrift_dir_paths = thrift_dir_paths if thrift_dir_paths is not None else []
@@ -24,18 +33,22 @@ class ThriftExecutor(object):
     def run(self, method_name, request_args):
         """ Executes a method on the connected server and returns its result.
 
-        :param method_name: Name of the method to call.
+        :param method_name: the name of the method to call
         :type method_name: str
-        :param request_args: Keyword arguments to pass into method call, acting as a request body.
+        :param request_args: keyword arguments to pass into method call, acting as a request body
         :type request_args: dict
-        :return: Result of method call.
+        :return: the result of the method call
 
         """
         method = self._get_method(method_name)
         return method(**request_args)
 
     def cleanup(self, remove_generated_src=False):
-        """ Deletes the gen-py code and closes the transport with the server. """
+        """ Deletes the gen-py code and closes the transport with the server.
+
+        :param remove_generated_src: whether or not to delete the generated source
+
+        """
         if remove_generated_src:
             self._remove_dir('gen-py')
         if self._transport:
@@ -43,23 +56,40 @@ class ThriftExecutor(object):
 
     @staticmethod
     def _remove_dir(path):
-        """ Removes a directory and ignores if it didn't exist. """
+        """ Recursively removes a directory and ignores if it didn't exist.
+
+        :param path: the directory to remove
+
+        """
         try:
             shutil.rmtree(path)
         except OSError:
             pass
 
     def _generate_and_import_packages(self):
-        """ Generates and imports the python modules defined by the thrift code. """
+        """ Generates and imports the python modules defined by the thrift code.
+
+        This method does the following:
+        1. Runs a shell process to generate the python code from the Thrift file
+        2. Adds the generated source to the python process' path
+        3. Imports the generated source package into this python process
+
+        """
         thrift_dir_options = ''.join([' -I %s' % thrift_dir_path for thrift_dir_path in self._thrift_dir_paths])
         command = 'thrift -r%s --gen py %s' % (thrift_dir_options, self._thrift_path)
-        if subprocess.call(command, shell=True):
+        if subprocess.call(command, shell=True) != 0:
             raise ThriftCLIError('Thrift generation command failed: \'%s\'' % command)
         sys.path.append('gen-py')
         self._import_package(ThriftParser.get_package_name(self._thrift_path))
 
     def _get_method(self, method_name):
-        """ Returns the python method generated for the given endpoint. """
+        """ Returns the python method generated for the given endpoint.
+
+        :param method_name: the name of the method to retrieve
+        :returns: the python method that can be called to execute the Thrift RPC
+        :rtype: method
+
+        """
         class_name = 'Client'
         client_constructor = getattr(sys.modules[self._service_reference], class_name)
         client = client_constructor(self._protocol)
@@ -70,7 +100,11 @@ class ThriftExecutor(object):
         return method
 
     def _open_connection(self, address):
-        """ Opens a connection with a server address. """
+        """ Opens a connection with a server address.
+
+        :param address: the address of the server to connect to
+
+        """
         (url, port) = self._parse_address_for_hostname_and_port(address)
         self._transport = TSocket.TSocket(url, port)
         self._transport = TTransport.TFramedTransport(self._transport)
@@ -79,7 +113,13 @@ class ThriftExecutor(object):
 
     @staticmethod
     def _parse_address_for_hostname_and_port(address):
-        """ Extracts the hostname and port from a url address. """
+        """ Extracts the hostname and port from a url address.
+
+        :param address: an address to parse
+        :returns: the hostname and port of the address
+        :rtype: tuple of (str, str)
+
+        """
         if '//' not in address:
             address = '//' + address
         url_obj = urlparse.urlparse(address)
@@ -87,7 +127,11 @@ class ThriftExecutor(object):
 
     @staticmethod
     def _import_package(package_name):
-        """ Imports a package generated by thrift code. """
+        """ Imports a package generated by thrift code.
+
+        :param package_name: the name of the package to import, which must be located somewhere on sys.path
+
+        """
         package = __import__(package_name, globals())
         modules = package.__all__
         for module in modules:

@@ -43,7 +43,7 @@ thriftcli localhost:9090 Calculator.ping ./Calculator.thrift
 thriftcli localhost:9090 Calculator.add ./Calculator.thrift --body add_request_body.json
 thriftcli localhost:9090 Calculator.doWork ./Calculator.thrift --body '{"work": {"num1": 1, "num2": 3, "op": "ADD"}}'
 thriftcli localhost:9090 Calculator.doWork ./Calculator.thrift --body 'Work(num1:1,num2:3,op:ADD)'
-thriftcli localhost:12201 Animals.get ~/Animals.thrift -I ~/thrifts/ --body ~/animals_get.json
+thriftcli localhost:12201 Animals.get ~/Animals.thrift -I ~/included-thrifts/ --body ~/animals_get.json
 thriftcli localhost:2181/animals -z Animals.get ~/Animals.thrift --body ~/animals_get.json
 ```
 
@@ -64,7 +64,7 @@ These examples assume that:
 
 ## Limitations
 
-# Conflicting Method Names
+#### Conflicting Method Names
 
 Consider two services, A and B, which are both defined in MyThrift.thrift and declare a method named helloWorld.
 
@@ -74,7 +74,7 @@ When using ThriftCLI, both endpoints A.helloWorld and B.helloWorld will execute 
 
 This is due to the nature of Thrift and cannot be checked for prior to execution. The ThriftCLI user is responsible for assuring that the correct helloWorld implementation is called.
 
-# Reserved Words
+#### Reserved Words
 
 Use of Python reserved words in service definitions is not supported by ThriftCLI.
 
@@ -83,25 +83,30 @@ If you provide ThriftCLI with a thrift file that uses a Python reserved word, or
 ## Contributing
 
 If you would like to contribute to the ThriftCLI project, please use this workflow:
-    1. Clone the repository
-    2. Create a branch named after your functionality
-    3. Implement your changes
-       NOTE: If it's your first time contributing to ThriftCLI, include
-             a change that adds your name to the CONTRIBUTORS file
-    4. Push the branch to the remote repository
-    5. File a pull request for your branch and include a description
+1. Clone the repository
+2. Create a branch named after your functionality
+3. Implement your changes
+4. Add your name to the CONTRIBUTORS file
+5. Push the branch to the remote repository
+6. File a pull request for your branch and include a description
 
-## Running from Source
+#### Running from Source
 
 If you'd like to run ThriftCLI from its source, without running the install script, navigate to the project directory and run:
 ```
 python -m thriftcli
 ```
 
-## Testing
+#### Testing
 
-From the project directory:
+From the project directory, run:
 
 ```
 nosetests
+```
+
+You can test a specific package or file by running:
+
+```
+nosetests [path]
 ```

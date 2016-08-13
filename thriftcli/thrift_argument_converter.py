@@ -15,13 +15,13 @@ class ThriftArgumentConverter(object):
     def convert_args(self, service_reference, method_name, data):
         """ Converts json request body into keyword arguments for a service's method.
 
-        :param service_reference: Name of the service that provides the given method.
+        :param service_reference: the name of the service that provides the given method.
         :type service_reference: str
-        :param method_name: Name of the method whose type signature is the basis for the conversion.
+        :param method_name: the name of the method whose type signature is the basis for the conversion.
         :type method_name: str
-        :param data: Nested dictionary of primitives and thrift data structures, mapping argument names to their values.
+        :param data: a nested dictionary of parameters, mapping argument names to their values
         :type data: dict
-        :returns: Python object argument dictionary representing the request body.
+        :returns: a python dict representing the request body
         :rtype: dict
 
         """
@@ -50,7 +50,9 @@ class ThriftArgumentConverter(object):
     def _construct_arg(self, field_type, value):
         """ Converts a simple request body item into an argument for the Python object.
 
-        A request body item is simple when it is not a struct that has another struct as a field. """
+        A request body item is simple when it is not a struct that has another struct as a field.
+
+        """
         if self._parse_result.get_struct(field_type) is not None:
             return self._construct_struct_arg(field_type, value)
         elif self._parse_result.has_enum(field_type):

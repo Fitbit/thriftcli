@@ -11,27 +11,50 @@ from .thrift_struct import ThriftStruct
 class ThriftParser(object):
     """ Extracts struct, service, enum, and typedef definitions from thrift files.
 
-    Call parse to extract definitions. The parser only knows about the last thrift file it parsed.
-    Getters are provided to inspect the parse results.
+    Call parse to extract a ThriftParseResult object.
+
+    The parser works by taking the following steps:
+    1. Parse all dependencies and inherit their results
+    2. Match file content with regexs and consolidate the following in a ThriftParseResult:
+        - Struct definitions as ThriftStructs
+        - Service definitions as ThriftServices
+        - Enum declarations as Enum type names (the names/values aren't needed)
+        - Typedefs as mappings from initial type to aliased type
+    3. Merge the ThriftParseResults from the dependencies into the ThriftParseResult from step 2
+    4. Return the merged ThriftParseResult
+
     """
 
+    # Matches Thrift includes statements. Captures the dependency file names.
     INCLUDES_REGEX = re.compile(r'^include\s+\"(\w+.thrift)\"', flags=re.MULTILINE)
+
+    # Matches struct definitions. Captures the whole definition and the struct name.
     STRUCTS_REGEX = re.compile(r'^([\r\t ]*?struct (\w+)[^}]+})', flags=re.MULTILINE)
+
+    # Matches service definitions. Captures the whole definition, the service name, and optionally the extended service.
     SERVICES_REGEX = re.compile(r'^([\r\t ]*?service\s+(\w+)(?:\s+extends\s+([\w.]+))?[^}]+})', flags=re.MULTILINE)
+
+    # Matches enum definitions. Captures the enum name.
     ENUMS_REGEX = re.compile(r'^[\r\t ]*?enum (\w+)[^}]+}', flags=re.MULTILINE)
+
+    # Matches endpoint declarations. Captures oneway, the return type, the endpoint name, and the fields string.
     ENDPOINTS_REGEX = re.compile(r'^[\r\t ]*(oneway)?\s*([^\n]*)\s+(\w+)\(([a-zA-Z0-9: ,.<>]*)\)',
                                  flags=re.MULTILINE)
+
+    # Matches field declarations. Captures index, optional/required, field type, field name, and default value.
     FIELDS_REGEX = re.compile(
         r'^[\r\t ]*(?:([\d+]):)?\s*(optional|required)?\s*([^\n=]+)?\s+(\w+)(?:\s*=\s*([^,;\s]+))?[,;\n]',
         flags=re.MULTILINE)
+
+    # Matches typedefs. Captures initial type name and aliased type name.
     TYPEDEFS_REGEX = re.compile(r'^[\r\t ]*typedef\s+([^\n]*)[\r\t ]+([^,;\n]*)', flags=re.MULTILINE)
 
     def __init__(self, thrift_path, thrift_dir_paths=None):
         """
 
-        :param thrift_path: The path to the thrift file being parsed.
+        :param thrift_path: the path to the thrift file being parsed.
         :type thrift_path: str
-        :param thrift_dir_paths: Additional directories to search for when including thrift files.
+        :param thrift_dir_paths: additional directories to search for when including thrift files.
         :type thrift_dir_paths: list of str
 
         """
@@ -47,7 +70,7 @@ class ThriftParser(object):
     def parse(self):
         """ Parses a thrift file into its structs, services, enums, and typedefs.
 
-        :returns: Parse result object containing definitions of structs, services, enums, and typedefs.
+        :returns: parse result object containing definitions of structs, services, enums, and typedefs.
         :rtype: ThriftParseResult
 
         """
@@ -228,8 +251,8 @@ class ThriftParser(object):
     def split_fields_string(fields_string, open='<', close='>', delim=','):
         """ Split a fields string into a list of field declarations.
 
-        :param fields_string: The string containing multiple field declarations.
-        :returns: List of field declarations.
+        :param fields_string: the string containing multiple field declarations.
+        :returns: list of field declarations.
         :rtype: list of str
 
         """
@@ -253,7 +276,7 @@ class ThriftParser(object):
     def calc_map_types_split_index(types_string):
         """ Returns the index of the comma separating the key and value types in a map type.
 
-        :param types_string: The string declaring the map's type.
+        :param types_string: the string declaring the map's type.
         :returns: index of top-level separating comma
         :rtype: int
 
