@@ -74,11 +74,13 @@ When using ThriftCLI, both endpoints A.helloWorld and B.helloWorld will execute 
 
 This is due to the nature of Thrift and cannot be checked for prior to execution. The ThriftCLI user is responsible for assuring that the correct helloWorld implementation is called.
 
-#### Reserved Words
+#### Keywords
 
-Use of Python reserved words in service definitions is not supported by ThriftCLI.
+Use of Python keywords in service definitions is not supported by ThriftCLI.
 
-If you provide ThriftCLI with a thrift file that uses a Python reserved word, or has a dependency that does, running ThriftCLI will fail.
+If you provide ThriftCLI with a thrift file that uses a Python keyword, or has a dependency that does, running ThriftCLI will fail.
+
+A full list of Python keywords can be found at https://docs.python.org/2/reference/lexical_analysis.html#keywords.
 
 ## Contributing
 
