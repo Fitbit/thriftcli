@@ -26,27 +26,74 @@ class ThriftParser(object):
     """
 
     # Matches Thrift includes statements. Captures the dependency file names.
+    #
+    # For example:
+    #   includes "File.thrift"
+    #   => ("File.thrift")
     INCLUDES_REGEX = re.compile(r'^include\s+\"(\w+.thrift)\"', flags=re.MULTILINE)
 
     # Matches struct definitions. Captures the whole definition and the struct name.
+    #
+    # For example:
+    #   struct MyStruct {
+    #       1:required i64 myNum = 0
+    #   }
+    #   => ("struct MyStruct {\n1:required i64 myNum = 0\n}",
+    #       "MyStruct")
     STRUCTS_REGEX = re.compile(r'^([\r\t ]*?struct (\w+)[^}]+})', flags=re.MULTILINE)
 
     # Matches service definitions. Captures the whole definition, the service name, and optionally the extended service.
+    #
+    # For example:
+    #   service MyService extends MyOtherService {
+    #       i64 add(1:i64 num1, 2:i64 num2)
+    #   }
+    #   => ("service MyService extends MyOtherService {\ni64 add(1:i64 num1, 2:i64 num2)\n}",
+    #       "MyService",
+    #       "MyOtherService")
     SERVICES_REGEX = re.compile(r'^([\r\t ]*?service\s+(\w+)(?:\s+extends\s+([\w.]+))?[^}]+})', flags=re.MULTILINE)
 
     # Matches enum definitions. Captures the enum name.
+    #
+    # For example:
+    #   enum MyEnum {
+    #       ONE = 0x64,
+    #       TWO = 2,
+    #       THREE
+    #   }
+    #   => ("MyEnum")
     ENUMS_REGEX = re.compile(r'^[\r\t ]*?enum (\w+)[^}]+}', flags=re.MULTILINE)
 
     # Matches endpoint declarations. Captures oneway, the return type, the endpoint name, and the fields string.
+    #
+    # For example:
+    #   i64 add(1:i64 num1, 2:i64 num2)
+    #   => ("",
+    #       "i64",
+    #       "add",
+    #       "1:i64 num1, 2:i64 num2")
     ENDPOINTS_REGEX = re.compile(r'^[\r\t ]*(oneway)?\s*([^\n]*)\s+(\w+)\(([a-zA-Z0-9: ,.<>]*)\)',
                                  flags=re.MULTILINE)
 
     # Matches field declarations. Captures index, optional/required, field type, field name, and default value.
+    #
+    # For example:
+    #   1:required i64 myNum = 0
+    #   => ("1",
+    #       "required",
+    #       "i64",
+    #       "myNum",
+    #       "0")
     FIELDS_REGEX = re.compile(
         r'^[\r\t ]*(?:([\d+]):)?\s*(optional|required)?\s*([^\n=]+)?\s+(\w+)(?:\s*=\s*([^,;\s]+))?[,;\n]',
         flags=re.MULTILINE)
 
     # Matches typedefs. Captures initial type name and aliased type name.
+    #
+    # For example:
+    #   typedef MyNumber i64
+    #   => ("MyNumber",
+    #       "i64")
     TYPEDEFS_REGEX = re.compile(r'^[\r\t ]*typedef\s+([^\n]*)[\r\t ]+([^,;\n]*)', flags=re.MULTILINE)
 
     def __init__(self, thrift_path, thrift_dir_paths=None):
@@ -248,10 +295,17 @@ class ThriftParser(object):
             last_index = field.index
 
     @staticmethod
-    def split_fields_string(fields_string, open='<', close='>', delim=','):
+    def split_fields_string(fields_string, opening='<', closing='>', delim=','):
         """ Split a fields string into a list of field declarations.
 
         :param fields_string: the string containing multiple field declarations.
+        :type fields_string: str
+        :param opening: a string containing all characters that are considered opening brackets
+        :type opening: str
+        :param closing: a string containing all characters that are considered closing brackets
+        :type closing: str
+        :param delim: a string containing all characters that are considered delimiters
+        :type delim: str
         :returns: list of field declarations.
         :rtype: list of str
 
@@ -260,9 +314,9 @@ class ThriftParser(object):
         bracket_depth = 0
         last_index = 0
         for i, char in enumerate(fields_string):
-            if char in open:
+            if char in opening:
                 bracket_depth += 1
-            elif char in close:
+            elif char in closing:
                 bracket_depth -= 1
             elif char in delim and bracket_depth == 0:
                 field_string = fields_string[last_index:i].strip()
