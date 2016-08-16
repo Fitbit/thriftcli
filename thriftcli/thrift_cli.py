@@ -68,6 +68,7 @@ def _split_endpoint(endpoint):
     For example: "Service.function" -> ("Service", "function")
 
     :param endpoint: the endpoint reference being split
+    :type endpoint: str
     :returns: a tuple of the service name and method name
     :rtype: tuple of (str, str)
 
@@ -82,6 +83,7 @@ def _load_file(path):
     """ Returns the contents of a file.
 
     :param path: the file to open
+    :type path: str
     :returns: the file contents
     :rtype: str
 
@@ -94,6 +96,7 @@ def _load_request_body(request_body_arg):
     """ Parses the request body argument into an argument dictionary.
 
     :param request_body_arg: either a file or a string containing the request body in some format
+    :type request_body_arg: str
     :returns: the argument dictionary represented by the request body
     :rtype: dict
 
@@ -112,6 +115,7 @@ def _parse_namespace(args):
     """ Converts the namespace object returned by argparse into the desired variables.
 
     :param args: the namespace object given by the argparse library
+    :type args: Namespace
     :returns: a tuple of all of the command line arguments
     :rtype: tuple
 
@@ -156,7 +160,24 @@ def _make_parser():
 
 def _run_cli(server_address, endpoint_name, thrift_path, thrift_dir_paths, request_body, zookeeper, return_json,
              remove_generated_src):
-    """ Runs a remote request and prints the result if it is not None. """
+    """ Runs a remote request and prints the result if it is not None.
+
+    :param server_address: the address of the Thrift server to request
+    :type server_address: str
+    :param endpoint_name: the name of the method to request
+    :type endpoint_name: str
+    :param thrift_path: the path to the Thrift file defining the service
+    :type thrift_path: str
+    :param thrift_dir_paths: a list of paths containing Thrift file dependencies
+    :type thrift_dir_paths: list of str
+    :param request_body: a JSON object representing the request body
+    :type request_body: JSON
+    :param return_json: whether or not to display the output in JSON format
+    :type return_json: bool
+    :param remove_generated_src: whether or not to delete the Python source generated from the Thrift files
+    :type remove_generated_src: bool
+
+    """
     [service_name, method_name] = _split_endpoint(endpoint_name)
     cli = ThriftCLI(thrift_path, server_address, service_name, thrift_dir_paths, zookeeper)
     try:
@@ -168,7 +189,12 @@ def _run_cli(server_address, endpoint_name, thrift_path, thrift_dir_paths, reque
 
 
 def _parse_args():
-    """ Creates an ArgumentParser, parses sys.argv, and returns the desired arguments. """
+    """ Creates an ArgumentParser, parses sys.argv, and returns the desired arguments.
+
+    :returns: a tuple of the desired arguments for _run_cli
+    :rtype: tuple
+
+    """
     parser = _make_parser()
     namespace = parser.parse_args()
     return _parse_namespace(namespace)
