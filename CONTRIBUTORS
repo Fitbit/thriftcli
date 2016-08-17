@@ -1,8 +1,8 @@
 # This is the list of all people who have contributed to the ThriftCLI project.
 #
 # When adding contributors to this list, use the format:
-#   First Last <Email>
+#   First Last <Email1> <Email2> ... <EmailN>
 #
 # Please keep the list alphabetically sorted.
 
-Neel Virdy <neelvirdy@gmail.com>
+Neel Virdy <neelvirdy@gmail.com> <nvirdy@fitbit.com>
