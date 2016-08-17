@@ -21,9 +21,9 @@ class ThriftService(object):
 
     def __init__(self, reference, endpoints, extends=None):
         """
-        :param reference: A unique reference to the service, defined as 'Namespace.name'.
-        :param endpoints: A dictionary from endpoint names to endpoint objects that compromise the service.
-        :param extends: A unique reference to the service that this service extends, or None.
+        :param reference: a unique reference to the service, defined as 'Namespace.name'.
+        :param endpoints: a dictionary from endpoint names to endpoint objects that compromise the service.
+        :param extends: a unique reference to the service that this service extends, or None.
         """
         self.reference = reference
         self.endpoints = endpoints

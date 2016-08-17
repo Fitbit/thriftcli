@@ -37,8 +37,8 @@ class ThriftStruct(object):
 
     def __init__(self, reference, fields=None):
         """
-        :param reference: A unique reference to the struct, defined as 'Namespace.name'.
-        :param fields: A dictionary from field names to field objects that compromise the struct.
+        :param reference: a unique reference to the struct, defined as 'Namespace.name'.
+        :param fields: a dictionary from field names to field objects that compromise the struct.
         """
         self.reference = reference
         self.fields = fields if fields is not None else {}

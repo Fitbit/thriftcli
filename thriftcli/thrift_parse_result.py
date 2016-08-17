@@ -2,13 +2,25 @@ from .thrift_cli_error import ThriftCLIError
 
 
 class ThriftParseResult(object):
+    """ Contains all necessary definitions and declarations extracted from parsing a Thrift file.
+
+    A ThriftParseResult holds:
+    1. A map of struct names to ThriftStructs
+    2. A map of service names to ThriftServices
+    3. A set of all enum type names
+    4. A map of initial types to aliased types, defined by typedefs
+
+    A ThriftParseResult includes all definitions from the parsed Thrift file as well as its dependencies.
+
+    """
     def __init__(self, structs=None, services=None, enums=None, typedefs=None):
         """ Container for results from parsing a thrift file.
 
-        :param structs: Dictionary from struct reference to ThriftStruct object.
-        :param services: Dictionary from service reference to ThriftService object.
-        :param enums: Set of enum references.
-        :param typedefs: Dictionary from typedef alias reference to unaliased field type.
+        :param structs: dictionary from struct reference to ThriftStruct object.
+        :param services: dictionary from service reference to ThriftService object.
+        :param enums: set of enum references.
+        :param typedefs: dictionary from typedef alias reference to unaliased field type.
+
         """
         self.structs = structs if structs is not None else {}
         self.services = services if services is not None else {}
@@ -30,36 +42,56 @@ class ThriftParseResult(object):
         })
 
     def merge_result(self, other):
-        """ Add the definitions from another ThriftParseResult into this one. """
+        """ Add the definitions from another ThriftParseResult into this one.
+
+        :param other: another ThriftParseResult to merge into self.
+
+        """
         self.merge_structs(other.structs)
         self.merge_services(other.services)
         self.merge_enums(other.enums)
         self.merge_typedefs(other.typedefs)
 
     def merge_structs(self, structs):
-        """ Add the structs from another ThriftParseResult into this one. """
+        """ Add the structs from another ThriftParseResult into this one.
+
+        :param structs: a map of struct names to ThriftStructs to be added to self's structs.
+
+        """
         self.structs.update(structs)
 
     def merge_services(self, services):
-        """ Add the services from another ThriftParseResult into this one. """
+        """ Add the services from another ThriftParseResult into this one.
+
+        :param services: a map of service names to ThriftServices to be added to self's services.
+
+        """
         self.services.update(services)
 
     def merge_enums(self, enums):
-        """ Add the enums from another ThriftParseResult into this one. """
+        """ Add the enums from another ThriftParseResult into this one.
+
+        :param enums: a set of enum type names to be added to self's enums.
+
+        """
         self.enums.update(enums)
 
     def merge_typedefs(self, typedefs):
-        """ Add the typedefs from another ThriftParseResult into this one. """
+        """ Add the typedefs from another ThriftParseResult into this one.
+
+        :param typedefs: a map of initial types to aliased types to be added to self's typedefs.
+
+        """
         self.typedefs.update(typedefs)
 
     def get_fields_for_endpoint(self, service_reference, method_name):
         """ Returns all argument fields declared for a given endpoint.
     
-        :param service_reference: The reference ('package.Service') of the service declaring the endpoint.
+        :param service_reference: the reference ('package.Service') of the service declaring the endpoint.
         :type service_reference: str
-        :param method_name: The name of the method representing the endpoint.
+        :param method_name: the name of the method representing the endpoint.
         :type method_name: str
-        :returns: Fields that are declared as arguments for the provided endpoint.
+        :returns: fields that are declared as arguments for the provided endpoint.
         :rtype: list of ThriftStruct.Field
         :raises: KeyError, AttributeError
     
@@ -69,9 +101,9 @@ class ThriftParseResult(object):
     def get_fields_for_struct_name(self, struct_name):
         """ Returns all fields that compromise the given struct.
     
-        :param struct_name: The name of the struct.
+        :param struct_name: the name of the struct.
         :type struct_name: str
-        :returns: Fields that are declared as components for the provided struct.
+        :returns: fields that are declared as components for the provided struct.
         :rtype: list of ThriftStruct.Field
         :raises: KeyError, AttributeError
     
@@ -81,7 +113,7 @@ class ThriftParseResult(object):
     def has_enum(self, enum_name):
         """ Checks if the given enum was found in the last parse.
     
-        :param enum_name: The name of the enum to check for.
+        :param enum_name: the name of the enum to check for.
         :type enum_name: str
         :returns: True if the enum was declared in the last parsed thrift file. False otherwise.
         :rtype: bool
@@ -94,9 +126,9 @@ class ThriftParseResult(object):
     def get_struct(self, struct_name):
         """ Returns the struct for the given struct name.
     
-        :param struct_name: The name of the struct to look up.
+        :param struct_name: the name of the struct to look up.
         :type struct_name: str
-        :returns: The associated ThriftStruct or None.
+        :returns: the associated ThriftStruct or None.
         :rtype: ThriftStruct or None
     
         """
@@ -105,11 +137,11 @@ class ThriftParseResult(object):
         return self.structs[struct_name]
 
     def get_typedef(self, alias):
-        """ Returns the thrift type for the given alias according to the typedefs found in the last parse.
+        """ Returns the type for the given alias according to the typedefs found in the last parse.
     
-        :param alias: The alias of the typedef to check for.
+        :param alias: the alias of the typedef to check for.
         :type alias: str
-        :returns: The thrift type for the given alias according to the typedefs in the last parsed thrift file.
+        :returns: the type for the given alias according to the typedefs in the last parsed thrift file.
         :rtype: str or None
     
         """
@@ -118,11 +150,11 @@ class ThriftParseResult(object):
         return self.typedefs[alias]
 
     def unalias_type(self, field_type):
-        """ Returns the unaliased thrift type according to the typedefs found in the last parse.
+        """ Returns the unaliased type according to the typedefs found in the last parse.
     
-        :param field_type: The potentially aliased thrift type.
+        :param field_type: the potentially aliased type.
         :type field_type: str
-        :returns: The unaliased thrift type according to the typedefs in the last parsed thrift file.
+        :returns: the unaliased type according to the typedefs in the last parsed thrift file.
         :raises: ThriftCLIError
     
         """
