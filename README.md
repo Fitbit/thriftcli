@@ -9,6 +9,8 @@ First, navigate to the project directory (contains setup.py):
 Next, install the CLI tool and thrift:
 ```
 python setup.py install
+```
+```
 brew install thrift
 ```
 
