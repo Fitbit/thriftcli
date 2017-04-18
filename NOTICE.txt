@@ -1,10 +1,14 @@
+thriftcli, Copyright, 2017, Fitbit, Inc.
+
+The thriftcli open source project may use or depend on software licensed under one or more of the following licenses:
+
 Thrift - Apache License v2.0
     https://thrift.apache.org/
     "Copyright 2016 Apache Software Foundation. Licensed under the Apache License v2.0."
 
 Kazoo - Apache License v2.0
     http://kazoo.readthedocs.io/en/latest/contributing.html#legal
-    "Currently we donâ€™t have any legal contributor agreement, so code ownership stays with the original authors.
+    "Currently we don’t have any legal contributor agreement, so code ownership stays with the original authors.
     The project is licensed under the Apache License Version 2."
 
 Mock - BSD License
