@@ -89,6 +89,8 @@ class ThriftParser(object):
 
     # Matches field declarations. Captures index, optional/required, field type, field name, and default value.
     #
+    # Note that only "field type and field name" are necessary. The other parts are optional.
+    #
     # For example:
     #   1:required i64 myNum = 0
     #   => ("1",
@@ -96,8 +98,20 @@ class ThriftParser(object):
     #       "i64",
     #       "myNum",
     #       "0")
+    #   11: optional set<Cohort> cohorts
+    #   => ("11",
+    #       "optional",
+    #       "set<Cohort>",
+    #       "cohorts",
+    #       "")
+    #   string thing_one
+    #   => ("",
+    #       "required",
+    #       "string",
+    #       "thing_one",
+    #       "")
     FIELDS_REGEX = re.compile(
-        r'^[\r\t ]*(?:([\d+]):)?\s*(optional|required)?\s*([^\n=]+)?\s+(\w+)(?:\s*=\s*([^,;\s]+))?[,;\n]',
+        r'^[\r\t ]*(\d+)?\s*:?\s*(optional|required)?\s*([^\n=]+)?\s+(\w+)(?:\s*=\s*([^,;\s]+))?[,;\n]',
         flags=re.MULTILINE)
 
     # Matches typedefs. Captures initial type name and aliased type name.
