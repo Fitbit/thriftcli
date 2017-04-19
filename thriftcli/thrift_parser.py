@@ -111,7 +111,7 @@ class ThriftParser(object):
     #       "thing_one",
     #       "")
     FIELDS_REGEX = re.compile(
-        r'^[\r\t ]*(\d+)?\s*:?\s*(optional|required)?\s*([^\n=]+)?\s+(\w+)(?:\s*=\s*([^,;\s]+))?[,;\n]',
+        r'^[\r\t ]*(\d+\s*:)?\s*(optional|required)?\s*([^\n=]+)?\s+(\w+)(?:\s*=\s*([^,;\s]+))?[,;\n]',
         flags=re.MULTILINE)
 
     # Matches typedefs. Captures initial type name and aliased type name.
