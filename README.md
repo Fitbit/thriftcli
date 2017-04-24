@@ -6,17 +6,27 @@ ThriftCLI is a CLI tool for executing RPC's via the Thrift protocol.
 
 First, navigate to the project directory (contains setup.py):
 
-Next, install the CLI tool and thrift:
-```
-python setup.py install
-```
+Next, install the and thrift compiler from homebrew: (this only needs to be done once)
 ```
 brew install thrift
 ```
 
-Now you have a command line application called "thriftcli" in your path:
+There are two ways of invoking this tool:
+
+You can build and install it to */usr/local/bin/thriftcli*
+
+```
+python setup.py install
+```
+and you can run it like this: (assuming /usr/local/bin is on your PATH)
 ```
 thriftcli server_address endpoint_name thrift_file_path [options]
+```
+
+Alternatively, you can build and start it all at once without installing: (convenient for dev)
+
+```buildoutcfg
+python -m thriftcli server_address endpoint_name thrift_file_path [options]
 ```
 
 Arguments:
