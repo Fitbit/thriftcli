@@ -44,6 +44,13 @@ class ThriftParser(object):
     #   => ("File.thrift")
     INCLUDES_REGEX = re.compile(r'^include\s+\"(\w+.thrift)\"', flags=re.MULTILINE)
 
+    # Matches Thrift python namespace statements. Captures the namespace.
+    #
+    # For example:
+    #   namespace py com.example.thrift.thriftpy
+    #   => ("com.example.thrift.thriftpy")
+    NAMESPACE_PY_REGEX = re.compile(r'^namespace\s+py\s+(\S+)', flags=re.MULTILINE)
+
     # Matches struct definitions. Captures the whole definition and the struct name.
     #
     # For example:
@@ -141,9 +148,9 @@ class ThriftParser(object):
         self._result = None
 
     def parse(self):
-        """ Parses a thrift file into its structs, services, enums, and typedefs.
+        """ Parses a thrift file into its structs, services, enums, typedefs, and namespaces.
 
-        :returns: parse result object containing definitions of structs, services, enums, and typedefs.
+        :returns: parse result object containing definitions of structs, services, enums, typedefs, and namespaces.
         :rtype: ThriftParseResult
 
         """
@@ -154,7 +161,8 @@ class ThriftParser(object):
             self._result.merge_result(parser.parse())
         self._references.update(self._parse_references())
         parse_result = ThriftParseResult(
-            self._parse_structs(), self._parse_services(), self._parse_enums(), self._parse_typedefs())
+            self._parse_structs(), self._parse_services(), self._parse_enums(), self._parse_typedefs(),
+            self._parse_namespace_py())
         self._result.merge_result(parse_result)
         return self._result
 
@@ -201,6 +209,14 @@ class ThriftParser(object):
                 dependency_paths.append(path)
                 names_found.add(name)
         return dependency_paths
+
+    def _parse_namespace_py(self):
+        basename = ThriftParser.get_package_name(self._thrift_path)
+        namespace_list = ThriftParser.NAMESPACE_PY_REGEX.findall(self._thrift_content)
+        if namespace_list:
+            return {basename: namespace_list[0]}
+        else:
+            return {basename: basename}
 
     def _parse_references(self):
         """ Returns the set of references defined by the parsed thrift file.

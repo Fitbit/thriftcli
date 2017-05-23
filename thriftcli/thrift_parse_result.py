@@ -21,23 +21,26 @@ class ThriftParseResult(object):
     2. A map of service names to ThriftServices
     3. A set of all enum type names
     4. A map of initial types to aliased types, defined by typedefs
+    5. A map from file basenames to python namespaces
 
     A ThriftParseResult includes all definitions from the parsed Thrift file as well as its dependencies.
 
     """
-    def __init__(self, structs=None, services=None, enums=None, typedefs=None):
+    def __init__(self, structs=None, services=None, enums=None, typedefs=None, namespaces=None):
         """ Container for results from parsing a thrift file.
 
         :param structs: dictionary from struct reference to ThriftStruct object.
         :param services: dictionary from service reference to ThriftService object.
         :param enums: set of enum references.
         :param typedefs: dictionary from typedef alias reference to unaliased field type.
+        :param typedefs: dictionary from file basenames to python namespaces.
 
         """
         self.structs = structs if structs is not None else {}
         self.services = services if services is not None else {}
         self.enums = enums if enums is not None else set([])
         self.typedefs = typedefs if typedefs is not None else {}
+        self.namespaces = namespaces if namespaces is not None else {}
 
     def __eq__(self, other):
         return type(other) is type(self) and self.__dict__ == other.__dict__
@@ -50,7 +53,8 @@ class ThriftParseResult(object):
             'structs': {name: str(struct) for name, struct in self.structs.items()},
             'services': {name: str(service) for name, service in self.services.items()},
             'enums': self.enums,
-            'typedefs': self.typedefs
+            'typedefs': self.typedefs,
+            'namespaces': self.namespaces
         })
 
     def merge_result(self, other):
@@ -63,6 +67,7 @@ class ThriftParseResult(object):
         self.merge_services(other.services)
         self.merge_enums(other.enums)
         self.merge_typedefs(other.typedefs)
+        self.merge_namespaces(other.namespaces)
 
     def merge_structs(self, structs):
         """ Add the structs from another ThriftParseResult into this one.
@@ -95,6 +100,11 @@ class ThriftParseResult(object):
 
         """
         self.typedefs.update(typedefs)
+
+    def merge_namespaces(self, namespaces):
+        """ Add the namespaces from another ThriftParseResult into this one.
+        """
+        self.namespaces.update(namespaces)
 
     def get_fields_for_endpoint(self, service_reference, method_name):
         """ Returns all argument fields declared for a given endpoint.

@@ -27,10 +27,11 @@ class TestThriftExecutor(unittest.TestCase):
     def test_init(self, mock_load_file, mock_call, mock_import_package, mock_tsocket, mock_transport_open):
         mock_load_file.return_value = data.TEST_THRIFT_CONTENT
         mock_call.return_value = 0
-        ThriftExecutor(data.TEST_THRIFT_PATH, data.TEST_SERVER_ADDRESS, data.TEST_THRIFT_SERVICE_REFERENCE)
+        ThriftExecutor(data.TEST_THRIFT_PATH, data.TEST_SERVER_ADDRESS, data.TEST_THRIFT_SERVICE_REFERENCE,
+                       data.TEST_THRIFT_NAMESPACES)
         command = 'thrift -r --gen py %s' % data.TEST_THRIFT_PATH
         mock_call.assert_called_with(command, shell=True)
-        mock_import_package.assert_called_with(data.TEST_THRIFT_MODULE_NAME)
+        mock_import_package.assert_called_with(data.TEST_THRIFT_MODULE_NAME, data.TEST_THRIFT_PY_NAMESPACE)
         mock_tsocket.assert_called_with(data.TEST_SERVER_HOSTNAME, data.TEST_SERVER_PORT)
         self.assertTrue(mock_transport_open.called)
 
