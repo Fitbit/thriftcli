@@ -48,8 +48,8 @@ class ThriftCLI(object):
         self._service_reference = '%s.%s' % (ThriftParser.get_package_name(self._thrift_path), service_name)
         if zookeeper:
             server_address = get_server_address(server_address, service_name)
-        self._thrift_executor = ThriftExecutor(
-            thrift_path, server_address, self._service_reference, thrift_dir_paths)
+        self._thrift_executor = ThriftExecutor(thrift_path, server_address, self._service_reference, 
+            self._thrift_argument_converter._parse_result.namespaces, thrift_dir_paths)
 
     def run(self, method_name, request_body, return_json=False):
         """ Runs the endpoint on the connected server as defined by the thrift file.
