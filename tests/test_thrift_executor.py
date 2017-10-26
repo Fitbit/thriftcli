@@ -47,7 +47,7 @@ class TestThriftExecutor(unittest.TestCase):
         mock_call.return_value = 0
         ThriftExecutor(data.TEST_THRIFT_FILE, data.TEST_SERVER_ADDRESS, data.TEST_THRIFT_SERVICE_REFERENCE,
                        data.TEST_THRIFT_NAMESPACES)
-        command = 'thrift -r -I %s --gen py %s' % (os.getcwd(), data.TEST_THRIFT_FILE)
+        command = 'thrift -r -I . --gen py %s' % data.TEST_THRIFT_FILE
         mock_call.assert_called_with(command, shell=True)
         mock_import_package.assert_called_with(data.TEST_THRIFT_MODULE_NAME, data.TEST_THRIFT_PY_NAMESPACE)
         mock_tsocket.assert_called_with(data.TEST_SERVER_HOSTNAME, data.TEST_SERVER_PORT)

@@ -40,9 +40,8 @@ class ThriftExecutor(object):
         self._server_address = server_address
 
         self._thrift_dir_paths = set(thrift_dir_paths) if thrift_dir_paths is not None else set([])
-        thrift_file_dir = os.path.dirname(thrift_path)
-        if not thrift_file_dir:  # Handle case where thrift file is in the current directory
-            thrift_file_dir = os.getcwd()
+        # Handle case where thrift file is in the current directory
+        thrift_file_dir = os.path.dirname(thrift_path) or '.'
         self._thrift_dir_paths.add(thrift_file_dir)
 
         self._service_reference = service_reference
