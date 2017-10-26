@@ -38,8 +38,13 @@ class ThriftExecutor(object):
         """
         self._thrift_path = thrift_path
         self._server_address = server_address
+
         self._thrift_dir_paths = set(thrift_dir_paths) if thrift_dir_paths is not None else set([])
-        self._thrift_dir_paths.add(os.path.dirname(thrift_path))
+        thrift_file_dir = os.path.dirname(thrift_path)
+        if not thrift_file_dir:  # Handle case where thrift file is in the current directory
+            thrift_file_dir = os.getcwd()
+        self._thrift_dir_paths.add(thrift_file_dir)
+
         self._service_reference = service_reference
         self._open_connection(server_address)
         self._generate_and_import_packages(basename_to_namespaces)

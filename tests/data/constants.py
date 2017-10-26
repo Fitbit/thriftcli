@@ -24,7 +24,9 @@ TEST_SERVER_HOSTNAME3 = 'noport.com'
 TEST_SERVER_PORT = 9090
 TEST_SERVER_PORT2 = 12201
 TEST_SERVER_PORT3 = None
-TEST_THRIFT_PATH = 'somefolder/Something.thrift'
+TEST_THRIFT_DIR = 'somefolder'
+TEST_THRIFT_FILE = 'Something.thrift'
+TEST_THRIFT_PATH = '%s/%s' % (TEST_THRIFT_DIR, TEST_THRIFT_FILE)
 TEST_THRIFT_MODULE_PATH = 'gen-py/Something'
 TEST_THRIFT_MODULE_NAME = 'Something'
 TEST_THRIFT_NAMESPACE = 'Something'
@@ -426,7 +428,7 @@ TEST_THRIFT_INCLUDING_NAMESPACES = {
 TEST_THRIFT_INCLUDING_PARSE_RESULT = ThriftParseResult(TEST_THRIFT_INCLUDING_STRUCTS, TEST_THRIFT_INCLUDING_SERVICES,
                                                        TEST_THRIFT_INCLUDING_ENUMS, TEST_THRIFT_INCLUDING_TYPEDEFS,
                                                        TEST_THRIFT_INCLUDING_NAMESPACES)
-TEST_THRIFT_INCLUDING_PATH = 'somefolder/Including.thrift'
+TEST_THRIFT_INCLUDING_PATH = '%s/Including.thrift' % TEST_THRIFT_DIR
 TEST_THRIFT_DIR_PATH = 'target/folder/'
 TEST_THRIFT_DIR_PATH2 = 'other/target/folder'
 TEST_THRIFT_INCLUDED_PATH = 'target/folder/Included.thrift'
