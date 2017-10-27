@@ -66,12 +66,19 @@ class ThriftCLI(object):
         request_args = self._thrift_argument_converter.convert_args(self._service_reference, method_name, request_body)
         result = self._thrift_executor.run(method_name, request_args)
         if return_json:
-            result = json.dumps(result, default=lambda o: o.__dict__)
+            result = json.dumps(result, default=self._default_json_handler)
         return result
 
     def cleanup(self, remove_generated_src=False):
         """ Deletes the gen-py code and closes the transport with the server. """
         self._thrift_executor.cleanup(remove_generated_src)
+
+    @classmethod
+    def _default_json_handler(cls, obj):
+        if isinstance(obj, set):
+            return list(obj)
+        else:
+            return obj.__dict__
 
 
 def _split_endpoint(endpoint):
