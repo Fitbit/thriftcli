@@ -10,12 +10,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import json
 import sys
 import unittest
 
 import mock
 
 import data
+from data.generated.Sample.ttypes import SampleResponse
 from thriftcli import thrift_cli, ThriftCLIError
 
 
@@ -62,3 +64,9 @@ class TestThriftCLI(unittest.TestCase):
         endpoint = '%s.%s.abc' % (data.TEST_THRIFT_SERVICE_NAME, data.TEST_THRIFT_METHOD_NAME)
         with self.assertRaises(ThriftCLIError):
             thrift_cli._split_endpoint(endpoint)
+
+    def test_return_json_with_sets(self):
+        response = SampleResponse(message='test', tags={'tag1', 'tag2', 'tag3'})
+        json_response = thrift_cli.ThriftCLI.transform_output(response, return_json=True)
+        resp = json.loads(json_response)
+        self.assertEqual(len(resp['tags']), 3)
