@@ -10,7 +10,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import os
 import unittest
 
 import mock
@@ -20,12 +19,14 @@ from thriftcli import ThriftExecutor
 
 
 class TestThriftExecutor(unittest.TestCase):
+    @mock.patch('thriftcli.thrift_executor.TFinagleProtocol')
     @mock.patch('thriftcli.TTransport.TFramedTransport.open')
     @mock.patch('thriftcli.TSocket.TSocket')
     @mock.patch('thriftcli.ThriftExecutor._import_package')
     @mock.patch('subprocess.call')
     @mock.patch('thriftcli.ThriftParser._load_file')
-    def test_init(self, mock_load_file, mock_call, mock_import_package, mock_tsocket, mock_transport_open):
+    def test_init(self, mock_load_file, mock_call, mock_import_package, mock_tsocket, mock_transport_open,
+                  mock_finagle_protocol):
         mock_load_file.return_value = data.TEST_THRIFT_CONTENT
         mock_call.return_value = 0
         ThriftExecutor(data.TEST_THRIFT_PATH, data.TEST_SERVER_ADDRESS, data.TEST_THRIFT_SERVICE_REFERENCE,
@@ -35,14 +36,17 @@ class TestThriftExecutor(unittest.TestCase):
         mock_import_package.assert_called_with(data.TEST_THRIFT_MODULE_NAME, data.TEST_THRIFT_PY_NAMESPACE)
         mock_tsocket.assert_called_with(data.TEST_SERVER_HOSTNAME, data.TEST_SERVER_PORT)
         self.assertTrue(mock_transport_open.called)
+        mock_finagle_protocol.assert_called()
 
     # Test Case for when thrift file is in current directory
+    @mock.patch('thriftcli.thrift_executor.TFinagleProtocol')
     @mock.patch('thriftcli.TTransport.TFramedTransport.open')
     @mock.patch('thriftcli.TSocket.TSocket')
     @mock.patch('thriftcli.ThriftExecutor._import_package')
     @mock.patch('subprocess.call')
     @mock.patch('thriftcli.ThriftParser._load_file')
-    def test_init_simple_thrift_file(self, mock_load_file, mock_call, mock_import_package, mock_tsocket, mock_transport_open):
+    def test_init_simple_thrift_file(self, mock_load_file, mock_call, mock_import_package, mock_tsocket,
+                                     mock_transport_open, mock_finagle_protocol):
         mock_load_file.return_value = data.TEST_THRIFT_CONTENT
         mock_call.return_value = 0
         ThriftExecutor(data.TEST_THRIFT_FILE, data.TEST_SERVER_ADDRESS, data.TEST_THRIFT_SERVICE_REFERENCE,
@@ -52,6 +56,7 @@ class TestThriftExecutor(unittest.TestCase):
         mock_import_package.assert_called_with(data.TEST_THRIFT_MODULE_NAME, data.TEST_THRIFT_PY_NAMESPACE)
         mock_tsocket.assert_called_with(data.TEST_SERVER_HOSTNAME, data.TEST_SERVER_PORT)
         self.assertTrue(mock_transport_open.called)
+        mock_finagle_protocol.assert_called()
 
     def test_parse_address_for_hostname_and_url(self):
         hostname, port = ThriftExecutor._parse_address_for_hostname_and_port(data.TEST_SERVER_ADDRESS)
