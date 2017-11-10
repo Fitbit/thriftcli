@@ -29,6 +29,9 @@ Alternatively, you can build and start it all at once without installing: (conve
 python -m thriftcli server_address endpoint_name thrift_file_path [options]
 ```
 
+As a convenience you can define an environment variable THRIFT_CLI_PATH. A : delimited list of paths to search
+for thrift files. This makes the commands you write simpler
+
 Arguments:
 - **server_address**       URL to send the request to. This server should listen for and implement the requested endpoint.
 - **endpoint_name**        Service name and function name representing the request to send to the server.
