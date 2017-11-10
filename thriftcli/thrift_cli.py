@@ -65,6 +65,16 @@ class ThriftCLI(object):
         """
         request_args = self._thrift_argument_converter.convert_args(self._service_reference, method_name, request_body)
         result = self._thrift_executor.run(method_name, request_args)
+        if not request_body:
+            raise ValueError(
+                "No Request Body provided. {} a request should look roughly like this:\n{}".format(
+                    method_name,
+                    json.dumps(
+                        request_args,
+                        default=lambda o: o.__dict__, sort_keys=True, indent=4, separators=(',', ': ')
+                    )
+                )
+            )
         if return_json:
             result = json.dumps(result, default=lambda o: o.__dict__)
         return result
