@@ -47,6 +47,7 @@ Options:
 - **-z --zookeeper**       Treat the server address as a Zookeeper instance, and make the request to the service being provided at the given path.
 - **-c --cleanup**         Delete generated code from filesystem after execution
 - **-j --json**            Print result in JSON format
+- **-v --verbose**         Provide detailed logging
 
 ## Examples
 
