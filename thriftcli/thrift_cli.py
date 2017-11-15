@@ -12,6 +12,7 @@
 
 import argparse
 import json
+import logging
 import os
 
 from thrift_zookeeper_resolver import get_server_address
@@ -64,6 +65,16 @@ class ThriftCLI(object):
 
         """
         request_args = self._thrift_argument_converter.convert_args(self._service_reference, method_name, request_body)
+        logging.debug(
+            "Performing Request %s",
+            json.dumps(
+                request_args,
+                default=lambda o: o.__dict__,
+                sort_keys=True,
+                indent=4,
+                separators=(',', ': ')
+            )
+        )
         result = self._thrift_executor.run(method_name, request_args)
         if return_json:
             result = json.dumps(result, default=lambda o: o.__dict__)
@@ -167,6 +178,8 @@ def _make_parser():
                         help='remove generated code after execution')
     parser.add_argument('-j', '--json', action='store_true',
                         help='print result in JSON format')
+    parser.add_argument('-v', '--verbose', action='store_true',
+                        help='provide detailed logging')
     return parser
 
 
@@ -188,6 +201,8 @@ def _run_cli(server_address, endpoint_name, thrift_path, thrift_dir_paths, reque
     :type return_json: bool
     :param remove_generated_src: whether or not to delete the Python source generated from the Thrift files
     :type remove_generated_src: bool
+    :param verbose: log details
+    :type verbose: bool
 
     """
     [service_name, method_name] = _split_endpoint(endpoint_name)
@@ -200,6 +215,10 @@ def _run_cli(server_address, endpoint_name, thrift_path, thrift_dir_paths, reque
         cli.cleanup(remove_generated_src)
 
 
+def configure_logging(verbose):
+    logging.basicConfig(format='%(levelname)s:%(message)s', level=logging.DEBUG if verbose else logging.INFO)
+
+
 def _parse_args():
     """ Creates an ArgumentParser, parses sys.argv, and returns the desired arguments.
 
@@ -209,10 +228,11 @@ def _parse_args():
     """
     parser = _make_parser()
     namespace = parser.parse_args()
-    return _parse_namespace(namespace)
+    return namespace
 
 
 def main():
     """ Runs a remote request and prints the result if it is not None. """
     args = _parse_args()
-    _run_cli(*args)
+    configure_logging(args.verbose)
+    _run_cli(*_parse_namespace(args))
