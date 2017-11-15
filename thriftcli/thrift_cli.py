@@ -77,7 +77,7 @@ class ThriftCLI(object):
         )
         result = self._thrift_executor.run(method_name, request_args)
         if return_json:
-            result = json.dumps(result, default=lambda o: o.__dict__)
+            result = json.dumps(result, default=lambda o: o.__dict__, sort_keys=True, indent=4, separators=(',', ': '))
         return result
 
     def cleanup(self, remove_generated_src=False):
