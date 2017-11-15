@@ -22,6 +22,7 @@ from .thrift_executor import ThriftExecutor
 from .thrift_parser import ThriftParser
 from .request_body_converter import convert
 
+THRIFT_PATH_ENVIRONMENT_VARIABLE = 'THRIFT_CLI_PATH'
 
 class ThriftCLI(object):
     """ Provides an interface for setting up a client, making requests, and cleaning up.
@@ -44,12 +45,12 @@ class ThriftCLI(object):
         :type zookeeper: bool
 
         """
-        self._thrift_path = thrift_path
-        self._thrift_argument_converter = ThriftArgumentConverter(thrift_path, thrift_dir_paths)
+        self._thrift_path = _find_path(thrift_path)
+        self._thrift_argument_converter = ThriftArgumentConverter(self._thrift_path, thrift_dir_paths)
         self._service_reference = '%s.%s' % (ThriftParser.get_package_name(self._thrift_path), service_name)
         if zookeeper:
             server_address = get_server_address(server_address, service_name)
-        self._thrift_executor = ThriftExecutor(thrift_path, server_address, self._service_reference, 
+        self._thrift_executor = ThriftExecutor(self._thrift_path, server_address, self._service_reference,
             self._thrift_argument_converter._parse_result.namespaces, thrift_dir_paths)
 
     def run(self, method_name, request_body, return_json=False):
@@ -83,6 +84,22 @@ class ThriftCLI(object):
     def cleanup(self, remove_generated_src=False):
         """ Deletes the gen-py code and closes the transport with the server. """
         self._thrift_executor.cleanup(remove_generated_src)
+
+
+def _find_path(path):
+    if os.path.isfile(path):
+        return path
+    else:
+        thrift_file = os.path.basename(path)
+        for thrift_path in os.environ.get(THRIFT_PATH_ENVIRONMENT_VARIABLE, '').split(':'):
+            try:
+                if thrift_file in os.listdir(thrift_path):
+                    return os.path.join(thrift_path, thrift_file)
+            except OSError:
+                # Dir did not contain file needed
+                continue
+
+    raise IOError("Unable to find {}".format(path))
 
 
 def _split_endpoint(endpoint):
@@ -206,7 +223,16 @@ def _run_cli(server_address, endpoint_name, thrift_path, thrift_dir_paths, reque
 
     """
     [service_name, method_name] = _split_endpoint(endpoint_name)
-    cli = ThriftCLI(thrift_path, server_address, service_name, thrift_dir_paths, zookeeper)
+    environment_defined_paths = []
+    if os.environ.get(THRIFT_PATH_ENVIRONMENT_VARIABLE):
+        environment_defined_paths = os.environ[THRIFT_PATH_ENVIRONMENT_VARIABLE].split(':')
+    cli = ThriftCLI(
+        thrift_path,
+        server_address,
+        service_name,
+        thrift_dir_paths + environment_defined_paths,
+        zookeeper
+    )
     try:
         result = cli.run(method_name, request_body, return_json)
         if result is not None:
