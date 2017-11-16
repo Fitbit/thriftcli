@@ -29,6 +29,28 @@ Alternatively, you can build and start it all at once without installing: (conve
 python -m thriftcli server_address endpoint_name thrift_file_path [options]
 ```
 
+As a convenience you can define an environment variable THRIFT_CLI_PATH. This colon delimited list of directories will be used to find thrift files and their dependencies.
+
+Take the following command 
+
+```
+thriftcli localhost:9332 MakeTestCall ~/thrift/test/test.thrift -I ~/thrift/dependencies
+```
+
+If you had run the following before
+
+```
+export THRIFT_CLI_PATH="~/thrift/test:~/thrift/dependencies"
+```
+
+this command becomes
+
+```
+thriftcli localhost:9332 MakeTestCall test.thrift
+```
+
+This variable is most useful for endpoints you call fairly often
+
 Arguments:
 - **server_address**       URL to send the request to. This server should listen for and implement the requested endpoint.
 - **endpoint_name**        Service name and function name representing the request to send to the server.
@@ -49,6 +71,7 @@ Options:
 - **-j --json**            Print result in JSON format
 - **-i --client_id [client_id]**
                             Finagle client id to send request with
+- **-v --verbose**         Provide detailed logging
 
 ## Examples
 
