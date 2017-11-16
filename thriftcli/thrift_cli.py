@@ -12,6 +12,7 @@
 
 import argparse
 import json
+import logging
 import os
 
 from thrift_zookeeper_resolver import get_server_address
@@ -21,6 +22,7 @@ from .thrift_executor import ThriftExecutor
 from .thrift_parser import ThriftParser
 from .request_body_converter import convert
 
+THRIFT_PATH_ENVIRONMENT_VARIABLE = 'THRIFT_CLI_PATH'
 
 class ThriftCLI(object):
     """ Provides an interface for setting up a client, making requests, and cleaning up.
@@ -45,12 +47,12 @@ class ThriftCLI(object):
         :type client_id: str
 
         """
-        self._thrift_path = thrift_path
-        self._thrift_argument_converter = ThriftArgumentConverter(thrift_path, thrift_dir_paths)
+        self._thrift_path = _find_path(thrift_path)
+        self._thrift_argument_converter = ThriftArgumentConverter(self._thrift_path, thrift_dir_paths)
         self._service_reference = '%s.%s' % (ThriftParser.get_package_name(self._thrift_path), service_name)
         if zookeeper:
             server_address = get_server_address(server_address, service_name)
-        self._thrift_executor = ThriftExecutor(thrift_path, server_address, self._service_reference, 
+        self._thrift_executor = ThriftExecutor(self._thrift_path, server_address, self._service_reference,
                                                self._thrift_argument_converter._parse_result.namespaces,
                                                thrift_dir_paths=thrift_dir_paths, client_id=client_id)
 
@@ -67,6 +69,16 @@ class ThriftCLI(object):
 
         """
         request_args = self._thrift_argument_converter.convert_args(self._service_reference, method_name, request_body)
+        logging.debug(
+            "Performing Request %s",
+            json.dumps(
+                request_args,
+                default=lambda o: o.__dict__,
+                sort_keys=True,
+                indent=4,
+                separators=(',', ': ')
+            )
+        )
         result = self._thrift_executor.run(method_name, request_args)
         return self.transform_output(result, return_json)
 
@@ -77,7 +89,7 @@ class ThriftCLI(object):
     @classmethod
     def transform_output(cls, result, return_json=False):
         if return_json:
-            result = json.dumps(result, default=cls._default_json_handler)
+            result = json.dumps(result, default=cls._default_json_handler, sort_keys=True, indent=4, separators=(',', ': '))
         return result
 
     @classmethod
@@ -86,6 +98,22 @@ class ThriftCLI(object):
             return list(obj)
         else:
             return obj.__dict__
+
+
+def _find_path(path):
+    if os.path.isfile(path):
+        return path
+    else:
+        thrift_file = os.path.basename(path)
+        for thrift_path in os.environ.get(THRIFT_PATH_ENVIRONMENT_VARIABLE, '').split(':'):
+            try:
+                if thrift_file in os.listdir(thrift_path):
+                    return os.path.join(thrift_path, thrift_file)
+            except OSError:
+                # Dir did not contain file needed
+                continue
+
+    raise IOError("Unable to find {}".format(path))
 
 
 def _split_endpoint(endpoint):
@@ -185,6 +213,8 @@ def _make_parser():
                         help='print result in JSON format')
     parser.add_argument('-i', '--client_id', type=str, default=None,
                         help='Finagle client id to send request with')
+    parser.add_argument('-v', '--verbose', action='store_true',
+                        help='provide detailed logging')
     return parser
 
 
@@ -208,16 +238,32 @@ def _run_cli(server_address, endpoint_name, thrift_path, thrift_dir_paths, reque
     :type remove_generated_src: bool
     :param client_id: Finagle client id for identifying requests
     :type client_id: str
+    :param verbose: log details
+    :type verbose: bool
 
     """
     [service_name, method_name] = _split_endpoint(endpoint_name)
-    cli = ThriftCLI(thrift_path, server_address, service_name, thrift_dir_paths, zookeeper, client_id=client_id)
+    environment_defined_paths = []
+    if os.environ.get(THRIFT_PATH_ENVIRONMENT_VARIABLE):
+        environment_defined_paths = os.environ[THRIFT_PATH_ENVIRONMENT_VARIABLE].split(':')
+    cli = ThriftCLI(
+        thrift_path,
+        server_address,
+        service_name,
+        thrift_dir_paths + environment_defined_paths,
+        zookeeper,
+        client_id=client_id
+    )
     try:
         result = cli.run(method_name, request_body, return_json)
         if result is not None:
             print result
     finally:
         cli.cleanup(remove_generated_src)
+
+
+def configure_logging(verbose):
+    logging.basicConfig(format='%(levelname)s:%(message)s', level=logging.DEBUG if verbose else logging.INFO)
 
 
 def _parse_args():
@@ -229,10 +275,11 @@ def _parse_args():
     """
     parser = _make_parser()
     namespace = parser.parse_args()
-    return _parse_namespace(namespace)
+    return namespace
 
 
 def main():
     """ Runs a remote request and prints the result if it is not None. """
     args = _parse_args()
-    _run_cli(*args)
+    configure_logging(args.verbose)
+    _run_cli(*_parse_namespace(args))
