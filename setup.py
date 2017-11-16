@@ -10,8 +10,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import re
-
 from setuptools import setup
 
 
@@ -21,6 +19,7 @@ def make_version_unique(version):
     else:
         return version.format_with('{tag}.post{distance}+{time:%s}')
 
+
 config = {
     'name': 'thriftcli',
     'description': 'Thrift CLI',
@@ -29,8 +28,8 @@ config = {
     'entry_points': {
         'console_scripts': ['thriftcli = thriftcli.thrift_cli:main']
     },
-    'install_requires': ['thrift', 'kazoo', 'mock'],
-    'requires': ['thrift', 'kazoo', 'mock'],
+    'install_requires': ['kazoo', 'mock', 'thrift', 'twitter.common.rpc'],
+    'requires': ['kazoo', 'mock', 'thrift', 'twitter.common.rpc'],
     'use_scm_version': {'version_scheme': make_version_unique},
     'setup_requires': ['setuptools_scm']
 }

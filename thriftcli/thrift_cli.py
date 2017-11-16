@@ -33,7 +33,7 @@ class ThriftCLI(object):
 
     """
 
-    def __init__(self, thrift_path, server_address, service_name, thrift_dir_paths=None, zookeeper=False):
+    def __init__(self, thrift_path, server_address, service_name, thrift_dir_paths=None, zookeeper=False, client_id=None):
         """
         :param thrift_path: the path to the thrift file being used.
         :type thrift_path: str
@@ -43,6 +43,8 @@ class ThriftCLI(object):
         :type thrift_dir_paths: list of str
         :param zookeeper: whether or not to treat the server address as a zookeeper host with a path.
         :type zookeeper: bool
+        :param client_id: Finagle client id for identifying requests
+        :type client_id: str
 
         """
         self._thrift_path = _find_path(thrift_path)
@@ -51,7 +53,8 @@ class ThriftCLI(object):
         if zookeeper:
             server_address = get_server_address(server_address, service_name)
         self._thrift_executor = ThriftExecutor(self._thrift_path, server_address, self._service_reference,
-            self._thrift_argument_converter._parse_result.namespaces, thrift_dir_paths)
+                                               self._thrift_argument_converter._parse_result.namespaces,
+                                               thrift_dir_paths=thrift_dir_paths, client_id=client_id)
 
     def run(self, method_name, request_body, return_json=False):
         """ Runs the endpoint on the connected server as defined by the thrift file.
@@ -77,13 +80,24 @@ class ThriftCLI(object):
             )
         )
         result = self._thrift_executor.run(method_name, request_args)
-        if return_json:
-            result = json.dumps(result, default=lambda o: o.__dict__, sort_keys=True, indent=4, separators=(',', ': '))
-        return result
+        return self.transform_output(result, return_json)
 
     def cleanup(self, remove_generated_src=False):
         """ Deletes the gen-py code and closes the transport with the server. """
         self._thrift_executor.cleanup(remove_generated_src)
+
+    @classmethod
+    def transform_output(cls, result, return_json=False):
+        if return_json:
+            result = json.dumps(result, default=cls._default_json_handler, sort_keys=True, indent=4, separators=(',', ': '))
+        return result
+
+    @classmethod
+    def _default_json_handler(cls, obj):
+        if isinstance(obj, set):
+            return list(obj)
+        else:
+            return obj.__dict__
 
 
 def _find_path(path):
@@ -168,7 +182,9 @@ def _parse_namespace(args):
     zookeeper = args.zookeeper
     return_json = args.json
     cleanup = args.cleanup
-    return server_address, endpoint, thrift_path, thrift_dir_paths, request_body, zookeeper, return_json, cleanup
+    client_id = args.client_id
+    return (server_address, endpoint, thrift_path, thrift_dir_paths, request_body, zookeeper, return_json, cleanup,
+            client_id)
 
 
 def _make_parser():
@@ -195,13 +211,15 @@ def _make_parser():
                         help='remove generated code after execution')
     parser.add_argument('-j', '--json', action='store_true',
                         help='print result in JSON format')
+    parser.add_argument('-i', '--client_id', type=str, default=None,
+                        help='Finagle client id to send request with')
     parser.add_argument('-v', '--verbose', action='store_true',
                         help='provide detailed logging')
     return parser
 
 
 def _run_cli(server_address, endpoint_name, thrift_path, thrift_dir_paths, request_body, zookeeper, return_json,
-             remove_generated_src):
+             remove_generated_src, client_id):
     """ Runs a remote request and prints the result if it is not None.
 
     :param server_address: the address of the Thrift server to request
@@ -218,6 +236,8 @@ def _run_cli(server_address, endpoint_name, thrift_path, thrift_dir_paths, reque
     :type return_json: bool
     :param remove_generated_src: whether or not to delete the Python source generated from the Thrift files
     :type remove_generated_src: bool
+    :param client_id: Finagle client id for identifying requests
+    :type client_id: str
     :param verbose: log details
     :type verbose: bool
 
@@ -231,7 +251,8 @@ def _run_cli(server_address, endpoint_name, thrift_path, thrift_dir_paths, reque
         server_address,
         service_name,
         thrift_dir_paths + environment_defined_paths,
-        zookeeper
+        zookeeper,
+        client_id=client_id
     )
     try:
         result = cli.run(method_name, request_body, return_json)
