@@ -69,16 +69,11 @@ class ThriftCLI(object):
 
         """
         request_args = self._thrift_argument_converter.convert_args(self._service_reference, method_name, request_body)
-        logging.debug(
-            "Performing Request %s",
-            json.dumps(
-                request_args,
-                default=lambda o: o.__dict__,
-                sort_keys=True,
-                indent=4,
-                separators=(',', ': ')
+        if logging.getLogger().isEnabledFor(logging.DEBUG):
+            logging.debug(
+                "Performing Request %s",
+                _dump_json(request_args)
             )
-        )
         result = self._thrift_executor.run(method_name, request_args)
         return self.transform_output(result, return_json)
 
@@ -89,16 +84,17 @@ class ThriftCLI(object):
     @classmethod
     def transform_output(cls, result, return_json=False):
         if return_json:
-            result = json.dumps(result, default=cls._default_json_handler, sort_keys=True, indent=4, separators=(',', ': '))
+            result = _dump_json(result)
         return result
 
-    @classmethod
-    def _default_json_handler(cls, obj):
-        if isinstance(obj, set):
-            return list(obj)
-        else:
-            return obj.__dict__
+def _dump_json(obj):
+    return json.dumps(obj, default=_default_json_handler, sort_keys=True, indent=4, separators=(',', ': '))
 
+def _default_json_handler(obj):
+    if isinstance(obj, set) or isinstance(obj, frozenset):
+        return list(obj)
+    else:
+        return obj.__dict__
 
 def _find_path(path):
     if os.path.isfile(path):
