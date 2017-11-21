@@ -1,3 +1,6 @@
+[![Build Status](https://travis-ci.org/Fitbit/thriftcli.svg?branch=master)](https://travis-ci.org/Fitbit/thriftcli)
+[![Coverage Status](https://coveralls.io/repos/github/Fitbit/thriftcli/badge.svg?branch=master)](https://coveralls.io/github/Fitbit/thriftcli?branch=master)
+
 ## About
 
 ThriftCLI is a CLI tool for executing RPC's via the Thrift protocol.

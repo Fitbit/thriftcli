@@ -10,11 +10,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import json_request_body_converter
-import java_thrift_request_body_converter
 
 # These converters will be attempted in order. The first to successfully convert the request body will be used.
 # Each converter must implement the convert method.
+from thriftcli import java_thrift_request_body_converter
+from thriftcli import json_request_body_converter
+
 CONVERTERS = [
     json_request_body_converter,
     java_thrift_request_body_converter
