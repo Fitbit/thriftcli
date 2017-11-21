@@ -1,5 +1,5 @@
-[![Build Status](https://travis-ci.org/Bachmann1234/thriftcli.svg?branch=master)](https://travis-ci.org/Bachmann1234/thriftcli)
-[![Coverage Status](https://coveralls.io/repos/github/Bachmann1234/thriftcli/badge.svg?branch=travis_ci)](https://coveralls.io/github/Bachmann1234/thriftcli?branch=master)
+[![Build Status](https://travis-ci.org/Fitbit/thriftcli.svg?branch=master)](https://travis-ci.org/Fitbit/thriftcli)
+[![Coverage Status](https://coveralls.io/repos/github/Fitbit/thriftcli/badge.svg?branch=master)](https://coveralls.io/github/Fitbit/thriftcli?branch=master)
 
 ## About
 
