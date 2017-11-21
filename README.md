@@ -1,4 +1,5 @@
-![Build Status](https://travis-ci.org/Bachmann1234/thriftcli.svg?branch=travis_ci "Build Status")
+[![Build Status](https://travis-ci.org/Bachmann1234/thriftcli.svg?branch=master)](https://travis-ci.org/Bachmann1234/thriftcli)
+[![Coverage Status](https://coveralls.io/repos/github/Bachmann1234/thriftcli/badge.svg?branch=travis_ci)](https://coveralls.io/github/Bachmann1234/thriftcli?branch=master)
 
 ## About
 
