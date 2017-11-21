@@ -3,4 +3,4 @@ install:
   - pip install .
 script:
   - coverage run -m unittest discover tests
-  - coverage report
+  - coverage report --fail-under 86
