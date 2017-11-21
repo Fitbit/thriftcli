@@ -1,3 +1,5 @@
+![Build Status](https://travis-ci.org/Bachmann1234/thriftcli.svg?branch=travis_ci "Build Status")
+
 ## About
 
 ThriftCLI is a CLI tool for executing RPC's via the Thrift protocol.
