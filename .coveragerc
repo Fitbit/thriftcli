@@ -3,3 +3,4 @@ omit =
     *venv*
     *tests*
     *gen-py*
+    *virtualenv*
