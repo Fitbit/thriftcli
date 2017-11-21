@@ -14,7 +14,7 @@ import unittest
 
 import mock
 
-import data
+from tests import data
 from thriftcli import ThriftParser, ThriftParseResult, ThriftCLIError
 
 

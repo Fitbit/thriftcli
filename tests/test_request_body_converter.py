@@ -9,11 +9,10 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
+from __future__ import absolute_import
 import unittest
-import data
-
-from thriftcli.request_body_converter import convert
+from tests import data
+from thriftcli import convert
 
 
 class TestRequestBodyConverter(unittest.TestCase):

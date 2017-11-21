@@ -1,0 +1,9 @@
+language: python
+install:
+  - pip install .
+  - pip install coveralls
+script:
+  - coverage run -m unittest discover tests
+  - coverage report
+after_success:
+  - coveralls

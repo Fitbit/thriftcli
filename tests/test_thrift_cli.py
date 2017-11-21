@@ -16,8 +16,8 @@ import unittest
 
 import mock
 
-import data
-from data.generated.Sample.ttypes import SampleResponse
+from tests import data
+from tests.data.generated.Sample.ttypes import SampleResponse
 from thriftcli import thrift_cli, ThriftCLIError
 
 

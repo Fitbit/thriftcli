@@ -28,8 +28,8 @@ config = {
     'entry_points': {
         'console_scripts': ['thriftcli = thriftcli.thrift_cli:main']
     },
-    'install_requires': ['kazoo', 'mock', 'thrift', 'twitter.common.rpc'],
-    'requires': ['kazoo', 'mock', 'thrift', 'twitter.common.rpc'],
+    'install_requires': ['kazoo', 'mock', 'thrift', 'twitter.common.rpc', 'coverage'],
+    'requires': ['kazoo', 'mock', 'thrift', 'twitter.common.rpc', 'coverage'],
     'use_scm_version': {'version_scheme': make_version_unique},
     'setup_requires': ['setuptools_scm']
 }
