@@ -13,7 +13,7 @@
 import json
 import os
 import random
-import urlparse
+from six.moves.urllib.parse import urlparse
 
 from kazoo.client import KazooClient
 
@@ -31,7 +31,7 @@ def get_server_address(zk_host_address, service_name):
     """
     if '//' not in zk_host_address:
         zk_host_address = '//' + zk_host_address
-    url_obj = urlparse.urlparse(zk_host_address)
+    url_obj = urlparse(zk_host_address)
     zk_host_address = '%s:%s' % (url_obj.hostname, url_obj.port)
     znode = _get_znode_from_zookeeper_host(zk_host_address, url_obj.path)
     return _parse_znode_for_address(znode, service_name, url_obj.path)

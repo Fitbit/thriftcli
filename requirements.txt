@@ -1,0 +1,4 @@
+-e .
+mock==2.0.0
+coverage==4.4.2
+coveralls

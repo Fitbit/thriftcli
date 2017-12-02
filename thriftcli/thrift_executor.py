@@ -15,7 +15,7 @@ import os
 import shutil
 import subprocess
 import sys
-import urlparse
+from six.moves.urllib.parse import urlparse
 
 from thrift.transport import TSocket
 from thrift.transport import TTransport
@@ -144,7 +144,7 @@ class ThriftExecutor(object):
         """
         if '//' not in address:
             address = '//' + address
-        url_obj = urlparse.urlparse(address)
+        url_obj = urlparse(address)
         return url_obj.hostname, url_obj.port
 
     @staticmethod
