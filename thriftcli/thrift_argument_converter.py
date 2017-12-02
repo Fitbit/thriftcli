@@ -13,8 +13,14 @@
 import json
 import sys
 
+import six
+
 from .thrift_cli_error import ThriftCLIError
 from .thrift_parser import ThriftParser
+
+if six.PY3:
+    # Python 3 merged some types
+    long = int
 
 
 class ThriftArgumentConverter(object):
@@ -52,7 +58,7 @@ class ThriftArgumentConverter(object):
 
         """
         if len(fields) == 1:
-            field = fields.values()[0]
+            field = list(fields.values())[0]
             if field.name not in data:
                 data = {field.name: data}
         args = {field_name: self._convert_dict_entry_to_arg(fields[field_name].field_type, value)
@@ -153,7 +159,7 @@ class ThriftArgumentConverter(object):
         enum_class = ThriftArgumentConverter._get_type_class(package, enum)
         if isinstance(value, (int, long)):
             return value
-        elif isinstance(value, basestring):
+        elif isinstance(value, six.string_types):
             return enum_class._NAMES_TO_VALUES[value]
         raise ThriftCLIError('Invalid value provided for enum %s: %s' % (field_type.str(value)))
 
