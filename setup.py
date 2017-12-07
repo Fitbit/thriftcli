@@ -24,8 +24,6 @@ config = {
         'console_scripts': ['thriftcli = thriftcli.thrift_cli:main']
     },
     'install_requires': ['kazoo', 'mock', 'thrift', 'twitter.common.rpc', 'coverage'],
-    'requires': ['kazoo', 'mock', 'thrift', 'twitter.common.rpc', 'coverage'],
-    'setup_requires': ['setuptools_scm']
 }
 
 setup(**config)
