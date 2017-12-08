@@ -14,6 +14,7 @@ import argparse
 import json
 import logging
 import os
+from sshtunnel import SSHTunnelForwarder
 
 from thrift_zookeeper_resolver import get_server_address
 from .thrift_argument_converter import ThriftArgumentConverter
@@ -23,6 +24,9 @@ from .thrift_parser import ThriftParser
 from .request_body_converter import convert
 
 THRIFT_PATH_ENVIRONMENT_VARIABLE = 'THRIFT_CLI_PATH'
+
+logger = logging.getLogger(__name__)
+
 
 class ThriftCLI(object):
     """ Provides an interface for setting up a client, making requests, and cleaning up.
@@ -69,12 +73,14 @@ class ThriftCLI(object):
 
         """
         request_args = self._thrift_argument_converter.convert_args(self._service_reference, method_name, request_body)
-        if logging.getLogger().isEnabledFor(logging.DEBUG):
-            logging.debug(
+        if logger.isEnabledFor(logging.DEBUG):
+            logger.debug(
                 "Performing Request %s",
                 _dump_json(request_args)
             )
         result = self._thrift_executor.run(method_name, request_args)
+        if logger.isEnabledFor(logging.DEBUG):
+            logger.debug("Result: ")
         return self.transform_output(result, return_json)
 
     def cleanup(self, remove_generated_src=False):
@@ -87,14 +93,17 @@ class ThriftCLI(object):
             result = _dump_json(result)
         return result
 
+
 def _dump_json(obj):
     return json.dumps(obj, default=_default_json_handler, sort_keys=True, indent=4, separators=(',', ': '))
+
 
 def _default_json_handler(obj):
     if isinstance(obj, set) or isinstance(obj, frozenset):
         return list(obj)
     else:
         return obj.__dict__
+
 
 def _find_path(path):
     if os.path.isfile(path):
@@ -179,8 +188,9 @@ def _parse_namespace(args):
     return_json = args.json
     cleanup = args.cleanup
     client_id = args.client_id
+    ssh_key = args.ssh_key
     return (server_address, endpoint, thrift_path, thrift_dir_paths, request_body, zookeeper, return_json, cleanup,
-            client_id)
+            client_id, ssh_key)
 
 
 def _make_parser():
@@ -211,11 +221,14 @@ def _make_parser():
                         help='Finagle client id to send request with')
     parser.add_argument('-v', '--verbose', action='store_true',
                         help='provide detailed logging')
+    parser.add_argument('-s', '--ssh_key', type=str,
+                        help='path to ssh key. If provided thriftcli will assume the host must be sshed into to run '
+                             'command')
     return parser
 
 
 def _run_cli(server_address, endpoint_name, thrift_path, thrift_dir_paths, request_body, zookeeper, return_json,
-             remove_generated_src, client_id):
+             remove_generated_src, client_id, ssh_key=None):
     """ Runs a remote request and prints the result if it is not None.
 
     :param server_address: the address of the Thrift server to request
@@ -234,6 +247,8 @@ def _run_cli(server_address, endpoint_name, thrift_path, thrift_dir_paths, reque
     :type remove_generated_src: bool
     :param client_id: Finagle client id for identifying requests
     :type client_id: str
+    :param ssh_key: key to allow thriftcli to ssh into the server address
+    :type ssh_key: str
     :param verbose: log details
     :type verbose: bool
 
@@ -242,24 +257,42 @@ def _run_cli(server_address, endpoint_name, thrift_path, thrift_dir_paths, reque
     environment_defined_paths = []
     if os.environ.get(THRIFT_PATH_ENVIRONMENT_VARIABLE):
         environment_defined_paths = os.environ[THRIFT_PATH_ENVIRONMENT_VARIABLE].split(':')
-    cli = ThriftCLI(
-        thrift_path,
-        server_address,
-        service_name,
-        thrift_dir_paths + environment_defined_paths,
-        zookeeper,
-        client_id=client_id
-    )
+    server_host, server_port = server_address.split(":")
+    server_port = int(server_port)
+    ssh_tunnel = None
+    if ssh_key:
+        ssh_tunnel = SSHTunnelForwarder(
+                (server_host, 22),
+                ssh_pkey=ssh_key,
+                remote_bind_address=('localhost', server_port),
+                local_bind_address=('localhost', server_port)
+        )
+        ssh_tunnel.start()
+    cli = None
     try:
+        cli = ThriftCLI(
+            thrift_path,
+            "localhost:{}".format(server_port),
+            service_name,
+            thrift_dir_paths + environment_defined_paths,
+            zookeeper,
+            client_id=client_id
+        )
         result = cli.run(method_name, request_body, return_json)
         if result is not None:
             print result
     finally:
-        cli.cleanup(remove_generated_src)
+        if cli:
+            cli.cleanup(remove_generated_src)
+        if ssh_tunnel:
+            ssh_tunnel.close()
 
 
 def configure_logging(verbose):
-    logging.basicConfig(format='%(levelname)s:%(message)s', level=logging.DEBUG if verbose else logging.INFO)
+    handler = logging.StreamHandler()
+    handler.setLevel(logging.DEBUG if verbose else logging.INFO)
+    logger.addHandler(handler)
+    logger.setLevel(logging.DEBUG if verbose else logging.INFO)
 
 
 def _parse_args():
