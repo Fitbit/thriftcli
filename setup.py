@@ -13,15 +13,10 @@
 from setuptools import setup
 
 
-def make_version_unique(version):
-    if version.exact:
-        return version.format_with('{tag}+{time:%s}')
-    else:
-        return version.format_with('{tag}.post{distance}+{time:%s}')
-
 
 config = {
     'name': 'thriftcli',
+    'version': 1.0,
     'description': 'Thrift CLI',
     'author': 'Neel Virdy',
     'packages': ['thriftcli'],
@@ -29,9 +24,6 @@ config = {
         'console_scripts': ['thriftcli = thriftcli.thrift_cli:main']
     },
     'install_requires': ['kazoo', 'mock', 'thrift', 'twitter.common.rpc', 'coverage'],
-    'requires': ['kazoo', 'mock', 'thrift', 'twitter.common.rpc', 'coverage'],
-    'use_scm_version': {'version_scheme': make_version_unique},
-    'setup_requires': ['setuptools_scm']
 }
 
 setup(**config)
