@@ -16,7 +16,7 @@ from setuptools import setup
 
 config = {
     'name': 'thriftcli',
-    'version': 1.0,
+    'version': 1.1,
     'description': 'Thrift CLI',
     'author': 'Neel Virdy',
     'packages': ['thriftcli'],
