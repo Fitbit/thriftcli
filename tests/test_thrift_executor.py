@@ -15,22 +15,22 @@ import unittest
 import mock
 
 from tests import data
-from thriftcli import ThriftExecutor
+from thriftcli import ThriftExecutor, ThriftLoader
 
 
 class TestThriftExecutor(unittest.TestCase):
     @mock.patch('thriftcli.thrift_executor.TFinagleProtocol')
     @mock.patch('thriftcli.TTransport.TFramedTransport.open')
     @mock.patch('thriftcli.TSocket.TSocket')
-    @mock.patch('thriftcli.ThriftExecutor._import_package')
+    @mock.patch('thriftcli.ThriftLoader._import_package')
     @mock.patch('subprocess.call')
     @mock.patch('thriftcli.ThriftParser._load_file')
     def test_init(self, mock_load_file, mock_call, mock_import_package, mock_tsocket, mock_transport_open,
                   mock_finagle_protocol):
         mock_load_file.return_value = data.TEST_THRIFT_CONTENT
         mock_call.return_value = 0
-        ThriftExecutor(data.TEST_THRIFT_PATH, data.TEST_SERVER_ADDRESS, data.TEST_THRIFT_SERVICE_REFERENCE,
-                       data.TEST_THRIFT_NAMESPACES)
+        loader = ThriftLoader(data.TEST_THRIFT_PATH, [])
+        ThriftExecutor(data.TEST_SERVER_ADDRESS, data.TEST_THRIFT_SERVICE_NAME, loader)
         command = 'thrift -r -I %s --gen py %s' % (data.TEST_THRIFT_DIR, data.TEST_THRIFT_PATH)
         mock_call.assert_called_with(command, shell=True)
         mock_import_package.assert_called_with(data.TEST_THRIFT_MODULE_NAME, data.TEST_THRIFT_PY_NAMESPACE)
@@ -42,15 +42,15 @@ class TestThriftExecutor(unittest.TestCase):
     @mock.patch('thriftcli.thrift_executor.TFinagleProtocol')
     @mock.patch('thriftcli.TTransport.TFramedTransport.open')
     @mock.patch('thriftcli.TSocket.TSocket')
-    @mock.patch('thriftcli.ThriftExecutor._import_package')
+    @mock.patch('thriftcli.ThriftLoader._import_package')
     @mock.patch('subprocess.call')
     @mock.patch('thriftcli.ThriftParser._load_file')
     def test_init_simple_thrift_file(self, mock_load_file, mock_call, mock_import_package, mock_tsocket,
                                      mock_transport_open, mock_finagle_protocol):
         mock_load_file.return_value = data.TEST_THRIFT_CONTENT
         mock_call.return_value = 0
-        ThriftExecutor(data.TEST_THRIFT_FILE, data.TEST_SERVER_ADDRESS, data.TEST_THRIFT_SERVICE_REFERENCE,
-                       data.TEST_THRIFT_NAMESPACES)
+        loader = ThriftLoader(data.TEST_THRIFT_FILE, [])
+        ThriftExecutor(data.TEST_SERVER_ADDRESS, data.TEST_THRIFT_SERVICE_NAME, loader)
         command = 'thrift -r -I . --gen py %s' % data.TEST_THRIFT_FILE
         mock_call.assert_called_with(command, shell=True)
         mock_import_package.assert_called_with(data.TEST_THRIFT_MODULE_NAME, data.TEST_THRIFT_PY_NAMESPACE)

@@ -15,7 +15,7 @@ import unittest
 import mock
 
 from tests import data
-from thriftcli import ThriftArgumentConverter, ThriftCLIError
+from thriftcli import ThriftArgumentConverter, ThriftCLIError, ThriftParser
 
 
 class TestThriftArgumentConverter(unittest.TestCase):
@@ -37,7 +37,8 @@ class TestThriftArgumentConverter(unittest.TestCase):
         op_mock = mock.Mock(_NAMES_TO_VALUES={'A': 0})
         mock_get_type_class.return_value = op_mock
         mock_load_file.return_value = data.TEST_THRIFT_CONTENT
-        converter = ThriftArgumentConverter(data.TEST_THRIFT_PATH)
+        parser = ThriftParser(data.TEST_THRIFT_PATH, [])
+        converter = ThriftArgumentConverter(parser.parse())
         args = converter.convert_args(data.TEST_THRIFT_SERVICE_REFERENCE, 'doSomething1', data.TEST_JSON_TO_CONVERT)
         expected_args = {
             "num1": 3,
@@ -55,7 +56,8 @@ class TestThriftArgumentConverter(unittest.TestCase):
         struct_mock = mock.Mock(return_value=struct_obj_mock)
         mock_get_type_class.return_value = struct_mock
         mock_load_file.return_value = data.TEST_THRIFT_CONTENT
-        converter = ThriftArgumentConverter(data.TEST_THRIFT_PATH)
+        parser = ThriftParser(data.TEST_THRIFT_PATH, [])
+        converter = ThriftArgumentConverter(parser.parse())
         struct_args = {"thing_one": "some string", "thing_two": 2.0, "thing_three": True}
         args = converter.convert_args(
             data.TEST_THRIFT_SERVICE_REFERENCE,
@@ -70,7 +72,8 @@ class TestThriftArgumentConverter(unittest.TestCase):
     @mock.patch('thriftcli.ThriftParser._load_file')
     def test_convert_args_with_map_typedef(self, mock_load_file):
         mock_load_file.return_value = data.TEST_THRIFT_CONTENT
-        converter = ThriftArgumentConverter(data.TEST_THRIFT_PATH)
+        parser = ThriftParser(data.TEST_THRIFT_PATH, [])
+        converter = ThriftArgumentConverter(parser.parse())
         args = converter.convert_args(data.TEST_THRIFT_SERVICE_REFERENCE3, 'passMap', data.TEST_JSON_TO_CONVERT2)
         expected_args = data.TEST_JSON_TO_CONVERT2
         self.assertEqual(args, expected_args)
@@ -82,7 +85,8 @@ class TestThriftArgumentConverter(unittest.TestCase):
         mock_struct_constructor.side_effect = [0, 1, 2]
         mock_get_type_class.return_value = mock_struct_constructor
         mock_load_file.return_value = data.TEST_THRIFT_CONTENT
-        converter = ThriftArgumentConverter(data.TEST_THRIFT_PATH)
+        parser = ThriftParser(data.TEST_THRIFT_PATH, [])
+        converter = ThriftArgumentConverter(parser.parse())
         args = converter.convert_args(data.TEST_THRIFT_SERVICE_REFERENCE3, 'passSetOfLists', data.TEST_JSON_TO_CONVERT3)
         expected_args = {
             "setOfLists": frozenset([

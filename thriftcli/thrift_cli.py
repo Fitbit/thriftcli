@@ -20,6 +20,7 @@ from .thrift_argument_converter import ThriftArgumentConverter
 from .thrift_cli_error import ThriftCLIError
 from .thrift_executor import ThriftExecutor
 from .thrift_parser import ThriftParser
+from .thrift_loader import ThriftLoader
 from .request_body_converter import convert
 
 THRIFT_PATH_ENVIRONMENT_VARIABLE = 'THRIFT_CLI_PATH'
@@ -48,13 +49,14 @@ class ThriftCLI(object):
 
         """
         self._thrift_path = _find_path(thrift_path)
-        self._thrift_argument_converter = ThriftArgumentConverter(self._thrift_path, thrift_dir_paths)
-        self._service_reference = '%s.%s' % (ThriftParser.get_package_name(self._thrift_path), service_name)
+        self._thrift_loader = ThriftLoader(self._thrift_path, thrift_dir_paths)
+        self._thrift_argument_converter = ThriftArgumentConverter(self._thrift_loader._parse_result)
+        self._service_name = service_name
         if zookeeper:
             server_address = get_server_address(server_address, service_name)
-        self._thrift_executor = ThriftExecutor(self._thrift_path, server_address, self._service_reference,
-                                               self._thrift_argument_converter._parse_result.namespaces,
-                                               thrift_dir_paths=thrift_dir_paths, client_id=client_id)
+        self._thrift_executor = ThriftExecutor(server_address, self._service_name,
+                                               self._thrift_loader,
+                                               client_id=client_id)
 
     def run(self, method_name, request_body, return_json=False):
         """ Runs the endpoint on the connected server as defined by the thrift file.
@@ -68,7 +70,8 @@ class ThriftCLI(object):
         :returns: endpoint result
 
         """
-        request_args = self._thrift_argument_converter.convert_args(self._service_reference, method_name, request_body)
+        request_args = self._thrift_argument_converter.convert_args(
+                self._thrift_loader.get_service_reference(self._service_name), method_name, request_body)
         if logging.getLogger().isEnabledFor(logging.DEBUG):
             logging.debug(
                 "Performing Request %s",
