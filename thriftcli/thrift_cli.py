@@ -33,7 +33,7 @@ class ThriftCLI(object):
 
     """
 
-    def __init__(self, thrift_path, server_address, service_name, thrift_dir_paths=None, zookeeper=False, client_id=None):
+    def __init__(self, thrift_path, server_address, service_name, thrift_dir_paths=None, zookeeper=False, client_id=None, http_client=False):
         """
         :param thrift_path: the path to the thrift file being used.
         :type thrift_path: str
@@ -54,7 +54,7 @@ class ThriftCLI(object):
             server_address = get_server_address(server_address, service_name)
         self._thrift_executor = ThriftExecutor(self._thrift_path, server_address, self._service_reference,
                                                self._thrift_argument_converter._parse_result.namespaces,
-                                               thrift_dir_paths=thrift_dir_paths, client_id=client_id)
+                                               thrift_dir_paths=thrift_dir_paths, client_id=client_id, http_client=http_client)
 
     def run(self, method_name, request_body, return_json=False):
         """ Runs the endpoint on the connected server as defined by the thrift file.
@@ -179,8 +179,9 @@ def _parse_namespace(args):
     return_json = args.json
     cleanup = args.cleanup
     client_id = args.client_id
+    http_client = args.http_client
     return (server_address, endpoint, thrift_path, thrift_dir_paths, request_body, zookeeper, return_json, cleanup,
-            client_id)
+            client_id, http_client)
 
 
 def _make_parser():
@@ -209,13 +210,15 @@ def _make_parser():
                         help='print result in JSON format')
     parser.add_argument('-i', '--client_id', type=str, default=None,
                         help='Finagle client id to send request with')
+    parser.add_argument('-hc', '--http_client', action='store_true',
+                        help='Use a thirft of HTTP client')
     parser.add_argument('-v', '--verbose', action='store_true',
                         help='provide detailed logging')
     return parser
 
 
 def _run_cli(server_address, endpoint_name, thrift_path, thrift_dir_paths, request_body, zookeeper, return_json,
-             remove_generated_src, client_id):
+             remove_generated_src, client_id, http_client):
     """ Runs a remote request and prints the result if it is not None.
 
     :param server_address: the address of the Thrift server to request
@@ -234,6 +237,8 @@ def _run_cli(server_address, endpoint_name, thrift_path, thrift_dir_paths, reque
     :type remove_generated_src: bool
     :param client_id: Finagle client id for identifying requests
     :type client_id: str
+    :param http_client: use the http client to connect to thrift instead of the default socket client
+    :type http_client: bool
     :param verbose: log details
     :type verbose: bool
 
@@ -248,7 +253,8 @@ def _run_cli(server_address, endpoint_name, thrift_path, thrift_dir_paths, reque
         service_name,
         thrift_dir_paths + environment_defined_paths,
         zookeeper,
-        client_id=client_id
+        client_id=client_id,
+        http_client=http_client,
     )
     try:
         result = cli.run(method_name, request_body, return_json)
