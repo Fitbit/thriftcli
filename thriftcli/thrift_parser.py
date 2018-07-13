@@ -42,7 +42,7 @@ class ThriftParser(object):
     # For example:
     #   includes "File.thrift"
     #   => ("File.thrift")
-    INCLUDES_REGEX = re.compile(r'^include\s+\"(\w+.thrift)\"', flags=re.MULTILINE)
+    INCLUDES_REGEX = re.compile(r'^include\s+\"([\w./]+.thrift)\"', flags=re.MULTILINE)
 
     # Matches Thrift python namespace statements. Captures the namespace.
     #
