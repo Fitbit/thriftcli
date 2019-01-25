@@ -16,14 +16,14 @@ from setuptools import setup
 
 config = {
     'name': 'thriftcli',
-    'version': 1.1,
+    'version': 1.2,
     'description': 'Thrift CLI',
     'author': 'Neel Virdy',
     'packages': ['thriftcli'],
     'entry_points': {
         'console_scripts': ['thriftcli = thriftcli.thrift_cli:main']
     },
-    'install_requires': ['kazoo', 'mock', 'thrift', 'twitter.common.rpc', 'coverage'],
+    'install_requires': ['kazoo', 'mock', 'requests_kerberos', 'thrift', 'twitter.common.rpc', 'coverage'],
 }
 
 setup(**config)

@@ -33,7 +33,7 @@ class ThriftCLI(object):
 
     """
 
-    def __init__(self, thrift_path, server_address, service_name, thrift_dir_paths=None, zookeeper=False, client_id=None):
+    def __init__(self, thrift_path, server_address, service_name, thrift_dir_paths=None, zookeeper=False, client_id=None, proxy=None):
         """
         :param thrift_path: the path to the thrift file being used.
         :type thrift_path: str
@@ -45,7 +45,8 @@ class ThriftCLI(object):
         :type zookeeper: bool
         :param client_id: Finagle client id for identifying requests
         :type client_id: str
-
+        :param proxy: [<proxy host>:<proxy port>] to route request through
+        :type proxy: str
         """
         self._thrift_path = _find_path(thrift_path)
         self._thrift_argument_converter = ThriftArgumentConverter(self._thrift_path, thrift_dir_paths)
@@ -54,7 +55,7 @@ class ThriftCLI(object):
             server_address = get_server_address(server_address, service_name)
         self._thrift_executor = ThriftExecutor(self._thrift_path, server_address, self._service_reference,
                                                self._thrift_argument_converter._parse_result.namespaces,
-                                               thrift_dir_paths=thrift_dir_paths, client_id=client_id)
+                                               thrift_dir_paths=thrift_dir_paths, client_id=client_id, proxy=proxy)
 
     def run(self, method_name, request_body, return_json=False):
         """ Runs the endpoint on the connected server as defined by the thrift file.
@@ -179,8 +180,9 @@ def _parse_namespace(args):
     return_json = args.json
     cleanup = args.cleanup
     client_id = args.client_id
+    proxy = args.proxy
     return (server_address, endpoint, thrift_path, thrift_dir_paths, request_body, zookeeper, return_json, cleanup,
-            client_id)
+            client_id, proxy)
 
 
 def _make_parser():
@@ -203,6 +205,8 @@ def _make_parser():
                         help='json string or path to json file encoding the request body')
     parser.add_argument('-z', '--zookeeper', action='store_true',
                         help='treat server address as a zookeeper host with a path')
+    parser.add_argument('-p', '--proxy', type=str,
+                        help='access the service via a proxy (for auth reasons) [<proxy host>:<proxy port>]')
     parser.add_argument('-c', '--cleanup', action='store_true',
                         help='remove generated code after execution')
     parser.add_argument('-j', '--json', action='store_true',
@@ -215,7 +219,7 @@ def _make_parser():
 
 
 def _run_cli(server_address, endpoint_name, thrift_path, thrift_dir_paths, request_body, zookeeper, return_json,
-             remove_generated_src, client_id):
+             remove_generated_src, client_id, proxy):
     """ Runs a remote request and prints the result if it is not None.
 
     :param server_address: the address of the Thrift server to request
@@ -234,6 +238,8 @@ def _run_cli(server_address, endpoint_name, thrift_path, thrift_dir_paths, reque
     :type remove_generated_src: bool
     :param client_id: Finagle client id for identifying requests
     :type client_id: str
+    :param proxy: [<proxy host>:<proxy port>] to route request through
+    :type proxy: str
     :param verbose: log details
     :type verbose: bool
 
@@ -248,7 +254,8 @@ def _run_cli(server_address, endpoint_name, thrift_path, thrift_dir_paths, reque
         service_name,
         thrift_dir_paths + environment_defined_paths,
         zookeeper,
-        client_id=client_id
+        client_id=client_id,
+        proxy=proxy
     )
     try:
         result = cli.run(method_name, request_body, return_json)
