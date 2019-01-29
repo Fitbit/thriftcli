@@ -70,6 +70,7 @@ Options:
                             Java Thrift body, such as 'request:MyRequest(person:Person(name:joe, id:2))'.
                             Path to a file containing any of the above formats.
 - **-z --zookeeper**       Treat the server address as a Zookeeper instance, and make the request to the service being provided at the given path.
+- **-p --proxy [PROXY]**    Access the service via a proxy (for auth reasons) "proxy host:proxy port"
 - **-c --cleanup**         Delete generated code from filesystem after execution
 - **-j --json**            Print result in JSON format
 - **-i --client_id [client_id]**

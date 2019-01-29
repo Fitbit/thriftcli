@@ -22,13 +22,14 @@ from thrift.transport import TTransport
 from twitter.common.rpc.finagle.protocol import TFinagleProtocol
 
 from .thrift_cli_error import ThriftCLIError
+from .transport import TProxySocket
 
 
 class ThriftExecutor(object):
     """ This class handles connecting to and communicating with the Thrift server. """
 
     def __init__(self, thrift_path, server_address, service_reference, basename_to_namespaces, thrift_dir_paths=None,
-                 client_id=None):
+                 client_id=None, proxy=None):
         """ Opens a connection with the server and generates then imports the thrift-defined python code.
 
         :param thrift_path: the path to the Thrift file defining the service being requested
@@ -36,7 +37,7 @@ class ThriftExecutor(object):
         :param service_reference: the namespaced service name in the format <file-name>.<service-name>
         :param thrift_dir_paths: a list of paths to directories containing Thrift file dependencies
         :param client_id: Finagle client id for identifying requests
-
+        :param proxy: [<proxy host>:<proxy port>] to route request through
         """
         self._thrift_path = thrift_path
         self._server_address = server_address
@@ -48,6 +49,7 @@ class ThriftExecutor(object):
 
         self._client_id = client_id
         self._service_reference = service_reference
+        self._proxy = proxy
         self._open_connection(server_address)
         self._generate_and_import_packages(basename_to_namespaces)
 
@@ -128,7 +130,11 @@ class ThriftExecutor(object):
 
         """
         (url, port) = self._parse_address_for_hostname_and_port(address)
-        self._transport = TSocket.TSocket(url, port)
+        if self._proxy:
+            proxy_host, proxy_port = self._proxy.split(":")
+            self._transport = TProxySocket(proxy_host, proxy_port, url, port)
+        else:
+            self._transport = TSocket.TSocket(url, port)
         self._transport = TTransport.TFramedTransport(self._transport)
         self._transport.open()
         self._protocol = TFinagleProtocol(self._transport, client_id=self._client_id)
