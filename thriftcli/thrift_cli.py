@@ -15,7 +15,7 @@ import json
 import logging
 import os
 
-from thrift_zookeeper_resolver import get_server_address
+from .thrift_zookeeper_resolver import get_server_address
 from .thrift_argument_converter import ThriftArgumentConverter
 from .thrift_cli_error import ThriftCLIError
 from .thrift_executor import ThriftExecutor
@@ -158,7 +158,7 @@ def _load_request_body(request_body_arg):
         request_body_arg = _load_file(request_body_arg)
     try:
         return convert(request_body_arg)
-    except ValueError, e:
+    except ValueError as e:
         raise ThriftCLIError(e)
 
 
@@ -260,7 +260,7 @@ def _run_cli(server_address, endpoint_name, thrift_path, thrift_dir_paths, reque
     try:
         result = cli.run(method_name, request_body, return_json)
         if result is not None:
-            print result
+            print(result)
     finally:
         cli.cleanup(remove_generated_src)
 

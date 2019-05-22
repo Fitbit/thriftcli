@@ -15,7 +15,7 @@ import os
 import shutil
 import subprocess
 import sys
-import urlparse
+import urllib.parse
 
 from thrift.transport import TSocket
 from thrift.transport import TTransport

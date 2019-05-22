@@ -6,7 +6,7 @@ and auditing ofthese requests.
 TProxySocket is a thin wrapper around TSocket transport that uses httplib to handle setting up the tunnel 
 and requests_kerberos to handle kerberos auth.
 """
-import httplib
+import http.client
 import requests_kerberos
 import socket
 

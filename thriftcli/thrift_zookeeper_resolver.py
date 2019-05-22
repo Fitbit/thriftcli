@@ -13,7 +13,7 @@
 import json
 import os
 import random
-import urlparse
+import urllib.parse
 
 from kazoo.client import KazooClient
 

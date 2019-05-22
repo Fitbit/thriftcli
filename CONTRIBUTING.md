@@ -10,6 +10,8 @@ If you would like to contribute to the ThriftCLI project, please use this workfl
 
 #### Running from Source
 
+Please note that thriftcli is Python 3 ONLY.
+
 If you'd like to run ThriftCLI from its source, without running the install script, navigate to the project directory and run:
 
 ```
