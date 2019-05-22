@@ -23,7 +23,7 @@ config = {
     'entry_points': {
         'console_scripts': ['thriftcli = thriftcli.thrift_cli:main']
     },
-    'install_requires': ['kazoo', 'mock', 'requests_kerberos', 'thrift', 'twitter.common.rpc', 'coverage'],
+    'install_requires': ['kazoo', 'mock', 'requests_kerberos', 'thrift', 'twitter.common.rpc==0.3.9', 'coverage'],
 }
 
 setup(**config)
