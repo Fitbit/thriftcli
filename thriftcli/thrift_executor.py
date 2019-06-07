@@ -150,7 +150,7 @@ class ThriftExecutor(object):
         """
         if '//' not in address:
             address = '//' + address
-        url_obj = urlparse.urlparse(address)
+        url_obj = urllib.parse.urlparse(address)
         return url_obj.hostname, url_obj.port
 
     @staticmethod
