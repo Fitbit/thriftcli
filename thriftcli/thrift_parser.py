@@ -91,7 +91,7 @@ class ThriftParser(object):
     #       "i64",
     #       "add",
     #       "1:i64 num1, 2:i64 num2")
-    ENDPOINTS_REGEX = re.compile(r'^[\r\t ]*(oneway)?\s*([^\n]*)\s+(\w+)\(([a-zA-Z0-9: ,.<>]*)\)',
+    ENDPOINTS_REGEX = re.compile(r'^[\r\t ]*(oneway)?\s*([^\n]*)\s+(\w+)\(([a-zA-Z0-9: ,.<>_]*)\)',
                                  flags=re.MULTILINE)
 
     # Matches field declarations. Captures index, optional/required, field type, field name, and default value.
