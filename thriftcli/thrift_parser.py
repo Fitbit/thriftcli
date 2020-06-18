@@ -129,6 +129,16 @@ class ThriftParser(object):
     #       "i64")
     TYPEDEFS_REGEX = re.compile(r'^[\r\t ]*typedef\s+([^\n]*)[\r\t ]+([^,;\n]*)', flags=re.MULTILINE)
 
+    # Matches union definitions. Captures the whole definition and the union name.
+    #
+    # For example:
+    #   union MyUnion {
+    #      1: string string_thing,
+    #   }
+    #   => ("union MyUnion {\n1:string string_thing\n}",
+    #       "MyUnion")
+    UNIONS_REGEX = re.compile(r'^([\r\t ]*?union (\w+)[^}]+})', flags=re.MULTILINE)
+
     def __init__(self, thrift_path, thrift_dir_paths=None):
         """
 
@@ -233,7 +243,8 @@ class ThriftParser(object):
         service_names = {name for _, name, _ in ThriftParser.SERVICES_REGEX.findall(self._thrift_content)}
         enum_names = {name for name in ThriftParser.ENUMS_REGEX.findall(self._thrift_content)}
         typedef_names = {name for _, name in ThriftParser.TYPEDEFS_REGEX.findall(self._thrift_content)}
-        names = struct_names | service_names | enum_names | typedef_names
+        union_names = {name for _, name in ThriftParser.UNIONS_REGEX.findall(self._thrift_content)}
+        names = struct_names | service_names | enum_names | typedef_names | union_names
         references = {'%s.%s' % (self._namespace, name) for name in names}
         return references
 
@@ -379,6 +390,43 @@ class ThriftParser(object):
         typedefs = {self._apply_namespace(alias): self._apply_namespace(field_type)
                     for (field_type, alias) in typedef_matches}
         return typedefs
+
+    def _parse_unions(self):
+        """ Returns the unions defined by the parsed thrift file, keyed by reference.
+
+        :returns: a dict of union references to ThriftUnions for each union defined in the parsed thrift file
+        :rtype: dict of str to ThriftUnion
+
+        """
+        definitions_by_reference = self._parse_union_definitions()
+        fields_by_reference = {reference: self._parse_fields_from_union_definition(definition)
+                               for reference, definition in definitions_by_reference.items()}
+        unions = {reference: ThriftUnion(reference, fields) for reference, fields in fields_by_reference.items()}
+        return unions
+
+    def _parse_union_definitions(self):
+        """ Returns the union definitions found in the parsed thrift file, keyed by reference.
+
+        :returns: a dict of union references to union definitions for each union defined in the parsed thrift file
+        :rtype: dict of str to str
+
+        """
+        unions_list = ThriftParser.UNIONS_REGEX.findall(self._thrift_content)
+        unions = {'%s.%s' % (self._namespace, name): definition for definition, name in unions_list}
+        return unions
+
+    def _parse_fields_from_union_definition(self, definition):
+        """ Returns the fields in the union definition, keyed by field name.
+
+        :returns: a dict of field names to ThriftUnion.Fields for each field defined in a union definition
+        :rtype: dict of str to ThriftUnion.Field
+
+        """
+        field_matches = ThriftParser.FIELDS_REGEX.findall(definition)
+        fields = [self._construct_field_from_field_match(field_match) for field_match in field_matches]
+        self._assign_field_indices(fields)
+        fields = {field.name: field for field in fields}
+        return fields
 
     def _apply_namespace(self, field_type):
         """ Applies the package namespace to the field type appropriately.
