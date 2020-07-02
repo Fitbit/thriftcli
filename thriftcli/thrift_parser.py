@@ -119,7 +119,7 @@ class ThriftParser(object):
     #       "thing_one",
     #       "")
     FIELDS_REGEX = re.compile(
-        r'^[\r\t ]*(\d+\s*:)+\s*(optional|required)?\s*([^\n=]+)?\s+(\w+)(?:\s*=\s*([^,;\s]+))?[,;\n]',
+        r'^[\s]*(\d:)?\s*(optional|required)?\s*([^\n=*]+)?\s+(\w+)(?:\s*=\s*([^,;\s]+))?[,;\n]',
         flags=re.MULTILINE)
 
     # Matches typedefs. Captures initial type name and aliased type name.
@@ -281,8 +281,6 @@ class ThriftParser(object):
 
         """
         field_matches = ThriftParser.FIELDS_REGEX.findall(definition)
-        print(definition)
-        print(field_matches)
         fields = [self._construct_field_from_field_match(field_match) for field_match in field_matches]
         self._assign_field_indices(fields)
         fields = {field.name: field for field in fields}
