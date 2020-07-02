@@ -18,6 +18,7 @@ from .thrift_cli_error import ThriftCLIError
 from .thrift_parse_result import ThriftParseResult
 from .thrift_service import ThriftService
 from .thrift_struct import ThriftStruct
+from .thrift_union import ThriftUnion
 
 
 class ThriftParser(object):
@@ -118,7 +119,7 @@ class ThriftParser(object):
     #       "thing_one",
     #       "")
     FIELDS_REGEX = re.compile(
-        r'^[\r\t ]*(\d+\s*:)?\s*(optional|required)?\s*([^\n=]+)?\s+(\w+)(?:\s*=\s*([^,;\s]+))?[,;\n]',
+        r'^[\r\t ]*(\d+\s*:)+\s*(optional|required)?\s*([^\n=]+)?\s+(\w+)(?:\s*=\s*([^,;\s]+))?[,;\n]',
         flags=re.MULTILINE)
 
     # Matches typedefs. Captures initial type name and aliased type name.
@@ -172,7 +173,7 @@ class ThriftParser(object):
         self._references.update(self._parse_references())
         parse_result = ThriftParseResult(
             self._parse_structs(), self._parse_services(), self._parse_enums(), self._parse_typedefs(),
-            self._parse_namespace_py())
+            self._parse_namespace_py(), self._parse_unions())
         self._result.merge_result(parse_result)
         return self._result
 
@@ -280,6 +281,8 @@ class ThriftParser(object):
 
         """
         field_matches = ThriftParser.FIELDS_REGEX.findall(definition)
+        print(definition)
+        print(field_matches)
         fields = [self._construct_field_from_field_match(field_match) for field_match in field_matches]
         self._assign_field_indices(fields)
         fields = {field.name: field for field in fields}
