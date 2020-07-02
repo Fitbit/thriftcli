@@ -34,8 +34,8 @@ class ThriftUnion(object):
 
         def __str__(self):
             default_str = (' = %s' % str(self.default)) if self.default is not None else ''
-            str_params = (self.index, modifier_str, self.field_type, self.name, default_str)
-            return '%s:%s%s %s%s' % str_params
+            str_params = (self.index, self.field_type, self.name, default_str)
+            return '%s:%s %s%s' % str_params
 
     def __init__(self, reference, fields=None):
         """

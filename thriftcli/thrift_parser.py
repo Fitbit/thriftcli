@@ -119,7 +119,7 @@ class ThriftParser(object):
     #       "thing_one",
     #       "")
     FIELDS_REGEX = re.compile(
-        r'^[\r\t ]*(\d+\s*:)+\s*(optional|required)?\s*([^\n=]+)?\s+(\w+)(?:\s*=\s*([^,;\s]+))?[,;\n]',
+        r'^[\s]*([\d]*):?\s*(optional|required)?\s*([^\n=*]+)?\s+(\w+)(?:\s*=\s*([^,;\s]+))?[,;\n]',
         flags=re.MULTILINE)
 
     # Matches typedefs. Captures initial type name and aliased type name.
@@ -154,9 +154,37 @@ class ThriftParser(object):
         self._thrift_path = thrift_path
         self._thrift_dir_paths = [os.path.dirname(thrift_path)] + thrift_dir_paths
         self._namespace = ThriftParser.get_package_name(thrift_path)
-        self._thrift_content = self._load_file(self._thrift_path)
+        self._thrift_content = self._remove_commments(self._load_file(self._thrift_path))
         self._references = set([])
         self._result = None
+
+    @staticmethod
+    def _remove_commments(_file_contents):
+        lines = _file_contents.split('\n')
+        new_contents = []
+        in_comment = False
+        for lin in lines:
+            # fails where multilines DON'T use * in the front
+            if re.match(r"^[\s]*(/\*)", lin) and re.match(r"(\*/)[\s]*$", lin):
+                # single line commment using multiline syntax
+                pass
+            elif re.match(r"^[\s]*(//)", lin):
+                # single line comment
+                pass
+            elif re.match(r"^[\s]*(/\*)", lin):
+                # start of block comment
+                in_comment = True
+            elif re.match(r"^[\s]*(\*/)", lin):
+                # end of block comment
+                in_comment = False
+            elif in_comment:
+                # inside of block comment
+                pass
+            else:
+                # code
+                new_contents.append(lin)
+        return "\n".join(new_contents)
+
 
     def parse(self):
         """ Parses a thrift file into its structs, services, enums, typedefs, and namespaces.
@@ -281,8 +309,6 @@ class ThriftParser(object):
 
         """
         field_matches = ThriftParser.FIELDS_REGEX.findall(definition)
-        print(definition)
-        print(field_matches)
         fields = [self._construct_field_from_field_match(field_match) for field_match in field_matches]
         self._assign_field_indices(fields)
         fields = {field.name: field for field in fields}
