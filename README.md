@@ -7,9 +7,13 @@ ThriftCLI is a CLI tool for executing RPC's via the Thrift protocol.
 
 ## Installation
 
-First, navigate to the project directory (contains setup.py):
+The easiest way is to use pip:
 
-Next, install the thrift compiler from homebrew: (this only needs to be done once)
+```
+pip install thriftcli
+```
+
+Another option is to manually build and compile. First, install the thrift compiler from homebrew: (this only needs to be done once)
 ```
 brew install thrift
 ```
@@ -17,44 +21,28 @@ brew install thrift
 There are two ways of invoking this tool:
 
 You can build and install it to */usr/local/bin/thriftcli*
-
 ```
 python setup.py install
 ```
+
 and you can run it like this: (assuming /usr/local/bin is on your PATH)
 ```
 thriftcli server_address endpoint_name thrift_file_path [options]
 ```
 
 Alternatively, you can build and start it all at once without installing: (convenient for dev)
-
 ```
 python -m thriftcli server_address endpoint_name thrift_file_path [options]
 ```
 
-As a convenience you can define an environment variable THRIFT_CLI_PATH. This colon delimited list of directories will be used to find thrift files and their dependencies.
+## Running
 
-Take the following command 
-
+All options for executing thriftcli can be accessed by doing:
 ```
-thriftcli localhost:9332 MakeTestCall ~/thrift/test/test.thrift -I ~/thrift/dependencies
-```
-
-If you had run the following before
-
-```
-export THRIFT_CLI_PATH="~/thrift/test:~/thrift/dependencies"
+thriftcli --help
 ```
 
-this command becomes
-
-```
-thriftcli localhost:9332 MakeTestCall test.thrift
-```
-
-This variable is most useful for endpoints you call fairly often
-
-Arguments:
+This is the list of most common arguments:
 - **server_address**       URL to send the request to. This server should listen for and implement the requested endpoint.
 - **endpoint_name**        Service name and function name representing the request to send to the server.
 - **thrift_file_path**     Path to the thrift file containing the endpoint\'s declaration.
@@ -77,8 +65,39 @@ Options:
                             Finagle client id to send request with
 - **-v --verbose**         Provide detailed logging
 
-## Examples
+#### Includes
 
+As a convenience you can define an environment variable THRIFT_CLI_PATH. This colon delimited list of directories will be used to find thrift files and their dependencies.
+
+Take the following command 
+
+```
+thriftcli localhost:9332 MakeTestCall ~/thrift/test/test.thrift -I ~/thrift/dependencies
+```
+
+If you had run the following before
+
+```
+export THRIFT_CLI_PATH="~/thrift/test:~/thrift/dependencies"
+```
+
+this command becomes
+
+```
+thriftcli localhost:9332 MakeTestCall test.thrift
+```
+
+This variable is most useful for endpoints you call fairly often.
+
+#### Proxy
+
+If you need to access a server behind a proxy, the `--proxy` option allows you to do so:
+
+```
+thriftcli server:port Hello.echo Hello.thrift -b '{"name": "World"}' -j --proxy prod-proxy-us-central1.gcp.fitbit.com:3128
+```
+
+## Examples
 ```
 thriftcli localhost:9090 Calculator.ping ./Calculator.thrift
 thriftcli localhost:9090 Calculator.add ./Calculator.thrift --body add_request_body.json
@@ -123,9 +142,17 @@ If you provide ThriftCLI with a thrift file that uses a Python keyword, or has a
 
 A full list of Python keywords can be found at https://docs.python.org/2/reference/lexical_analysis.html#keywords.
 
+#### Unions
+
+Unions are not supported right now.
+
+#### Python 2.7
+
+Python 3 is not supported. Due to the dependency we have on Twitter thrift libraries (Python 2 only) upgrading is not straightforward.
+
 ## License
 
-    Copyright 2017, Fitbit, Inc.
+    Copyright 2020, Fitbit, Inc.
     Licensed under the Apache License, Version 2.0 (the "License"); you 
     may not use this file except in compliance with the License.
     You may obtain a copy of the License at
