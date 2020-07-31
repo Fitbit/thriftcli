@@ -36,5 +36,6 @@ class TestThriftUnion(unittest.TestCase):
 
     def test_str(self):
         union1 = ThriftUnion("union1", {"someField1": ThriftUnion.Field(1, 'void', 'someField1')})
-        union2 = ThriftUnion("union1", {"someField1": ThriftUnion.Field(1, 'i32', 'someField1'),"someField2": ThriftUnion.Field(2, 'i16', 'someField3')})
-        self.assertEquals("union1", str(union1))
+        union2 = ThriftUnion("union2", {"someField1": ThriftUnion.Field(1, 'i32', 'someField1'),"someField2": ThriftUnion.Field(2, 'i16', 'someField2')})
+        self.assertEquals("union1 \n\t1:void someField1", str(union1))
+        self.assertEquals("union2 \n\t1:i32 someField1\n\t2:i16 someField2", str(union2))
