@@ -46,6 +46,10 @@ class TestThriftCLI(unittest.TestCase):
             args = thrift_cli._parse_namespace(thrift_cli._parse_args())
             expected_args = data.TEST_PARSED_ARGS4
             self.assertEqual(args, expected_args)
+        with mock.patch.object(sys, 'argv', data.TEST_CLI_ARGS6):
+            args = thrift_cli._parse_namespace(thrift_cli._parse_args())
+            expected_args = data.TEST_PARSED_ARGS6
+            self.assertEqual(args, expected_args)
         with self.assertRaises(ThriftCLIError), mock.patch.object(sys, 'argv', data.TEST_CLI_ARGS2):
             mock_isfile.return_value = True
             mock_load_file.return_value = data.TEST_INVALID_REQUEST_BODY
