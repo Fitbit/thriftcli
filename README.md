@@ -61,6 +61,8 @@ Options:
 - **-p --proxy [PROXY]**    Access the service via a proxy (for auth reasons) "proxy host:proxy port"
 - **-c --cleanup**         Delete generated code from filesystem after execution
 - **-j --json**            Print result in JSON format
+- **-t --tls**             Use TLS socket if provided
+- **-k --tls_key_path**    path to tls key file. Provides client identity to enable mTLS communication.  Has effect only if --tls key is provided
 - **-i --client_id [client_id]**
                             Finagle client id to send request with
 - **-v --verbose**         Provide detailed logging
@@ -103,6 +105,7 @@ thriftcli localhost:9090 Calculator.ping ./Calculator.thrift
 thriftcli localhost:9090 Calculator.add ./Calculator.thrift --body add_request_body.json
 thriftcli localhost:9090 Calculator.doWork ./Calculator.thrift --body '{"work": {"num1": 1, "num2": 3, "op": "ADD"}}'
 thriftcli localhost:9090 Calculator.doWork ./Calculator.thrift --body 'Work(num1:1,num2:3,op:ADD)'
+thriftcli localhost:9093 Calculator.doWork ./Calculator.thrift --body 'Work(num1:1,num2:3,op:ADD)' --tls
 thriftcli localhost:12201 Animals.get ~/Animals.thrift -I ~/included-thrifts/ --body ~/animals_get.json
 thriftcli localhost:2181/animals -z Animals.get ~/Animals.thrift --body ~/animals_get.json
 ```
