@@ -22,16 +22,14 @@ from thrift.transport.TTransport import TTransportException
 class TProxySSLSocket(TSocket.TSocket):
     SSL_VERSION = ssl.PROTOCOL_SSLv23
 
-    def __init__(self, host, port, proxy_host=None, proxy_port=None,
+    def __init__(self, host, port, proxy_host, proxy_port,
+                 cert_verification_mode,
                  ca_certs=None,
                  unix_socket=None):
         self.proxy_host = proxy_host
         self.proxy_port = proxy_port
         self.is_valid = False
-        if ca_certs is None:
-            self.cert_reqs = ssl.CERT_NONE
-        else:
-            self.cert_reqs = ssl.CERT_REQUIRED
+        self.cert_reqs = cert_verification_mode
         self.ca_certs = ca_certs
         if ca_certs is not None and not os.access(ca_certs, os.R_OK):
             raise IOError(
