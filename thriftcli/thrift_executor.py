@@ -139,14 +139,15 @@ class ThriftExecutor(object):
         """
         (url, port) = self._parse_address_for_hostname_and_port(address)
         if self._tls:
+            verifier_type = self._get_verifier_type(self.cert_verification_mode)
             if self._proxy:
                 proxy_host, proxy_port = self._proxy.split(":")
-                self._transport = TProxySSLSocket(url, port, proxy_host, proxy_port, ca_certs=self._tls_key_path)
+                self._transport = TProxySSLSocket(url, port, proxy_host, proxy_port, verifier_type, ca_certs=self._tls_key_path)
             else:
                 ssl_context = ssl.SSLContext(ssl.PROTOCOL_SSLv23)
                 if self._tls_key_path is not None:
                     ssl_context.load_cert_chain(self._tls_key_path, self._tls_key_path)
-                ssl_context.verify_mode = self._get_verifier_type(self.cert_verification_mode)
+                ssl_context.verify_mode = verifier_type
                 self._transport = TSSLSocket.TSSLSocket(url, port, ssl_context=ssl_context)
         else:
             if self._proxy:
