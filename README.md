@@ -18,9 +18,7 @@ Another option is to manually build and compile. First, install the thrift compi
 brew install thrift
 ```
 
-There are two ways of invoking this tool:
-
-You can build and install it to */usr/local/bin/thriftcli*
+Then you can build and install it to */usr/local/bin/thriftcli*
 ```
 python setup.py install
 ```
@@ -35,19 +33,24 @@ Alternatively, you can build and start it all at once without installing: (conve
 python -m thriftcli server_address endpoint_name thrift_file_path [options]
 ```
 
+A last option, if you don't care about wasting a lot of disk space for Docker:
+```
+docker run vtatai/thriftcli --help
+```
+
 ## Running
 
-All options for executing thriftcli can be accessed by doing:
+When first running it can be helpful to do:
 ```
 thriftcli --help
 ```
 
-This is the list of most common arguments:
+This will list all the arguments accepted by the tool. The most common are:
 - **server_address**       URL to send the request to. This server should listen for and implement the requested endpoint.
 - **endpoint_name**        Service name and function name representing the request to send to the server.
 - **thrift_file_path**     Path to the thrift file containing the endpoint\'s declaration.
 
-Options:
+And the main options:
 - **-h --help**            Display a help message
 - **-I --includes [thrift_dir_path...]**
                            Path to additional directory to search in when locating thrift file dependencies.
