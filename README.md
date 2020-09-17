@@ -33,10 +33,13 @@ Alternatively, you can build and start it all at once without installing: (conve
 python -m thriftcli server_address endpoint_name thrift_file_path [options]
 ```
 
-A last option, if you don't care about wasting a lot of disk space for Docker:
+A last option, if you don't care about wasting a lot of disk space for Docker, is to run from docker:
+
 ```
-docker run vtatai/thriftcli --help
+docker run docker.pkg.github.com/fitbit/thriftcli/thriftcli:<VERSION>
 ```
+
+Available docker images are at https://github.com/Fitbit/thriftcli/packages/
 
 ## Running
 
