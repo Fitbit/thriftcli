@@ -69,6 +69,10 @@ And the main options:
 - **-j --json**            Print result in JSON format
 - **-t --tls**             Use TLS socket if provided
 - **-k --tls_key_path**    path to tls key file. Provides client identity to enable mTLS communication.  Has effect only if --tls key is provided
+- **-m --cert_verification_mode** Peer certificate validation mode.
+                            **none** : server's certificate will not be validated. Connection will be established even if certificate is absent
+                            **optional** : server's certificate will be validated if provided. Absence of certificate doesn't prevent the connection
+                            **required** : Valid certificate must be provided by the server. This is default value if omitted
 - **-i --client_id [client_id]**
                             Finagle client id to send request with
 - **-v --verbose**         Provide detailed logging
