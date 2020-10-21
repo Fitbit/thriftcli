@@ -13,14 +13,17 @@
 import importlib
 import os
 import shutil
+import ssl
 import subprocess
 import sys
 import urlparse
 
+from thrift.transport import TSSLSocket
 from thrift.transport import TSocket
 from thrift.transport import TTransport
 from twitter.common.rpc.finagle.protocol import TFinagleProtocol
 
+from tls_transport import TProxySSLSocket
 from .thrift_cli_error import ThriftCLIError
 from .transport import TProxySocket
 
@@ -28,7 +31,9 @@ from .transport import TProxySocket
 class ThriftExecutor(object):
     """ This class handles connecting to and communicating with the Thrift server. """
 
-    def __init__(self, thrift_path, server_address, service_reference, basename_to_namespaces, thrift_dir_paths=None,
+    def __init__(self, thrift_path, server_address, service_reference, basename_to_namespaces,
+                 tls=False, tls_key_path=None, cert_verification_mode=None,
+                 thrift_dir_paths=None,
                  client_id=None, proxy=None):
         """ Opens a connection with the server and generates then imports the thrift-defined python code.
 
@@ -50,6 +55,9 @@ class ThriftExecutor(object):
         self._client_id = client_id
         self._service_reference = service_reference
         self._proxy = proxy
+        self._tls = tls
+        self._tls_key_path = tls_key_path
+        self.cert_verification_mode = cert_verification_mode
         self._open_connection(server_address)
         self._generate_and_import_packages(basename_to_namespaces)
 
@@ -130,11 +138,24 @@ class ThriftExecutor(object):
 
         """
         (url, port) = self._parse_address_for_hostname_and_port(address)
-        if self._proxy:
-            proxy_host, proxy_port = self._proxy.split(":")
-            self._transport = TProxySocket(proxy_host, proxy_port, url, port)
-        else:
-            self._transport = TSocket.TSocket(url, port)
+        if self._tls:
+            verifier_type = self._get_verifier_type(self.cert_verification_mode)
+            if self._proxy:
+                proxy_host, proxy_port = self._proxy.split(":")
+                self._transport = TProxySSLSocket(url, port, proxy_host, proxy_port, verifier_type, ca_certs=self._tls_key_path)
+            else:
+                ssl_context = ssl.SSLContext(ssl.PROTOCOL_SSLv23)
+                if self._tls_key_path is not None:
+                    ssl_context.load_cert_chain(self._tls_key_path, self._tls_key_path)
+                ssl_context.verify_mode = verifier_type
+                self._transport = TSSLSocket.TSSLSocket(url, port, ca_certs=self._tls_key_path,
+                                                        validate_callback=lambda cert, hostname: None)  # disabling hostname validation
+    else:
+            if self._proxy:
+                proxy_host, proxy_port = self._proxy.split(":")
+                self._transport = TProxySocket(proxy_host, proxy_port, url, port)
+            else:
+                self._transport = TSocket.TSocket(url, port)
         self._transport = TTransport.TFramedTransport(self._transport)
         self._transport.open()
         self._protocol = TFinagleProtocol(self._transport, client_id=self._client_id)
@@ -166,3 +187,20 @@ class ThriftExecutor(object):
             sub_package_name = '.'.join([package_name, module])
             sub_package = importlib.import_module(sub_package_name)
             sys.modules[sub_module_name] = sub_package
+
+    @staticmethod
+    def _get_verifier_type(cert_verification_mode):
+        """ Maps string value to SSL certificate verification type. Can be 'none', 'optional', 'required'.
+
+        :param cert_verification_mode: string representation of verification mode.
+        :returns: numeric code of verification mode
+        """
+        modes = {
+            'none': ssl.CERT_NONE,
+            'optional': ssl.CERT_OPTIONAL,
+            'required': ssl.CERT_REQUIRED
+        }
+        if cert_verification_mode in modes:
+            return modes[cert_verification_mode]
+        else:
+            raise ValueError('Unknown certificate verification mode: {}'.format(cert_verification_mode))

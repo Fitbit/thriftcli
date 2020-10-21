@@ -15,14 +15,15 @@ import json
 import logging
 import os
 
-from .thrift_zookeeper_resolver import get_server_address
+from thrift_zookeeper_resolver import get_server_address
+from .request_body_converter import convert
 from .thrift_argument_converter import ThriftArgumentConverter
 from .thrift_cli_error import ThriftCLIError
 from .thrift_executor import ThriftExecutor
 from .thrift_parser import ThriftParser
-from .request_body_converter import convert
 
 THRIFT_PATH_ENVIRONMENT_VARIABLE = 'THRIFT_CLI_PATH'
+
 
 class ThriftCLI(object):
     """ Provides an interface for setting up a client, making requests, and cleaning up.
@@ -33,7 +34,9 @@ class ThriftCLI(object):
 
     """
 
-    def __init__(self, thrift_path, server_address, service_name, thrift_dir_paths=None, zookeeper=False, client_id=None, proxy=None):
+    def __init__(self, thrift_path, server_address, service_name, tls, tls_key_path, cert_verification_mode, thrift_dir_paths=None, zookeeper=False,
+                 client_id=None,
+                 proxy=None):
         """
         :param thrift_path: the path to the thrift file being used.
         :type thrift_path: str
@@ -55,6 +58,7 @@ class ThriftCLI(object):
             server_address = get_server_address(server_address, service_name)
         self._thrift_executor = ThriftExecutor(self._thrift_path, server_address, self._service_reference,
                                                self._thrift_argument_converter._parse_result.namespaces,
+                                               tls, tls_key_path, cert_verification_mode,
                                                thrift_dir_paths=thrift_dir_paths, client_id=client_id, proxy=proxy)
 
     def run(self, method_name, request_body, return_json=False):
@@ -88,14 +92,17 @@ class ThriftCLI(object):
             result = _dump_json(result)
         return result
 
+
 def _dump_json(obj):
     return json.dumps(obj, default=_default_json_handler, sort_keys=True, indent=4, separators=(',', ': '))
+
 
 def _default_json_handler(obj):
     if isinstance(obj, set) or isinstance(obj, frozenset):
         return list(obj)
     else:
         return obj.__dict__
+
 
 def _find_path(path):
     if os.path.isfile(path):
@@ -181,8 +188,11 @@ def _parse_namespace(args):
     cleanup = args.cleanup
     client_id = args.client_id
     proxy = args.proxy
+    tls = args.tls
+    tls_key_path = args.tls_key_path
+    cert_verification_mode = args.cert_verification_mode
     return (server_address, endpoint, thrift_path, thrift_dir_paths, request_body, zookeeper, return_json, cleanup,
-            client_id, proxy)
+            client_id, proxy, tls, tls_key_path, cert_verification_mode)
 
 
 def _make_parser():
@@ -213,13 +223,20 @@ def _make_parser():
                         help='print result in JSON format')
     parser.add_argument('-i', '--client_id', type=str, default=None,
                         help='Finagle client id to send request with')
+    parser.add_argument('-t', '--tls', action='store_true', help='Use TLS socket if provided')
+
+    parser.add_argument('-k', '--tls_key_path', type=str,
+                        help='path to tls key file. --tls key must be provided to enable mtls')
+    parser.add_argument('-m', '--cert_verification_mode', type=str, default='required',
+                        help='defines peer certificate verification mode. Possible values are none, optional, required. '
+                             '--tls key must be provided to enable mtls')
     parser.add_argument('-v', '--verbose', action='store_true',
                         help='provide detailed logging')
     return parser
 
 
 def _run_cli(server_address, endpoint_name, thrift_path, thrift_dir_paths, request_body, zookeeper, return_json,
-             remove_generated_src, client_id, proxy):
+             remove_generated_src, client_id, proxy, tls, tls_key_path, cert_verification_mode):
     """ Runs a remote request and prints the result if it is not None.
 
     :param server_address: the address of the Thrift server to request
@@ -252,8 +269,10 @@ def _run_cli(server_address, endpoint_name, thrift_path, thrift_dir_paths, reque
         thrift_path,
         server_address,
         service_name,
+        tls, tls_key_path, cert_verification_mode,
         thrift_dir_paths + environment_defined_paths,
         zookeeper,
+
         client_id=client_id,
         proxy=proxy
     )
