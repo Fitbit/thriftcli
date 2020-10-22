@@ -106,7 +106,7 @@ This variable is most useful for endpoints you call fairly often.
 If you need to access a server behind a proxy, the `--proxy` option allows you to do so:
 
 ```
-thriftcli server:port Hello.echo Hello.thrift -b '{"name": "World"}' -j --proxy prod-proxy-us-central1.gcp.fitbit.com:3128
+thriftcli server:port Hello.echo Hello.thrift -b '{"name": "World"}' -j --proxy prod-proxy:3128
 ```
 
 ## Examples
