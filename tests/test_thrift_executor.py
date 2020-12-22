@@ -74,7 +74,7 @@ class TestThriftExecutor(unittest.TestCase):
         command = 'thrift -r -I . --gen py %s' % data.TEST_THRIFT_FILE
         mock_call.assert_called_with(command, shell=True)
         mock_import_package.assert_called_with(data.TEST_THRIFT_MODULE_NAME, data.TEST_THRIFT_PY_NAMESPACE)
-        mock_tsocket.assert_called_with(data.TEST_SERVER_HOSTNAME, data.TEST_SERVER_PORT,ssl_context=mock.ANY)
+        mock_tsocket.assert_called_with(data.TEST_SERVER_HOSTNAME, data.TEST_SERVER_PORT,ca_certs=None,validate_callback=mock.ANY)
         self.assertTrue(mock_transport_open.called)
         mock_finagle_protocol.assert_called()
 

@@ -150,7 +150,7 @@ class ThriftExecutor(object):
                 ssl_context.verify_mode = verifier_type
                 self._transport = TSSLSocket.TSSLSocket(url, port, ca_certs=self._tls_key_path,
                                                         validate_callback=lambda cert, hostname: None)  # disabling hostname validation
-    else:
+        else:
             if self._proxy:
                 proxy_host, proxy_port = self._proxy.split(":")
                 self._transport = TProxySocket(proxy_host, proxy_port, url, port)
