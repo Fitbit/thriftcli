@@ -1,0 +1,25 @@
+{
+	"series": [
+		{
+			"seriesKey": {
+				"userId": "5649647",
+				"dataType": "STEPS",
+				"source": {
+					"staticSource": 0
+				}
+			},
+			"dataPoints": [
+				{
+					"value": {
+						"doubleVal": 2880.0
+					},
+					"recordedAt": {
+						"timestamp": 1592228621100
+					},
+					"sensor": "MANUAL"
+				}
+			]
+		}
+	],
+	"serviceId": "thriftCli"
+}

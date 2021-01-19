@@ -51,6 +51,9 @@ class ThriftArgumentConverter(object):
         :rtype: dict
 
         """
+        # print(data.items())
+        # for item in fields.values():
+        #     print(item)
         if len(fields) == 1:
             field = fields.values()[0]
             if field.name not in data:
@@ -92,6 +95,8 @@ class ThriftArgumentConverter(object):
             return self._construct_struct_arg(field_type, value)
         elif self._parse_result.has_enum(field_type):
             return self._construct_enum_arg(field_type, value)
+        elif self._parse_result.get_union(field_type) is not None:
+            return self._construct_union_arg(field_type, value)
         elif field_type.startswith('list<'):
             return self._construct_list_arg(field_type, value)
         elif field_type.startswith('set<'):
@@ -205,6 +210,21 @@ class ThriftArgumentConverter(object):
         prep = lambda x: x if self._parse_result.get_struct(key_type) is None else json.loads(x)
         return {self._convert_dict_entry_to_arg(key_type, prep(key)): self._convert_dict_entry_to_arg(elem_type, elem)
                 for key, elem in value.items()}
+
+    @staticmethod
+    def _construct_union_arg(field_type, value):
+        """ Returns the Python object corresponding to a union.
+
+        :param field_type: the type of the union being constructed
+        :type field_type: str
+        :param value: a flat dictionary that represents the desired Python struct
+        :type value: dict
+        :returns: the Python struct represented by value given the field type
+
+        """
+        package, union = ThriftArgumentConverter._split_field_type(field_type)
+        constructor = ThriftArgumentConverter._get_type_class(package, union)
+        return constructor(**value)
 
     @staticmethod
     def _split_field_type(field_type):

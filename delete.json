@@ -1,0 +1,20 @@
+{
+	"seriesKeys": [
+		{
+			"userId": "5649647",
+			"dataType": "STEPS",
+			"source": {
+				"staticSource": 0
+			}
+		}
+	],
+	"localDateTimeRange": {
+		"startTime": 1592228000000,
+		"endTime": 1592229622000
+	},
+	"serviceId": "thriftCli",
+	"gddContext": {
+		"requestId": "testing13yo",
+		"userIanaTimeZone": "UTC"
+	}
+}

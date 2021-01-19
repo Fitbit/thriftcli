@@ -26,7 +26,7 @@ class ThriftParseResult(object):
     A ThriftParseResult includes all definitions from the parsed Thrift file as well as its dependencies.
 
     """
-    def __init__(self, structs=None, services=None, enums=None, typedefs=None, namespaces=None):
+    def __init__(self, structs=None, services=None, enums=None, typedefs=None, namespaces=None, unions=None):
         """ Container for results from parsing a thrift file.
 
         :param structs: dictionary from struct reference to ThriftStruct object.
@@ -34,6 +34,7 @@ class ThriftParseResult(object):
         :param enums: set of enum references.
         :param typedefs: dictionary from typedef alias reference to unaliased field type.
         :param typedefs: dictionary from file basenames to python namespaces.
+        :param unions: dictionary from union reference to ThriftUnion object.
 
         """
         self.structs = structs if structs is not None else {}
@@ -41,6 +42,7 @@ class ThriftParseResult(object):
         self.enums = enums if enums is not None else set([])
         self.typedefs = typedefs if typedefs is not None else {}
         self.namespaces = namespaces if namespaces is not None else {}
+        self.unions = unions if unions is not None else {}
 
     def __eq__(self, other):
         return type(other) is type(self) and self.__dict__ == other.__dict__
@@ -54,7 +56,8 @@ class ThriftParseResult(object):
             'services': {name: str(service) for name, service in self.services.items()},
             'enums': self.enums,
             'typedefs': self.typedefs,
-            'namespaces': self.namespaces
+            'namespaces': self.namespaces,
+            'unions': {name: str(union) for name, union in self.unions.items()}
         })
 
     def merge_result(self, other):
@@ -68,6 +71,7 @@ class ThriftParseResult(object):
         self.merge_enums(other.enums)
         self.merge_typedefs(other.typedefs)
         self.merge_namespaces(other.namespaces)
+        self.merge_unions(other.unions)
 
     def merge_structs(self, structs):
         """ Add the structs from another ThriftParseResult into this one.
@@ -106,9 +110,17 @@ class ThriftParseResult(object):
         """
         self.namespaces.update(namespaces)
 
+    def merge_unions(self, unions):
+        """ Add the unions from another ThriftParseResult into this one.
+
+        :param structs: a map of union names to ThriftUnions to be added to self's unions.
+
+        """
+        self.unions.update(unions)
+
     def get_fields_for_endpoint(self, service_reference, method_name):
         """ Returns all argument fields declared for a given endpoint.
-    
+
         :param service_reference: the reference ('package.Service') of the service declaring the endpoint.
         :type service_reference: str
         :param method_name: the name of the method representing the endpoint.
@@ -116,30 +128,42 @@ class ThriftParseResult(object):
         :returns: fields that are declared as arguments for the provided endpoint.
         :rtype: list of ThriftStruct.Field
         :raises: KeyError, AttributeError
-    
+
         """
         return self.services[service_reference].endpoints[method_name].fields
 
     def get_fields_for_struct_name(self, struct_name):
         """ Returns all fields that compromise the given struct.
-    
+
         :param struct_name: the name of the struct.
         :type struct_name: str
         :returns: fields that are declared as components for the provided struct.
         :rtype: list of ThriftStruct.Field
         :raises: KeyError, AttributeError
-    
+
         """
         return self.structs[struct_name].fields
 
+    def get_fields_for_union_name(self, union_name):
+        """ Returns all fields that compromise the given union.
+
+        :param union_name: the name of the union.
+        :type union_name: str
+        :returns: fields that are declared as components for the provided union.
+        :rtype: list of ThriftUnion.Field
+        :raises: KeyError, AttributeError
+
+        """
+        return self.unions[union_name].fields
+
     def has_enum(self, enum_name):
         """ Checks if the given enum was found in the last parse.
-    
+
         :param enum_name: the name of the enum to check for.
         :type enum_name: str
         :returns: True if the enum was declared in the last parsed thrift file. False otherwise.
         :rtype: bool
-    
+
         """
         if not self:
             return False
@@ -147,12 +171,12 @@ class ThriftParseResult(object):
 
     def get_struct(self, struct_name):
         """ Returns the struct for the given struct name.
-    
+
         :param struct_name: the name of the struct to look up.
         :type struct_name: str
         :returns: the associated ThriftStruct or None.
         :rtype: ThriftStruct or None
-    
+
         """
         if not self or struct_name not in self.structs:
             return None
@@ -160,12 +184,12 @@ class ThriftParseResult(object):
 
     def get_typedef(self, alias):
         """ Returns the type for the given alias according to the typedefs found in the last parse.
-    
+
         :param alias: the alias of the typedef to check for.
         :type alias: str
         :returns: the type for the given alias according to the typedefs in the last parsed thrift file.
         :rtype: str or None
-    
+
         """
         if not self or alias not in self.typedefs:
             return None
@@ -173,12 +197,12 @@ class ThriftParseResult(object):
 
     def unalias_type(self, field_type):
         """ Returns the unaliased type according to the typedefs found in the last parse.
-    
+
         :param field_type: the potentially aliased type.
         :type field_type: str
         :returns: the unaliased type according to the typedefs in the last parsed thrift file.
         :raises: ThriftCLIError
-    
+
         """
         type_set = {field_type}
         while self.get_typedef(field_type) is not None:
@@ -187,3 +211,16 @@ class ThriftParseResult(object):
                 raise ThriftCLIError('Circular typedef dependency involving \'%s\'' % field_type)
             type_set.add(field_type)
         return field_type
+
+    def get_union(self, union_name):
+        """ Returns the union for the given union name.
+
+        :param union_name: the name of the union to look up.
+        :type union_name: str
+        :returns: the associated ThriftUnion or None.
+        :rtype: ThriftUnion or None
+
+        """
+        if not self or union_name not in self.unions:
+            return None
+        return self.unions[union_name]
