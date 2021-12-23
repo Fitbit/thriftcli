@@ -5,6 +5,8 @@
 
 ThriftCLI is a CLI tool for executing RPC's via the Thrift protocol.
 
+*Attention: ThriftCLI only works on Python 2.7*
+
 ## Installation
 
 The easiest way is to use pip:
@@ -14,8 +16,15 @@ pip install thriftcli
 ```
 
 Another option is to manually build and compile. First, install the thrift compiler from homebrew: (this only needs to be done once)
+
+(mac)
 ```
 brew install thrift
+```
+
+(linux)
+```
+sudo apt install thrift-compiler
 ```
 
 Then you can build and install it to */usr/local/bin/thriftcli*
